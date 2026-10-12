@@ -4,6 +4,12 @@ import {
 } from "../../_lib/moris/v5/connectors/supabase.js";
 
 import {
+  baseUrl,
+  serverKey,
+  headersForKey
+} from "../../_lib/moris/v5/connectors/supabaseService.js";
+
+import {
   json,
   readJson,
   errorResponse
@@ -36,6 +42,20 @@ export async function onRequestPost({ request, env }) {
     const out = await rpc(env, "app_delete_all_parts", {
       p_session_token: token
     });
+
+    // Dọn dẹp triệt để toàn bộ vector trong catalogue_image_vectors
+    try {
+      const key = serverKey(env);
+      const base = baseUrl(env);
+      if (key && base) {
+        await fetch(`${base}/rest/v1/catalogue_image_vectors?id=neq.0`, {
+          method: "DELETE",
+          headers: headersForKey(key)
+        });
+      }
+    } catch (vecErr) {
+      console.warn("Lỗi dọn vector khi delete-all:", vecErr);
+    }
 
     // Dọn dẹp sạch sẽ toàn bộ bucket R2
     let r2CleanedCount = 0;

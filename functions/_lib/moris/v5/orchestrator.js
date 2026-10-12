@@ -347,10 +347,19 @@ export async function runMorisSearch(env, config, {
   ];
 
   // Moris: chỉ dùng retrieval vector + metadata (không LLM).
+  const sortedCandidates = geometricRanked
+    .map(publicCandidate)
+    .sort((a, b) => {
+      const scoreA = Number(a?.match_score ?? a?.final_score ?? a?.vector_similarity ?? 0);
+      const scoreB = Number(b?.match_score ?? b?.final_score ?? b?.vector_similarity ?? 0);
+      return scoreB - scoreA;
+    })
+    .slice(0, 10);
+
   return {
     mode:"MORIS_VECTOR_CLEAR",
     summary:"Vector retrieval đủ rõ.",
-    candidates:geometricRanked.slice(0,10).map(publicCandidate),
+    candidates:sortedCandidates,
     warnings,
     ai_calls:null,
     candidate_pool_hash:poolHash

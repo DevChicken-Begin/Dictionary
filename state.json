@@ -117,11 +117,34 @@
       "status": "completed",
       "completed_at": "2026-10-12T02:59:48Z",
       "evidence": "Đã bổ sung điều khoản 5 vào AGENTS.md, agent.md, .agents/agent.md: Khi không hiểu hoặc thiếu thông tin, PHẢI hỏi lại người dùng trước khi bắt tay vào làm."
+    },
+    {
+      "id": "task_10_sort_top10_descending",
+      "title": "Sắp xếp danh sách Top 10 của Moris theo tỷ lệ phần trăm từ lớn trở xuống",
+      "status": "completed",
+      "completed_at": "2026-10-12T03:53:30Z",
+      "diagnostics": {
+        "finding": "Trong ảnh image.png, mã 3465490001 đạt 68% nhưng bị đặt ở vị trí Top 3 sau các mã 50% và 59% do mảng candidates chưa được sắp xếp giảm dần theo tỷ lệ phần trăm hiển thị."
+      },
+      "solution": "Cập nhật geometricReranker.js gán final_score/match_score bằng geo.final_score; cập nhật candidatePool.js, orchestrator.js, publicResult.js sắp xếp giảm dần; cập nhật applyMorisSearchResults trong src/app.js sắp xếp giảm dần theo morisCandidatePercent, đưa mã đạt 68% (3465490001) lên Top 1 thay vì Top 3.",
+      "evidence": "tests/moris-reranker.test.js pass 100%, toàn bộ 167/167 unit tests pass 100%."
+    },
+    {
+      "id": "task_11_sync_vector_deletion_on_main_delete",
+      "title": "Đồng bộ xóa sạch toàn bộ dữ liệu Vector AI liên quan khi xóa ảnh/mã ở main chính",
+      "status": "completed",
+      "completed_at": "2026-10-12T04:04:30Z",
+      "diagnostics": {
+        "finding": "Khi xóa mã ở main chính (đơn lẻ hoặc bulk delete), trigger cũ trên image_library không xóa triệt để hoặc không cascade sang catalogue_image_vectors (do cột record_id là text trong khi id là uuid). Điều này làm tồn đọng 2 vector mồ côi (orphan) của mã 104342 trong DB, làm sai lệch thống kê độ phủ vector.",
+        "root_cause": "API /api/catalogue/bulk-delete chỉ gọi RPC app_bulk_delete_parts và xóa R2 mà không xóa catalogue_image_vectors; deleteCurrentPart gọi trực tiếp app_delete_part không có bước dọn vector AI; hàng đợi vector local của trình duyệt vẫn giữ job cũ có thể nạp lại sau khi xóa."
+      },
+      "solution": "1) Tạo API /api/catalogue/delete-part đồng bộ xóa bản ghi lẫn vector trong catalogue_image_vectors; 2) Cập nhật /api/catalogue/bulk-delete và /api/catalogue/delete-all trực tiếp xóa triệt để catalogue_image_vectors qua service role; 3) Cập nhật deleteCurrentPart và executeBulkDelete trong src/app.js dọn sạch hàng đợi vector local (removeMorisVectorJob, removeMorisVectorJobs); 4) Tạo migration SQL 2026101200020000_cascade_delete_vectors_on_part_delete.sql; 5) Dọn sạch 2 orphan vectors trong database thực tế về đúng 247 vectors / 123 linh kiện.",
+      "evidence": "Đã dọn sạch 2 orphan vectors trong database thực tế, tests/catalogue-delete.test.js (12 tests) pass 100%, toàn bộ suite 173/173 tests pass 100%."
     }
   ],
   "verification": {
-    "total_unit_tests": 166,
-    "passing_tests": 166,
+    "total_unit_tests": 173,
+    "passing_tests": 173,
     "failing_tests": 0
   }
 }

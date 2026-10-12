@@ -156,6 +156,8 @@ export function rerankCandidatesByGeometry(candidates, queryGeometry, options = 
     const geo = scoreCandidateGeometry(c, queryGeometry, options.weights);
     return {
       ...c,
+      final_score: geo.final_score,
+      match_score: geo.final_score,
       geometric_score: geo.final_score,
       s_vec: geo.s_vec,
       s_holes: geo.s_holes,
@@ -164,6 +166,6 @@ export function rerankCandidatesByGeometry(candidates, queryGeometry, options = 
     };
   });
 
-  scored.sort((a, b) => b.geometric_score - a.geometric_score);
+  scored.sort((a, b) => Number(b.geometric_score ?? b.match_score ?? b.final_score ?? 0) - Number(a.geometric_score ?? a.match_score ?? a.final_score ?? 0));
   return scored;
 }

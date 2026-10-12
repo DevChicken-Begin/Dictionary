@@ -82,3 +82,27 @@
   - [x] Bổ sung điều khoản 5 vào mục I. CÁC ĐIỀU CẤM KỴ: Cấm tự ý làm khi chưa hiểu rõ hoặc thiếu thông tin, phải hỏi lại người dùng.
   - [x] Đồng bộ vào `AGENTS.md`, `agent.md`, `.agents/agent.md`.
 
+- [x] **Task 10: Sắp xếp danh sách kết quả Top 10 của Moris theo tỷ lệ lớn trở xuống**
+  - [x] Cập nhật `geometricReranker.js`: gán `final_score` và `match_score` bằng `geo.final_score` để candidate lưu giữ điểm số sau khi re-rank.
+  - [x] Cập nhật `orchestrator.js` và `candidatePool.js`: sắp xếp danh sách ứng viên theo điểm số cuối cùng giảm dần (descending).
+  - [x] Cập nhật `publicResult.js`: đảm bảo danh sách `candidates` và câu trả lời text trong `buildMorisUserMessage` luôn được sắp xếp từ tỷ lệ lớn trở xuống.
+  - [x] Cập nhật `src/app.js` (`applyMorisSearchResults`): sắp xếp mảng candidates theo `morisCandidatePercent(c)` giảm dần, đảm bảo mã đạt 68% (3465490001) đứng ở Top 1 thay vì Top 3.
+  - [x] Chạy unit test kiểm thử (`tests/moris-reranker.test.js` pass 100%, toàn bộ suite 167 tests pass) và cập nhật `state.json`.
+
+- [x] **Task 11: Đồng bộ xóa sạch toàn bộ dữ liệu Vector AI khi xóa ảnh/mã ở main chính**
+  - [x] Khảo sát cơ sở dữ liệu: phát hiện 2 vector mồ côi (orphan) của mã 104342 trong `catalogue_image_vectors` bị tồn đọng do `record_id` kiểu text không kích hoạt FK cascade và RPC cũ không gọi xóa vector.
+  - [x] Dọn dẹp thực tế: trực tiếp xóa 2 vector mồ côi đưa số lượng vector về 247 vectors / 123 linh kiện trong database Supabase thực tế.
+  - [x] Tạo endpoint `functions/api/catalogue/delete-part.js`: xóa đơn lẻ mã linh kiện và đồng thời xóa triệt để toàn bộ vector liên quan trong `catalogue_image_vectors` qua Supabase Service Role.
+  - [x] Cập nhật `functions/api/catalogue/bulk-delete.js`: khi admin xóa hàng loạt, tự động batch DELETE toàn bộ vector liên quan trong `catalogue_image_vectors`.
+  - [x] Cập nhật `functions/api/catalogue/delete-all.js`: xóa sạch bảng `catalogue_image_vectors` qua Service Role khi xóa tất cả.
+  - [x] Cập nhật `src/app.js`:
+    - `deleteCurrentPart()`: gọi `/api/catalogue/delete-part` đồng bộ xóa bản ghi lẫn vector AI, dọn dẹp job trong hàng đợi local (`removeMorisVectorJob`).
+    - `executeBulkDelete()`: sau khi xóa xong, dọn dẹp toàn bộ job các mã đã chọn trong hàng đợi local (`removeMorisVectorJobs`).
+    - `executeDeleteAll()`: dọn sạch hàng đợi vector local (`clearAllMorisVectorJobs`).
+  - [x] Tạo migration `supabase/migrations/2026101200020000_cascade_delete_vectors_on_part_delete.sql` cập nhật các RPC `app_delete_part`, `app_bulk_delete_parts` và trigger `trg_kim_cleanup_vectors_on_delete`.
+  - [x] Viết unit tests kiểm thử toàn diện `tests/catalogue-delete.test.js` (12 tests pass 100%).
+  - [x] Chạy toàn bộ test suite (`npm test`: 173/173 tests pass 100%) và build static (`npm run build`).
+  - [x] Cập nhật bộ nhớ RAM `state.json` và checklist `plan.md`.
+
+
+

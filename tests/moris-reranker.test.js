@@ -106,4 +106,41 @@ describe("Moris Layer 3 — Geometric Re-Ranking Engine", () => {
     expect(reranked[0].s_ratio).toBe(1.0);
     expect(reranked[1].s_ratio).toBeLessThan(0.5);
   });
+
+  it("sắp xếp danh sách Top 10 từ tỷ lệ lớn trở xuống: mã 3465490001 đạt 68% được đặt Top 1 thay vì Top 3", async () => {
+    const { toPublicMorisResult } = await import("../functions/_lib/moris/v5/presentation/publicResult.js");
+
+    // Dữ liệu mô phỏng đúng như ảnh image.png
+    const mockResult = {
+      mode: "MORIS_VECTOR_CLEAR",
+      candidates: [
+        { code: "3410990101", final_score: 0.50, match_score: 0.50 },
+        { code: "3405120101", final_score: 0.59, match_score: 0.59 },
+        { code: "3465490001", final_score: 0.68, match_score: 0.68 },
+        { code: "3405110101", final_score: 0.58, match_score: 0.58 },
+        { code: "3410770101", final_score: 0.57, match_score: 0.57 }
+      ]
+    };
+
+    const publicOut = toPublicMorisResult(mockResult);
+
+    // Kiểm tra danh sách candidates: mã 3465490001 (68%) bắt buộc phải đứng ở Top 1!
+    expect(publicOut.candidates[0].code).toBe("3465490001");
+    expect(publicOut.candidates[0].match_score).toBe(0.68);
+
+    expect(publicOut.candidates[1].code).toBe("3405120101");
+    expect(publicOut.candidates[1].match_score).toBe(0.59);
+
+    expect(publicOut.candidates[2].code).toBe("3405110101");
+    expect(publicOut.candidates[2].match_score).toBe(0.58);
+
+    expect(publicOut.candidates[3].code).toBe("3410770101");
+    expect(publicOut.candidates[3].match_score).toBe(0.57);
+
+    expect(publicOut.candidates[4].code).toBe("3410990101");
+    expect(publicOut.candidates[4].match_score).toBe(0.50);
+
+    // Kiểm tra text trả về trong user_message: mã Top 1 phải là 3465490001
+    expect(publicOut.user_message).toContain("1. 3465490001");
+  });
 });

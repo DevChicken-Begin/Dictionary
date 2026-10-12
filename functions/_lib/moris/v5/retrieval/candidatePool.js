@@ -10,8 +10,12 @@ export async function finalizeCandidatePool(rows, {limit=10}={}) {
   }
 
   const candidates = [...map.values()]
-    .sort((a,b) => Number(b.final_score || 0) - Number(a.final_score || 0))
-    .slice(0,limit);
+    .sort((a, b) => {
+      const scoreA = Number(a?.geometric_score ?? a?.match_score ?? a?.final_score ?? a?.vector_similarity ?? 0);
+      const scoreB = Number(b?.geometric_score ?? b?.match_score ?? b?.final_score ?? b?.vector_similarity ?? 0);
+      return scoreB - scoreA;
+    })
+    .slice(0, limit);
 
   const hash = await stableHash(
     candidates.map(x => ({

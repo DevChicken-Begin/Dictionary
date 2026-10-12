@@ -1473,16 +1473,46 @@ createApp({
     },
     async deleteCurrentPart() {
       if(!this.detail.item) return;
-      const ok = await this.showConfirm('Xác nhận xóa data của mã này? (Ảnh gốc trên Cloud sẽ không bị xóa để phòng ngừa lỗi rủi ro).', {
+      const partId = this.detail.item.id;
+      const ok = await this.showConfirm('Xác nhận xóa data của mã này? Dữ liệu linh kiện và toàn bộ vector AI liên quan sẽ bị xóa sạch.', {
         title: 'Xóa mã linh kiện',
         confirmText: 'Xác nhận xóa',
         danger: true
       });
       if (!ok) return;
       try {
-        const row = await this.rpcRow('app_delete_part', {p_session_token:this.session.token, p_image_id:this.detail.item.id});
-        if(!row?.ok) throw new Error(row?.message || 'Không xóa được.');
-        this.toast('success','Đã xóa thành công.');
+        let deletedOk = false;
+        try {
+          const res = await this.fetchWithTimeout(
+            '/api/catalogue/delete-part',
+            {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+                'x-session-token': await this.freshAuth()
+              },
+              body: JSON.stringify({
+                session_token: await this.freshAuth(),
+                image_id: partId
+              })
+            },
+            15000
+          );
+          const data = await res.json().catch(() => null);
+          if (res.ok && data?.ok) {
+            deletedOk = true;
+          }
+        } catch (_) {}
+
+        if (!deletedOk) {
+          const row = await this.rpcRow('app_delete_part', {p_session_token:this.session.token, p_image_id:partId});
+          if(!row?.ok) throw new Error(row?.message || 'Không xóa được.');
+        }
+
+        // Dọn dẹp hàng đợi vector local cho mã vừa xóa
+        this.removeMorisVectorJob(partId);
+
+        this.toast('success','Đã xóa mã linh kiện và toàn bộ vector AI liên quan.');
         this.closeDetail();
         await this.loadParts(false);
         if (this.parts.length === 0 && this.page > 0) {
@@ -1583,6 +1613,8 @@ createApp({
         this.toast('success', data?.message || `Đã xóa thành công ${ids.length} mã linh kiện.`);
         this.bulkSelection.selectedIds = [];
         this.bulkSelection.active = false;
+        // Dọn dẹp hàng đợi vector local cho toàn bộ các mã vừa xóa
+        this.removeMorisVectorJobs(ids);
         await this.loadParts(false);
         if (this.parts.length === 0 && this.page > 0) {
           this.page = Math.max(0, this.page - 1);
@@ -1645,6 +1677,8 @@ createApp({
         this.toast('success', data?.message || 'Đã xóa toàn bộ catalogue và làm sạch bucket R2.');
         this.bulkSelection.selectedIds = [];
         this.bulkSelection.active = false;
+        // Dọn dẹp sạch toàn bộ hàng đợi vector local
+        this.clearAllMorisVectorJobs();
         await this.loadParts(true);
       } catch (e) {
         this.toast('error', this.readError(e));
@@ -2816,6 +2850,35 @@ createApp({
       return next.length;
     },
 
+    removeMorisVectorJob(recordId) {
+      const key = String(recordId || '');
+      if (!key) return;
+      const queue = this.readMorisVectorQueue().filter(j => String(j?.record_id) !== key);
+      this.writeMorisVectorQueue(queue);
+      const failed = this.readMorisVectorFailedQueue().filter(j => String(j?.record_id) !== key);
+      localStorage.setItem(
+        CONFIG.MORIS_VECTOR_QUEUE_FAILED_KEY,
+        JSON.stringify(failed)
+      );
+    },
+
+    removeMorisVectorJobs(recordIds) {
+      const idSet = new Set((recordIds || []).map(id => String(id)));
+      if (!idSet.size) return;
+      const queue = this.readMorisVectorQueue().filter(j => !idSet.has(String(j?.record_id)));
+      this.writeMorisVectorQueue(queue);
+      const failed = this.readMorisVectorFailedQueue().filter(j => !idSet.has(String(j?.record_id)));
+      localStorage.setItem(
+        CONFIG.MORIS_VECTOR_QUEUE_FAILED_KEY,
+        JSON.stringify(failed)
+      );
+    },
+
+    clearAllMorisVectorJobs() {
+      localStorage.removeItem(CONFIG.MORIS_VECTOR_QUEUE_KEY);
+      localStorage.removeItem(CONFIG.MORIS_VECTOR_QUEUE_FAILED_KEY);
+    },
+
     async processMorisVectorQueue() {
       if (this._morisVectorQueueRunning) return;
       if (!this.session.token || !this.canEdit) return;
@@ -2995,9 +3058,21 @@ createApp({
     },
 
     applyMorisSearchResults(data) {
-      const candidates = Array.isArray(data?.candidates)
+      const candidatesList = Array.isArray(data?.candidates)
         ? data.candidates.slice(0, 10)
         : [];
+
+      // Sắp xếp danh sách Top 10 giảm dần theo tỷ lệ phần trăm hiển thị (từ lớn trở xuống)
+      candidatesList.sort((a, b) => {
+        const pctA = this.morisCandidatePercent(a) ?? -1;
+        const pctB = this.morisCandidatePercent(b) ?? -1;
+        if (pctB !== pctA) return pctB - pctA;
+        const scoreA = Number(a?.match_score ?? a?.final_score ?? a?.geometric_score ?? a?.vector_similarity ?? 0);
+        const scoreB = Number(b?.match_score ?? b?.final_score ?? b?.geometric_score ?? b?.vector_similarity ?? 0);
+        return scoreB - scoreA;
+      });
+
+      const candidates = candidatesList;
 
       // Chỉ lọc giao diện khi thật sự có kết quả.
       this.morisSearch.active = candidates.length > 0;
