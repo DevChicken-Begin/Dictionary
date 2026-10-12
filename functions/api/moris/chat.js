@@ -16,6 +16,7 @@
 import { validateSession, searchCatalogue, scanCatalogue } from "../../_lib/moris/v5/connectors/supabase.js";
 import { parseTextConstraints, buildSearchAnchors } from "../../_lib/moris/v5/retrieval/textConstraints.js";
 import { rankMetadata } from "../../_lib/moris/v5/retrieval/metadataFilter.js";
+import { filterCatalogueByQueryFeatures } from "../../_lib/moris/v5/retrieval/featureMatcher.js";
 import { json, readJson } from "../../_lib/shared/http.js";
 
 // Rate limiting bảo vệ tài nguyên DB (tối đa 30 request / phút / client)
@@ -96,8 +97,8 @@ function dedupeRows(rows) {
 }
 
 /** Chuyển 1 dòng catalogue → object candidate đúng contract frontend. */
-function toCandidate(row, rank) {
-  const score = Number(row.metadata_score || 0);
+function toCandidate(row, rank, isFeatureMatch = false) {
+  const score = isFeatureMatch ? 1.0 : Number(row.metadata_score || 0);
   const features = String(row.identifying_features || "").trim();
   return {
     id: String(row.id || row.code || ""),
@@ -113,14 +114,14 @@ function toCandidate(row, rank) {
     thumb_provider: row.thumb_provider || "r2",
     front_provider: row.front_provider || "r2",
     match_reason: features.slice(0, 160) || null,
-    confidence: score >= 0.6 ? "high" : score >= 0.3 ? "medium" : "low",
+    confidence: isFeatureMatch ? "high" : (score >= 0.6 ? "high" : score >= 0.3 ? "medium" : "low"),
     match_score: score,
     final_score: score,
     vector_similarity: 0,
     raw_vector_similarity: 0,
     probe_consensus: 0,
     structural_score: null,
-    score_source: "metadata_rank",
+    score_source: isFeatureMatch ? "identifying_features_match" : "metadata_rank",
     reason: features.slice(0, 160) || null,
     matched: [],
     conflicts: [],
@@ -130,11 +131,16 @@ function toCandidate(row, rank) {
 }
 
 /** Sinh câu trả lời liệt kê mã — thuần dữ liệu, không sinh text từ model. */
-function buildAnswer(candidates, message) {
+function buildAnswer(candidates, message, isFeatureFilter = false) {
   if (!candidates.length) {
+    if (isFeatureFilter) {
+      return `Em đã kiểm tra toàn bộ catalogue nhưng không tìm thấy mã nào khớp đặc điểm “${message}”. Anh kiểm tra lại số lỗ hoặc mô tả nhé.`;
+    }
     return `Em chưa tìm thấy mã nào khớp với “${message}”. Anh thử mô tả thêm đặc điểm (kích thước, số lỗ, chất liệu) nhé.`;
   }
-  const head = `Em tìm thấy ${candidates.length} mã phù hợp nhất với yêu cầu của anh:`;
+  const head = isFeatureFilter
+    ? `Em tìm thấy ${candidates.length} mã khớp chính xác đặc điểm “${message}”:`
+    : `Em tìm thấy ${candidates.length} mã phù hợp nhất với yêu cầu của anh:`;
   const list = candidates.map((c, i) => {
     const feats = String(c.identifying_features || "").trim();
     return `${i + 1}. ${c.code}${feats ? ` — ${feats}` : ""}`;
@@ -175,16 +181,43 @@ export async function onRequestPost({ request, env }) {
     // ── RETRIEVER: tách từ khóa + search đa anchor ──────────────────
     const { pool } = await retrieveTextPool(env, token, message);
 
-    // ── RANKER: chấm điểm metadata (deterministic, không model) ─────
+    // ── 1. KIỂM TRA BỘ LỌC ĐẶC ĐIỂM NHẬN DẠNG (Số + Chữ, ngăn cách bởi dấu phẩy) ──
+    const featureCheck = filterCatalogueByQueryFeatures(pool, message);
+    if (featureCheck.isFeatureQuery) {
+      // Để đảm bảo không bỏ sót mã nào trong kho, quét toàn bộ catalogue (122 mã hiện có)
+      let fullPool = pool;
+      if (fullPool.length < 150) {
+        const scanned = await scanCatalogue(env, token, { maxRows: 300 }).catch(() => []);
+        fullPool = dedupeRows([...pool, ...scanned]);
+      }
+      const matched = filterCatalogueByQueryFeatures(fullPool, message).matchedRows;
+
+      // QUAN TRỌNG: CHỈ LỌC NHỮNG GÌ ĐÃ "TRUE", TUYỆT ĐỐI KHÔNG LỌC TOP 10 RÁC HAY NHỒI NHÉT POOL
+      const candidates = matched.map((row, i) => toCandidate(row, i + 1, true));
+      const answer = buildAnswer(candidates, message, true);
+
+      return json({
+        ok: true,
+        engine: "moris-feature-filter",
+        answer,
+        candidates,
+        user_message: answer,
+        sources_count: candidates.length,
+        model_used: null,
+        provider_used: null,
+        protocol: null
+      });
+    }
+
+    // ── 2. CÂU HỎI TRA CỨU METADATA THÔNG THƯỜNG ─────
     const ranked = rankMetadata(pool, message)
       .filter(row => Number(row.metadata_score || 0) >= 0.10)
       .slice(0, 20);
 
-    const top = ranked.length >= 3 ? ranked : pool.slice(0, 15);
-
-    // ── PRESENT: top 10 + câu trả lời liệt kê ───────────────────────
-    const candidates = top.slice(0, 10).map((row, i) => toCandidate(row, i + 1));
-    const answer = buildAnswer(candidates, message);
+    // Chỉ lấy ứng viên đạt điểm số (tối đa top 10), không pad mã rác không liên quan
+    const top = ranked.slice(0, 10);
+    const candidates = top.slice(0, 10).map((row, i) => toCandidate(row, i + 1, false));
+    const answer = buildAnswer(candidates, message, false);
 
     return json({
       ok: true,
@@ -192,7 +225,7 @@ export async function onRequestPost({ request, env }) {
       answer,
       candidates,
       user_message: answer,
-      sources_count: top.length,
+      sources_count: candidates.length,
       model_used: null,
       provider_used: null,
       protocol: null

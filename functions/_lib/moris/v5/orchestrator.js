@@ -319,7 +319,7 @@ export async function runMorisSearch(env, config, {
       b.final_score - a.final_score
     );
 
-  const geometricRanked = (query?.geometry && query.geometry.hole_count != null)
+  const geometricRanked = (query?.geometry && (query.geometry.hole_count != null || query.geometry.aspect_ratio != null))
     ? rerankCandidatesByGeometry(fused, query.geometry)
     : fused;
 

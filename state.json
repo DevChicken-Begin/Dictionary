@@ -87,11 +87,41 @@
       },
       "solution": "Tích hợp geometricReranker vào functions/_lib/moris/v5/orchestrator.js, bổ sung cơ chế tính khoảng cách Euclid tâm lỗ và bất biến lật mặt sau (Mirror Invariant). Chạy thử nghiệm đối sánh thực tế trên 122 mã đạt độ chính xác Top 1: 99.2% (ảnh chuẩn) và Top 5/Top 10: 100.0% trên dữ liệu thực.",
       "evidence": "Thực nghiệm 122 mã thực tế trong database đạt độ chính xác thực tế, lập báo cáo chi tiết không bịa đặt số liệu."
+    },
+    {
+      "id": "task_7_identifying_features_filter",
+      "title": "Lọc chuẩn xác đặc điểm nhận dạng ở Chatbox Moris theo cặp Số + Chữ, không lấy Top 10 rác",
+      "status": "completed",
+      "completed_at": "2026-10-12T03:08:30Z",
+      "diagnostics": {
+        "root_cause_1": "Truy vấn textConstraints cũ dùng rankMetadata chấm điểm mờ và dòng 183 trong functions/api/moris/chat.js tự động fallback sang pool.slice(0, 15) khi ranked.length < 3, nhồi nhét mã ngẫu nhiên vào Top 10.",
+        "root_cause_2": "SQL ilike '%6 lỗ tròn%' khớp nhầm cả '16 lỗ tròn' và '26 lỗ tròn' do không phân tách ranh giới số và chữ."
+      },
+      "solution": "Xây dựng featureMatcher.js tách các đặc điểm ngăn cách bằng dấu phẩy ',', trích xuất key số và key chữ, so khớp nghiêm ngặt (6 không khớp 16, lỗ tròn không khớp lỗ vuông, không phân biệt hoa thường). Khi tìm theo đặc điểm nhận dạng, CHỈ lọc những mã đạt TRUE, tuyệt đối không pad mã rác top 10.",
+      "evidence": "tests/moris-features-filter.test.js 18 tests pass 100%, kiểm thử thực tế '6 lỗ tròn' trả đúng 1 mã 3411160201, '16 lỗ tròn' trả đúng mã 16 lỗ, '99 lỗ tròn' trả về mảng rỗng không rác."
+    },
+    {
+      "id": "task_8_upload_image_3_layers_moris",
+      "title": "Tối ưu tìm kiếm bằng hình ảnh tải từ ngoài vào và đồng bộ kiến trúc 3 lớp Moris",
+      "status": "completed",
+      "completed_at": "2026-10-12T03:10:00Z",
+      "diagnostics": {
+        "finding": "Linh kiện to và dài khi chụp trực tiếp trong khung camera 1000:410 bị nhỏ hoặc cắt góc. Cần tùy chọn tải ảnh góc rộng từ máy ngay trong modal camera và đồng bộ luồng ảnh tải lên với kiến trúc 3 lớp (DINOv2 + PCA + HoleTopology + GeometricReranker Lớp 3)."
+      },
+      "solution": "Bổ sung nút 'Tải ảnh từ máy' (triggerCameraUpload/onCameraFileSelect) trong Modal Camera Moris; đồng bộ hóa luồng ảnh tải từ ngoài vào với pipeline 3 lớp (trích xuất vector 384D, aspect_ratio, hole_count, hole_centroids); mở rộng điều kiện rerank trong orchestrator.js và geometricReranker.js hỗ trợ tỷ lệ khung hình cho linh kiện dài.",
+      "evidence": "tests/moris-reranker.test.js & tests/frontend.test.js pass 100%."
+    },
+    {
+      "id": "task_9_constitution_clarification_rule",
+      "title": "Bổ sung Hiến pháp Agent (agent.md / AGENTS.md): Cấm tự ý làm khi chưa hiểu rõ hoặc thiếu thông tin",
+      "status": "completed",
+      "completed_at": "2026-10-12T02:59:48Z",
+      "evidence": "Đã bổ sung điều khoản 5 vào AGENTS.md, agent.md, .agents/agent.md: Khi không hiểu hoặc thiếu thông tin, PHẢI hỏi lại người dùng trước khi bắt tay vào làm."
     }
   ],
   "verification": {
-    "total_unit_tests": 147,
-    "passing_tests": 147,
+    "total_unit_tests": 166,
+    "passing_tests": 166,
     "failing_tests": 0
   }
 }

@@ -99,8 +99,8 @@ export function computeAspectRatioSimilarity(qAR, dbAR) {
 export function scoreCandidateGeometry(candidate, queryGeometry, weights = { wVec: 0.45, wHoles: 0.40, wRatio: 0.15 }) {
   const sVec = clamp01(candidate?.vector_similarity ?? candidate?.similarity ?? 0);
 
-  // Nếu không có thông tin hình học của query -> Fallback điểm vector gốc
-  if (!queryGeometry || queryGeometry.hole_count === undefined) {
+  // Nếu không có bất kỳ thông tin hình học nào -> Fallback điểm vector gốc
+  if (!queryGeometry || (queryGeometry.hole_count == null && queryGeometry.aspect_ratio == null)) {
     return {
       final_score: sVec,
       s_vec: sVec,
@@ -110,10 +110,12 @@ export function scoreCandidateGeometry(candidate, queryGeometry, weights = { wVe
     };
   }
 
-  const sHoles = computeHoleSimilarity(queryGeometry, {
-    hole_count: candidate?.hole_count ?? 0,
-    hole_centroids: candidate?.hole_centroids ?? []
-  });
+  const sHoles = queryGeometry.hole_count != null
+    ? computeHoleSimilarity(queryGeometry, {
+        hole_count: candidate?.hole_count ?? 0,
+        hole_centroids: candidate?.hole_centroids ?? []
+      })
+    : 1.0;
 
   const sRatio = computeAspectRatioSimilarity(
     queryGeometry?.aspect_ratio ?? 1.0,

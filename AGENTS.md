@@ -24,6 +24,11 @@
    - Không phá vỡ các tính năng bảo mật hiện có (Gatekeeper 2FA, RLS Supabase, CSRF, Anti-Bot).
    - Bảo toàn các comment, docstring giải thích nghiệp vụ không liên quan đến phạm vi thay đổi.
 
+5. **CẤM TỰ Ý LÀM KHI CHƯA HIỂU RÕ HOẶC THIẾU THÔNG TIN:**
+   - Khi không hiểu bất kỳ điểm nào hoặc cảm thấy chưa đủ thông tin, PHẢI chủ động hỏi lại người dùng để làm rõ.
+   - Chỉ khi nào có đầy đủ thông tin và hiểu rõ tường tận task nghiệp vụ mới được bắt tay vào thực thi.
+
+
 ---
 
 ### II. CÁC ĐIỀU BẮT BUỘC (PHẢI LÀM)

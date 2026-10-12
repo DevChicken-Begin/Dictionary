@@ -77,4 +77,33 @@ describe("Moris Layer 3 — Geometric Re-Ranking Engine", () => {
     expect(computeAspectRatioSimilarity(2.0, 2.0)).toBe(1.0);
     expect(computeAspectRatioSimilarity(2.0, 1.0)).toBe(0.5);
   });
+
+  it("linh kiện to và dài: hỗ trợ rerank theo aspect_ratio ngay cả khi hole_count là null", () => {
+    // Truy vấn linh kiện dài có aspect_ratio = 4.2
+    const queryGeometry = {
+      hole_count: null,
+      aspect_ratio: 4.2
+    };
+
+    const candidates = [
+      {
+        id: "short-part",
+        code: "PART-SQUARE",
+        vector_similarity: 0.88,
+        aspect_ratio: 1.2
+      },
+      {
+        id: "long-part",
+        code: "PART-LONG-MATCH",
+        vector_similarity: 0.86,
+        aspect_ratio: 4.2
+      }
+    ];
+
+    const reranked = rerankCandidatesByGeometry(candidates, queryGeometry);
+    // Linh kiện dài khớp aspect_ratio được cộng điểm vượt lên Top 1
+    expect(reranked[0].id).toBe("long-part");
+    expect(reranked[0].s_ratio).toBe(1.0);
+    expect(reranked[1].s_ratio).toBeLessThan(0.5);
+  });
 });

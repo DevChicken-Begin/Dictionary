@@ -60,3 +60,25 @@
   - [x] Tích hợp `geometricReranker` vào `functions/_lib/moris/v5/orchestrator.js` hỗ trợ so khớp tâm lỗ (centroid Euclidean distance), xoay lật gương (Mirror Invariant) và tỷ lệ khung hình.
   - [x] Lập báo cáo chuyên sâu trung thực, không bịa đặt số liệu theo đúng hiến pháp.
   - [x] Cập nhật `state.json` và đánh dấu checklist hoàn tất.
+
+- [x] **Task 7: Lọc chuẩn xác đặc điểm nhận dạng ở Chatbox Moris theo cặp Số + Chữ, loại bỏ nhồi nhét Top 10**
+  - [x] Xây dựng thuật toán phân tích và khớp đặc điểm nhận dạng (`featureMatcher`):
+    - Trích xuất key số và key chữ từ query (ví dụ: "6 lỗ tròn" -> số `6`, chữ `"lỗ tròn"`).
+    - Phân tách `identifying_features` trong catalogue theo dấu phẩy `,` (ví dụ: "6 lỗ tròn, 2 Lỗ vuông, 4 Lỗ oval, 3 lỗ tam giác").
+    - So khớp chính xác: số query phải bằng đúng số trong phân đoạn (6 không khớp 16 hay 60); chữ phải khớp đúng loại (lỗ tròn không khớp lỗ vuông).
+    - Không phân biệt hoa thường (case-insensitive: "4 lỗ oval" khớp "4 Lỗ oval").
+  - [x] Sửa `functions/api/moris/chat.js`: khi tìm theo đặc điểm nhận dạng, CHỈ trả về các mã có kết quả là `TRUE`, tuyệt đối KHÔNG fallback lấy 15 mã từ catalogue (`pool.slice(0, 15)`). Nếu 1 mã true thì trả về đúng 1 mã.
+  - [x] Viết unit test xác thực kiểm thử case "6 lỗ tròn" vs "16 lỗ tròn", hoa thường, và không trả về top 10 rác (`tests/moris-features-filter.test.js` 18 tests pass).
+  - [x] Cập nhật `state.json` và đánh dấu checklist.
+
+- [x] **Task 8: Tối ưu tìm kiếm bằng hình ảnh tải từ ngoài vào và đồng bộ kiến trúc 3 lớp Moris**
+  - [x] Bổ sung nút "Tải ảnh từ máy" trong Modal Camera Moris để người dùng linh hoạt chuyển đổi khi gặp linh kiện to và dài.
+  - [x] Đảm bảo khi gửi ảnh từ máy (file upload) vào Moris, ảnh được giữ nguyên tỉ lệ gốc, chạy qua DINOv2 + PCA + Hole Topology trích xuất đầy đủ `geometry: { hole_count, aspect_ratio, hole_centroids }`.
+  - [x] Tinh chỉnh điều kiện áp dụng Lớp 3 `geometricReranker` trong `orchestrator.js` hỗ trợ linh kiện dài dựa trên `aspect_ratio` ngay cả khi số lỗ bằng 0 hoặc rỗng.
+  - [x] Viết unit test xác thực luồng xử lý và đồng bộ 3 lớp (`tests/moris-reranker.test.js` pass).
+  - [x] Cập nhật `state.json` và đánh dấu checklist.
+
+- [x] **Task 9: Bổ sung Hiến pháp Agent (agent.md / AGENTS.md)**
+  - [x] Bổ sung điều khoản 5 vào mục I. CÁC ĐIỀU CẤM KỴ: Cấm tự ý làm khi chưa hiểu rõ hoặc thiếu thông tin, phải hỏi lại người dùng.
+  - [x] Đồng bộ vào `AGENTS.md`, `agent.md`, `.agents/agent.md`.
+

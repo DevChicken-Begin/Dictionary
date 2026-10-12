@@ -2121,10 +2121,15 @@
             class="btn h-11 px-5 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 text-xs uppercase tracking-wider font-black">
             <i data-lucide="aperture" class="w-4 h-4 inline-block align-[-2px] mr-1"></i>{{ camera.busy ? 'Đang chụp...' : 'Chụp & Tìm kiếm bằng AI' }}
           </button>
+          <button @click="triggerCameraUpload" :disabled="camera.busy"
+            class="btn h-11 px-4 bg-teal-50 border border-teal-300 text-teal-800 hover:bg-teal-100 disabled:opacity-50 text-xs uppercase tracking-wider font-black">
+            <i data-lucide="image-plus" class="w-4 h-4 inline-block align-[-2px] mr-1"></i>Tải ảnh từ máy
+          </button>
           <button @click="switchCamera" :disabled="!camera.ready || camera.busy"
             class="btn h-11 px-4 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 text-xs uppercase tracking-wider font-black">
             <i data-lucide="refresh-cw" class="w-4 h-4 inline-block align-[-2px] mr-1"></i>Đổi camera
           </button>
+          <input ref="cameraFileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" @change="onCameraFileSelect" />
           <button @click="closeCamera"
             class="btn h-11 px-4 bg-slate-200 text-slate-600 hover:bg-slate-300 text-xs uppercase tracking-wider font-black ml-auto">Đóng</button>
         </template>
@@ -2132,7 +2137,8 @@
 
       <ul class="mt-3 text-[11px] font-bold text-slate-500 leading-relaxed list-disc pl-5">
         <li>Tỉ lệ khung 1000:410 — đặt vật thể gọn trong khung (nền sáng, một màu).</li>
-        <li>Sau khi chụp, hệ thống sẽ tự động quét laser nhận diện đặc trưng rồi chuyển vào chat Moris.</li>
+        <li>Đối với <strong>linh kiện to và dài</strong>, bấm <strong>"Tải ảnh từ máy"</strong> để gửi ảnh chụp toàn cảnh rõ nét mà không lo bị thu nhỏ.</li>
+        <li>Hệ thống tự động chạy phân tích AI 3 lớp (DINOv2 + PCA xoay góc + Trọng tâm lỗ &amp; Tỷ lệ khung hình).</li>
       </ul>
     </div>
   </div>

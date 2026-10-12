@@ -1,0 +1,284 @@
+import { describe, it, expect } from "vitest";
+import {
+  parseIdentifyingFeatures,
+  extractQueryFeatures,
+  isSingleFeatureMatch,
+  matchRowWithFeatures,
+  filterCatalogueByQueryFeatures
+} from "../functions/_lib/moris/v5/retrieval/featureMatcher.js";
+
+describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", () => {
+  describe("parseIdentifyingFeatures — Phân tách đặc điểm trong DB", () => {
+    it("phân tách chính xác nhiều đặc điểm ngăn cách bằng dấu phẩy", () => {
+      const raw = "6 lỗ tròn, 2 Lỗ vuông, 4 Lỗ oval, 3 lỗ tam giác";
+      const parsed = parseIdentifyingFeatures(raw);
+
+      expect(parsed).toHaveLength(4);
+      expect(parsed[0]).toMatchObject({ number: 6, text: "lỗ tròn", shape: "tron" });
+      expect(parsed[1]).toMatchObject({ number: 2, text: "lỗ vuông", shape: "vuong" });
+      expect(parsed[2]).toMatchObject({ number: 4, text: "lỗ oval", shape: "oval" });
+      expect(parsed[3]).toMatchObject({ number: 3, text: "lỗ tam giác", shape: "tam giac" });
+    });
+
+    it("xử lý an toàn chuỗi rỗng hoặc null", () => {
+      expect(parseIdentifyingFeatures(null)).toEqual([]);
+      expect(parseIdentifyingFeatures("")).toEqual([]);
+      expect(parseIdentifyingFeatures("   ")).toEqual([]);
+    });
+  });
+
+  describe("extractQueryFeatures — Trích xuất key từ câu hỏi người dùng", () => {
+    it("trích xuất đúng key số và key chữ từ cụm ngắn", () => {
+      const q1 = extractQueryFeatures("6 lỗ tròn");
+      expect(q1).toHaveLength(1);
+      expect(q1[0].number).toBe(6);
+      expect(q1[0].shape).toBe("tron");
+
+      const q2 = extractQueryFeatures("4 Lỗ oval");
+      expect(q2).toHaveLength(1);
+      expect(q2[0].number).toBe(4);
+      expect(q2[0].shape).toBe("oval");
+    });
+
+    it("trích xuất đúng từ câu hỏi tự nhiên", () => {
+      const q = extractQueryFeatures("tìm giúp anh mã 6 lỗ tròn nhé");
+      expect(q).toHaveLength(1);
+      expect(q[0].number).toBe(6);
+      expect(q[0].shape).toBe("tron");
+    });
+
+    it("trích xuất nhiều đặc điểm ngăn cách bởi dấu phẩy", () => {
+      const q = extractQueryFeatures("6 lỗ tròn, 2 Lỗ vuông");
+      expect(q).toHaveLength(2);
+      expect(q[0]).toMatchObject({ number: 6, shape: "tron" });
+      expect(q[1]).toMatchObject({ number: 2, shape: "vuong" });
+    });
+  });
+
+  describe("So khớp nghiêm ngặt theo key Số + key Chữ", () => {
+    it("khớp '6 lỗ tròn' với DB '6 lỗ tròn' -> TRUE", () => {
+      const db = { number: 6, text: "lỗ tròn", shape: "tron" };
+      const q = { number: 6, text: "lỗ tròn", shape: "tron" };
+      expect(isSingleFeatureMatch(db, q)).toBe(true);
+    });
+
+    it("TUYỆT ĐỐI KHÔNG khớp '6 lỗ tròn' khi DB là '16 lỗ tròn' -> FALSE (khác số)", () => {
+      const db = { number: 16, text: "lỗ tròn", shape: "tron" };
+      const q = { number: 6, text: "lỗ tròn", shape: "tron" };
+      expect(isSingleFeatureMatch(db, q)).toBe(false);
+    });
+
+    it("TUYỆT ĐỐI KHÔNG khớp '16 lỗ tròn' khi DB là '6 lỗ tròn' -> FALSE", () => {
+      const db = { number: 6, text: "lỗ tròn", shape: "tron" };
+      const q = { number: 16, text: "lỗ tròn", shape: "tron" };
+      expect(isSingleFeatureMatch(db, q)).toBe(false);
+    });
+
+    it("TUYỆT ĐỐI KHÔNG khớp '6 lỗ tròn' khi DB là '6 lỗ vuông' -> FALSE (khác chữ)", () => {
+      const db = { number: 6, text: "lỗ vuông", shape: "vuong" };
+      const q = { number: 6, text: "lỗ tròn", shape: "tron" };
+      expect(isSingleFeatureMatch(db, q)).toBe(false);
+    });
+
+    it("không phân biệt hoa thường: '4 lỗ oval' khớp '4 Lỗ oval' -> TRUE", () => {
+      const db = { number: 4, text: "Lỗ oval", shape: "oval" };
+      const q = { number: 4, text: "lỗ oval", shape: "oval" };
+      expect(isSingleFeatureMatch(db, q)).toBe(true);
+    });
+  });
+
+  describe("matchRowWithFeatures & filterCatalogueByQueryFeatures trên Record", () => {
+    const mockCatalogue = [
+      { id: "1", code: "3411160201", identifying_features: "6 lỗ tròn" },
+      { id: "2", code: "3411160202", identifying_features: "16 lỗ tròn" },
+      { id: "3", code: "3411160203", identifying_features: "6 lỗ vuông" },
+      { id: "4", code: "3411160204", identifying_features: "6 lỗ tròn, 2 Lỗ vuông, 4 Lỗ oval, 3 lỗ tam giác" },
+      { id: "5", code: "3411160205", identifying_features: null }
+    ];
+
+    it("tìm '6 lỗ tròn': CHỈ trả về đúng các mã có '6 lỗ tròn' (code 3411160201 & 3411160204), loại bỏ 16 lỗ tròn và 6 lỗ vuông", () => {
+      const result = filterCatalogueByQueryFeatures(mockCatalogue, "6 lỗ tròn");
+      expect(result.isFeatureQuery).toBe(true);
+      expect(result.matchedRows).toHaveLength(2);
+      expect(result.matchedRows.map(r => r.code)).toEqual(["3411160201", "3411160204"]);
+    });
+
+    it("tìm '16 lỗ tròn': chỉ trả về đúng mã '3411160202', không trả về mã 6 lỗ tròn", () => {
+      const result = filterCatalogueByQueryFeatures(mockCatalogue, "16 lỗ tròn");
+      expect(result.isFeatureQuery).toBe(true);
+      expect(result.matchedRows).toHaveLength(1);
+      expect(result.matchedRows[0].code).toBe("3411160202");
+    });
+
+    it("tìm '4 lỗ oval' (không phân biệt hoa thường): khớp mã có '4 Lỗ oval'", () => {
+      const result = filterCatalogueByQueryFeatures(mockCatalogue, "4 lỗ oval");
+      expect(result.isFeatureQuery).toBe(true);
+      expect(result.matchedRows).toHaveLength(1);
+      expect(result.matchedRows[0].code).toBe("3411160204");
+    });
+
+    it("tìm đặc điểm không tồn tại (ví dụ '8 lỗ tròn'): trả về mảng rỗng [] CHỨ KHÔNG NHỒI NHÉT TOP 10 RÁC", () => {
+      const result = filterCatalogueByQueryFeatures(mockCatalogue, "8 lỗ tròn");
+      expect(result.isFeatureQuery).toBe(true);
+      expect(result.matchedRows).toHaveLength(0);
+    });
+
+    it("tìm kết hợp nhiều đặc điểm: '6 lỗ tròn, 2 Lỗ vuông' -> chỉ mã 3411160204 thỏa mãn cả 2", () => {
+      const result = filterCatalogueByQueryFeatures(mockCatalogue, "6 lỗ tròn, 2 Lỗ vuông");
+      expect(result.isFeatureQuery).toBe(true);
+      expect(result.matchedRows).toHaveLength(1);
+      expect(result.matchedRows[0].code).toBe("3411160204");
+    });
+  });
+
+  describe("API Integration: /api/moris/chat onRequestPost", () => {
+    const mockDbParts = [
+      { id: "uuid-1", code: "3411160201", identifying_features: "6 lỗ tròn" },
+      { id: "uuid-2", code: "3411160202", identifying_features: "16 lỗ tròn" },
+      { id: "uuid-3", code: "3411160203", identifying_features: "6 lỗ vuông" },
+      { id: "uuid-4", code: "3411160204", identifying_features: "part 4", confusing_note: null },
+      { id: "uuid-5", code: "3411160205", identifying_features: "part 5", confusing_note: null },
+      { id: "uuid-6", code: "3411160206", identifying_features: "part 6", confusing_note: null },
+      { id: "uuid-7", code: "3411160207", identifying_features: "part 7", confusing_note: null },
+      { id: "uuid-8", code: "3411160208", identifying_features: "part 8", confusing_note: null },
+      { id: "uuid-9", code: "3411160209", identifying_features: "part 9", confusing_note: null },
+      { id: "uuid-10", code: "3411160210", identifying_features: "part 10", confusing_note: null },
+      { id: "uuid-11", code: "3411160211", identifying_features: "part 11", confusing_note: null }
+    ];
+
+    function createMockEnv() {
+      return {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-token",
+        SUPABASE_SERVICE_ROLE_KEY: "service-token"
+      };
+    }
+
+    it("gửi '6 lỗ tròn' -> CHỈ trả về đúng 1 mã 3411160201, không bị ép top 10 rác", async () => {
+      const { onRequestPost } = await import("../functions/api/moris/chat.js");
+
+      // Mock fetch cho session và catalogue RPC
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes("app_me")) {
+          return new Response(JSON.stringify([{ ok: true, id: "test-user-id" }]), { status: 200 });
+        }
+        if (u.includes("app_search_catalogue")) {
+          return new Response(JSON.stringify(mockDbParts), { status: 200 });
+        }
+        return new Response("Not found", { status: 404 });
+      };
+
+      try {
+        const fakeJwt = "header.payload.signature";
+        const request = new Request("https://example.com/api/moris/chat", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-session-token": fakeJwt
+          },
+          body: JSON.stringify({
+            message: "6 lỗ tròn",
+            session_token: fakeJwt
+          })
+        });
+
+        const res = await onRequestPost({ request, env: createMockEnv() });
+        expect(res.status).toBe(200);
+        const data = await res.json();
+
+        expect(data.ok).toBe(true);
+        expect(data.engine).toBe("moris-feature-filter");
+        // CHỈ ĐÚNG 1 MÃ TRUE, KHÔNG PHẢI TOP 10 RÁC
+        expect(data.candidates).toHaveLength(1);
+        expect(data.candidates[0].code).toBe("3411160201");
+        expect(data.answer).toContain("3411160201");
+        expect(data.answer).not.toContain("3411160202");
+        expect(data.answer).not.toContain("3411160203");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("gửi '16 lỗ tròn' -> CHỈ trả về đúng mã 3411160202, không nhầm sang 6 lỗ tròn", async () => {
+      const { onRequestPost } = await import("../functions/api/moris/chat.js");
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes("app_me")) {
+          return new Response(JSON.stringify([{ ok: true, id: "test-user-id" }]), { status: 200 });
+        }
+        if (u.includes("app_search_catalogue")) {
+          return new Response(JSON.stringify(mockDbParts), { status: 200 });
+        }
+        return new Response("Not found", { status: 404 });
+      };
+
+      try {
+        const fakeJwt = "header.payload.signature";
+        const request = new Request("https://example.com/api/moris/chat", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-session-token": fakeJwt
+          },
+          body: JSON.stringify({
+            message: "16 lỗ tròn",
+            session_token: fakeJwt
+          })
+        });
+
+        const res = await onRequestPost({ request, env: createMockEnv() });
+        const data = await res.json();
+
+        expect(data.ok).toBe(true);
+        expect(data.candidates).toHaveLength(1);
+        expect(data.candidates[0].code).toBe("3411160202");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("gửi '99 lỗ tròn' (không tồn tại) -> trả về candidates rỗng [], không pad mã bừa bãi", async () => {
+      const { onRequestPost } = await import("../functions/api/moris/chat.js");
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes("app_me")) {
+          return new Response(JSON.stringify([{ ok: true, id: "test-user-id" }]), { status: 200 });
+        }
+        if (u.includes("app_search_catalogue")) {
+          return new Response(JSON.stringify(mockDbParts), { status: 200 });
+        }
+        return new Response("Not found", { status: 404 });
+      };
+
+      try {
+        const fakeJwt = "header.payload.signature";
+        const request = new Request("https://example.com/api/moris/chat", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-session-token": fakeJwt
+          },
+          body: JSON.stringify({
+            message: "99 lỗ tròn",
+            session_token: fakeJwt
+          })
+        });
+
+        const res = await onRequestPost({ request, env: createMockEnv() });
+        const data = await res.json();
+
+        expect(data.ok).toBe(true);
+        expect(data.candidates).toHaveLength(0);
+        expect(data.answer).toContain("không tìm thấy mã nào");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
+});

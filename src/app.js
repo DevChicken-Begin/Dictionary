@@ -2392,6 +2392,65 @@ createApp({
       }
     },
 
+    triggerCameraUpload() {
+      this.$refs.cameraFileInput?.click();
+    },
+
+    /** Xử lý tải ảnh từ máy ngay trong modal Camera (hỗ trợ linh kiện to, dài) */
+    async onCameraFileSelect(event) {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+
+      this.camera.busy = true;
+      try {
+        // Tắt camera stream để giải phóng tài nguyên
+        this.stopCameraStream();
+
+        this.camera.scanStatus = 'AI Đang đọc & phân tích ảnh linh kiện tải lên...';
+        const dataUrl = await this.prepareMorisImage(file);
+
+        // Hiển thị preview và kích hoạt quét AI
+        this.camera.previewUrl = dataUrl;
+        this.camera.maskUrl = '';
+        this.camera.scanning = true;
+
+        const startTime = Date.now();
+        let vectorResult = null;
+        let vectorError = null;
+
+        if (CONFIG.MORIS_BROWSER_VECTOR_ENABLED) {
+          try {
+            vectorResult = await this.buildMorisQueryVector(dataUrl);
+          } catch (embedErr) {
+            console.warn('Vector embedding for uploaded file failed, fallback to server:', embedErr);
+            vectorError = embedErr;
+          }
+        }
+
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1200) {
+          await new Promise(r => setTimeout(r, 1200 - elapsed));
+        }
+
+        // Đóng camera modal, mở chat Moris và kích hoạt tìm kiếm 3 lớp
+        this.closeCamera();
+        this.openMoris();
+
+        this.moris.imageDataUrl = dataUrl;
+        this.moris.imagePreview = dataUrl;
+        this.moris.imageName = file.name || `upload-part-${Date.now()}.jpg`;
+        this.moris.imageFile = file;
+
+        await this.sendMorisMessage(null, vectorResult, vectorError);
+      } catch (err) {
+        this.toast('error', `Không xử lý được ảnh tải lên: ${this.readError(err)}`);
+        this.camera.busy = false;
+        this.camera.scanning = false;
+      } finally {
+        if (event?.target) event.target.value = '';
+      }
+    },
+
     scrollMorisToBottom() {
       this.$nextTick(() => {
         const el = this.$refs.morisThread;
