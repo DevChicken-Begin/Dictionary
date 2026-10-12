@@ -18,7 +18,7 @@ export const SYSTEM_ADMIN_EMAIL = "pquangvinh1999@gmail.com";
 
 export function isSystemAdminEmail(email) {
   const e = String(email || "").trim().toLowerCase();
-  return e === SYSTEM_ADMIN_EMAIL.toLowerCase() || e === "vinh";
+  return e === SYSTEM_ADMIN_EMAIL.toLowerCase() || e === "vinh" || e === "pquangvinh1999";
 }
 
 export function baseUrl(env) {

@@ -18,6 +18,7 @@ import {
 } from "./retrieval/textConstraints.js";
 import { analyzeStructuralEvidence } from "./retrieval/structuralEvidence.js";
 import { fuseCandidateScore } from "./retrieval/scoreFusion.js";
+import { rerankCandidatesByGeometry } from "./retrieval/geometricReranker.js";
 import { finalizeCandidatePool } from "./retrieval/candidatePool.js";
 import { collapseBestVectorHitPerRecord } from "./retrieval/vectorHitCollapse.js";
 import { orientationWarnings } from "./guards/orientation.js";
@@ -318,18 +319,27 @@ export async function runMorisSearch(env, config, {
       b.final_score - a.final_score
     );
 
+  const geometricRanked = (query?.geometry && query.geometry.hole_count != null)
+    ? rerankCandidatesByGeometry(fused, query.geometry)
+    : fused;
+
   const {
     candidates:resolverPool,
     hash:poolHash
   } = await finalizeCandidatePool(
-    fused,
+    geometricRanked,
     {limit:config.vector.resolverK}
   );
 
   ctx.candidate_pool_hash = poolHash;
 
+  const geoWarnings = resolverPool
+    .map(c => c?.geometric_warning)
+    .filter(Boolean);
+
   const warnings = [
     ...ctx.warnings,
+    ...geoWarnings,
     ...orientationWarnings(
       query.message,
       resolverPool
@@ -340,7 +350,7 @@ export async function runMorisSearch(env, config, {
   return {
     mode:"MORIS_VECTOR_CLEAR",
     summary:"Vector retrieval đủ rõ.",
-    candidates:fused.slice(0,10).map(publicCandidate),
+    candidates:geometricRanked.slice(0,10).map(publicCandidate),
     warnings,
     ai_calls:null,
     candidate_pool_hash:poolHash

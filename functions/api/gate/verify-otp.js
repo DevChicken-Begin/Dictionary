@@ -23,8 +23,9 @@ async function findUserProfile(env, loginInput) {
   if (!input) return null;
 
   try {
+    const cleanUsername = input.toLowerCase().replace(/@users\.catalogue\.vn$/, "");
     const res = await fetch(
-      `${base}/rest/v1/profiles?or=(username.ilike.${encodeURIComponent(input)},email.ilike.${encodeURIComponent(input)})&limit=1`,
+      `${base}/rest/v1/profiles?or=(username.ilike.${encodeURIComponent(input)},email.ilike.${encodeURIComponent(input)},username.ilike.${encodeURIComponent(cleanUsername)})&limit=1`,
       { headers: { apikey: key, authorization: `Bearer ${key}` } }
     );
     if (!res.ok) return null;
@@ -126,12 +127,12 @@ export async function onRequestPost({ request, env }) {
         });
       }
 
-      isValid = await verifyTotp(env, code, 1, secret);
+      isValid = await verifyTotp(env, code, 2, secret);
       targetUserId = profile.id;
       targetUsername = profile.username || profile.email;
     } else {
       // Chế độ không nhập username (Khóa admin mặc định toàn hệ thống)
-      isValid = await verifyTotp(env, code, 1);
+      isValid = await verifyTotp(env, code, 2);
       targetUserId = "admin";
       targetUsername = "admin";
     }

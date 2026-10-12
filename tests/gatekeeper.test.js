@@ -205,4 +205,33 @@ describe("Gatekeeper & Microsoft Authenticator (TOTP)", () => {
     const data = await res.json();
     expect(data.ok).toBe(true);
   });
+
+  it("normalizeBase32Secret xóa khoảng trắng, gạch nối và sửa ký tự 0->O, 1->I", async () => {
+    const { normalizeBase32Secret } = await import("../functions/_lib/gatekeeper.js");
+    expect(normalizeBase32Secret("vo50xb-5xir w4lhc7")).toBe("VO5OXB5XIRW4LHC7");
+    expect(normalizeBase32Secret("1234abcd")).toBe("I234ABCD");
+  });
+
+  it("verifyTotp chấp nhận độ lệch thời gian ±60s (window = 2)", async () => {
+    const { verifyTotp, base32ToBytes } = await import("../functions/_lib/gatekeeper.js");
+    const secret = "VO5OXB5XIRW4LHC7EWT23TVBCPYF3WUI";
+    const cryptoObj = (typeof crypto !== "undefined" && crypto.subtle) ? crypto : (await import("crypto")).webcrypto;
+    const keyBytes = base32ToBytes(secret);
+    const cryptoKey = await cryptoObj.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+    
+    // Tạo mã lùi 2 chu kỳ (-60s)
+    const counterOld = Math.floor(Math.floor(Date.now() / 1000) / 30) - 2;
+    const buf = new ArrayBuffer(8);
+    new DataView(buf).setBigUint64(0, BigInt(counterOld));
+    const sig = await cryptoObj.subtle.sign("HMAC", cryptoKey, buf);
+    const sigBytes = new Uint8Array(sig);
+    const offset = sigBytes[sigBytes.length - 1] & 0x0f;
+    const binary = ((sigBytes[offset] & 0x7f) << 24) | ((sigBytes[offset + 1] & 0xff) << 16) | ((sigBytes[offset + 2] & 0xff) << 8) | (sigBytes[offset + 3] & 0xff);
+    const codeOld = (binary % 1000000).toString().padStart(6, "0");
+
+    // Window = 2 phải thành công
+    expect(await verifyTotp({}, codeOld, 2, secret)).toBe(true);
+    // Window = 1 phải thất bại (vì lệch -2 chu kỳ)
+    expect(await verifyTotp({}, codeOld, 1, secret)).toBe(false);
+  });
 });

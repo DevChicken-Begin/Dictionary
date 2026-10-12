@@ -16,11 +16,23 @@ export function getTotpSecret(env) {
   return String(env?.CATALOGUE_TOTP_SECRET || DEFAULT_TOTP_SECRET).trim().replace(/\s+/g, "");
 }
 
+/** Chuẩn hóa Secret Key Base32: loại bỏ khoảng trắng, dấu gạch nối và sửa ký tự dễ nhầm (0->O, 1->I) */
+export function normalizeBase32Secret(str) {
+  if (!str) return "";
+  return String(str)
+    .trim()
+    .toUpperCase()
+    .replace(/[\s=\-_]+/g, "")
+    .replace(/0/g, "O")
+    .replace(/1/g, "I");
+}
+
 /** Chuyển đổi chuỗi Base32 sang mảng Byte Uint8Array */
 export function base32ToBytes(str) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   let bits = 0, value = 0, output = [];
-  for (let char of str.toUpperCase().replace(/[\s=]+/g, "")) {
+  const clean = normalizeBase32Secret(str);
+  for (let char of clean) {
     const val = alphabet.indexOf(char);
     if (val === -1) continue;
     value = (value << 5) | val;
@@ -44,16 +56,17 @@ export function generateBase32Secret(length = 32) {
 
 /**
  * Xác thực mã từ Microsoft Authenticator
- * Tự động hỗ trợ cả mã 6 chữ số lẫn mã 8 chữ số với độ lệch ±1 chu kỳ (±30s)
+ * Tự động hỗ trợ cả mã 6 chữ số lẫn mã 8 chữ số với độ lệch ±2 chu kỳ (±60s để chống lệch giờ)
  * Hỗ trợ secretOverride để xác thực theo từng User riêng biệt
  */
-export async function verifyTotp(env, inputCode, window = 1, secretOverride = null) {
+export async function verifyTotp(env, inputCode, window = 2, secretOverride = null) {
   const cleanCode = String(inputCode || "").trim().replace(/\s+/g, "");
   if (!cleanCode || (cleanCode.length !== 6 && cleanCode.length !== 8)) {
     return false;
   }
   const digits = cleanCode.length;
-  const secret = secretOverride ? String(secretOverride).trim().replace(/\s+/g, "") : getTotpSecret(env);
+  const rawSecret = secretOverride ? String(secretOverride) : getTotpSecret(env);
+  const secret = normalizeBase32Secret(rawSecret);
   const keyBytes = base32ToBytes(secret);
 
   const cryptoObj = (typeof crypto !== "undefined" && crypto.subtle)
@@ -615,8 +628,8 @@ export function renderCamouflage404Html() {
             }
             showMsg('Xác thực thành công! Đang mở cổng...', false);
             setTimeout(function() {
-              window.location.href = window.location.pathname;
-            }, 500);
+              window.location.replace('/');
+            }, 400);
           } catch (_) {
             showMsg('Lỗi xác thực máy chủ. Vui lòng thử lại.', true);
             btnVerify.disabled = false;

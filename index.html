@@ -198,10 +198,8 @@
     }
     .part-img { filter: drop-shadow(0 12px 24px rgba(15,23,42,.2)); }
     
-    /* Thẻ Sản phẩm tối ưu chống Crash (Virtual render CSS) */
+    /* Thẻ Sản phẩm Catalogue */
     .catalog-card {
-      content-visibility: auto;
-      contain-intrinsic-size: 100% 320px;
       border:1px solid rgba(255,255,255,.9);
       box-shadow:0 12px 30px -10px rgba(15,23,42,.06);
       transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
@@ -670,7 +668,7 @@
           :key="item.id"
           :class="[
             'catalog-card rounded-[2rem] overflow-hidden group relative transition-all',
-            bulkSelection.active && isPartSelected(item.id) ? 'ring-4 ring-amber-400 border-amber-300' : ''
+            bulkSelection.active && isPartSelected(item.id) ? 'ring-4 ring-amber-500 border-amber-400 bg-amber-50/20 shadow-lg shadow-amber-100/60' : ''
           ]">
 
           <!-- Checkbox chọn hàng loạt (chỉ hiện khi bật bulkSelection) -->
@@ -685,7 +683,9 @@
                   : 'bg-white/95 border-slate-300 text-slate-400 hover:text-slate-600'
               ]"
               :aria-label="isPartSelected(item.id) ? 'Bỏ chọn' : 'Chọn mã này'">
-              <i v-if="isPartSelected(item.id)" data-lucide="check" class="w-5 h-5 stroke-[3]"></i>
+              <svg v-if="isPartSelected(item.id)" class="w-5 h-5 text-white stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
               <div v-else class="w-3.5 h-3.5 rounded-md border-2 border-slate-400"></div>
             </button>
           </div>
@@ -796,7 +796,7 @@
   </main>
 
   <!-- DETAIL MODAL -->
-  <div v-if="detail.open" class="detail-overlay fixed inset-0 z-50 p-3 sm:p-5 overflow-y-auto flex items-center justify-center" @click.self="closeDetail">
+  <div v-if="detail.open" class="detail-overlay fixed inset-0 z-[95] p-3 sm:p-5 overflow-y-auto flex items-center justify-center" @click.self="closeDetail">
     <div class="detail-grid w-full max-w-7xl grid lg:grid-cols-[minmax(0,1fr)_380px] gap-4 sm:gap-6">
       
       <section :class="['viewer-stage rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden relative flex items-center justify-center', detail.dragging ? 'dragging' : '']"
@@ -1252,10 +1252,17 @@
       <!-- Chỉ hiện khi đang ở tab Quy đổi — ẩn hoàn toàn ở tab Danh sách đơn trọng -->
       <div v-show="weightCalc.tab==='calc'" class="mt-6 bg-white/90 border border-slate-200/80 rounded-2xl p-4">
         <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-          <h4 class="text-xs font-bold text-slate-500 tracking-wider uppercase flex items-center">
-            <i data-lucide="image" class="w-4 h-4 text-emerald-600 mr-2"></i>Ảnh Catalogue Linh Kiện
-            <span v-if="weightCalc.selected" class="ml-2 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-mono text-slate-700 tracking-normal">{{ weightCalc.selected.code }}</span>
-          </h4>
+          <div class="flex items-center gap-2 flex-wrap min-w-0">
+            <h4 class="text-xs font-bold text-slate-500 tracking-wider uppercase flex items-center">
+              <i data-lucide="image" class="w-4 h-4 text-emerald-600 mr-2"></i>Ảnh Catalogue Linh Kiện
+              <span v-if="weightCalc.selected" class="ml-2 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-mono text-slate-700 tracking-normal">{{ weightCalc.selected.code }}</span>
+            </h4>
+            <div v-if="weightCalc.image.status==='ready'" class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+              <span class="px-2.5 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 uppercase tracking-wider text-[10px]">{{ wcImgTabLabel }}</span>
+              <span class="px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-[10px]">Zoom {{ weightCalc.image.zoom.toFixed(1) }}x</span>
+              <span class="hidden sm:inline-flex text-[11px] text-slate-400 font-medium">· Cuộn để phóng to, kéo để di chuyển</span>
+            </div>
+          </div>
           <div v-if="weightCalc.image.status==='ready'" class="flex items-center gap-2 flex-wrap">
             <button @click="wcImgSetTab('front')" :class="wcImgTabClass('front')"><i data-lucide="panel-top" class="w-3.5 h-3.5 inline-block align-[-2px] mr-1"></i>Mặt chính</button>
             <button @click="wcImgSetTab('back')" :class="wcImgTabClass('back')" :disabled="!wcImgHasBack"><i data-lucide="panel-bottom" class="w-3.5 h-3.5 inline-block align-[-2px] mr-1"></i>Mặt sau</button>
@@ -1312,11 +1319,6 @@
           <div v-else class="text-slate-400 text-center font-black">
             <i data-lucide="image-off" class="w-12 h-12 mx-auto mb-2"></i>
             {{ wcImgTabLabel }} chưa có ảnh
-          </div>
-          <div class="absolute left-3 bottom-3 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider font-black text-slate-600 pointer-events-none">
-            <span class="px-3 py-1.5 rounded-xl bg-white/90 border border-slate-200 shadow-sm backdrop-blur-md">{{ wcImgTabLabel }}</span>
-            <span class="px-3 py-1.5 rounded-xl bg-white/90 border border-slate-200 shadow-sm backdrop-blur-md">Zoom {{ weightCalc.image.zoom.toFixed(1) }}x</span>
-            <span class="hidden sm:inline-flex px-3 py-1.5 rounded-xl bg-white/90 border border-slate-200 shadow-sm backdrop-blur-md">Cuộn để phóng to · kéo để di chuyển</span>
           </div>
           <div v-if="wcImgDetailAssets.length && weightCalc.image.tab==='detail'" class="absolute right-3 bottom-3 flex gap-2 overflow-x-auto max-w-[50%] pb-1 scrollbar-soft">
             <button v-for="a in wcImgDetailAssets" :key="a.id || a.image_path" @click="weightCalc.image.activeAsset=a; wcImgReset()"
@@ -1745,11 +1747,19 @@
             <span class="font-mono font-bold text-sky-700 text-xs break-all">{{ users.createdInfo.secret }}</span>
           </div>
         </div>
-        <div class="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-sky-200 text-[11px] text-slate-600">
-          <i data-lucide="info" class="w-4 h-4 text-sky-600 shrink-0"></i>
-          <div>
-            <span class="font-bold text-slate-800">Thêm vào Microsoft Authenticator thủ công:</span>
-            Mở app -> bấm dấu <strong class="text-sky-700">+</strong> -> chọn <strong>Tài khoản khác</strong> -> chọn <strong>Nhập mã thủ công</strong> -> dán Khóa 2FA ở trên.
+        <div v-if="users.createdInfo.secret" class="flex flex-col sm:flex-row items-center gap-3.5 bg-white p-3 rounded-xl border border-sky-200">
+          <div v-html="generateTotpQrSvg(users.createdInfo.username, users.createdInfo.secret)" class="shrink-0 flex items-center justify-center p-1 bg-white border border-slate-200 rounded-lg shadow-sm"></div>
+          <div class="space-y-1.5 text-left text-xs min-w-0">
+            <p class="font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="qr-code" class="w-4 h-4 text-sky-600"></i>
+              Quét mã QR bằng Microsoft Authenticator:
+            </p>
+            <p class="text-slate-600 text-[11px] leading-relaxed">
+              Mở app Authenticator &gt; Bấm dấu <strong class="text-sky-700">+</strong> &gt; Chọn <strong>Tài khoản khác</strong> &gt; Quét mã QR này (hoặc bấm Nhập mã thủ công rồi dán Khóa 2FA bên trên).
+            </p>
+            <a :href="getTotpUri(users.createdInfo.username, users.createdInfo.secret)" class="inline-block text-xs text-sky-600 hover:text-sky-800 font-bold underline">
+              Mở trực tiếp trên ứng dụng Authenticator (Điện thoại) &rarr;
+            </a>
           </div>
         </div>
       </div>
@@ -1918,6 +1928,14 @@
       </div>
 
       <div class="p-5 space-y-4 text-center">
+        <div v-if="users.totpModal.secret" class="p-3 bg-white rounded-xl border border-indigo-100 shadow-sm flex flex-col items-center justify-center">
+          <div v-html="generateTotpQrSvg(users.totpModal.user?.username || users.totpModal.user?.email, users.totpModal.secret)" class="flex items-center justify-center"></div>
+          <p class="text-[11px] font-bold text-slate-600 mt-2">Quét mã QR bằng ứng dụng Authenticator</p>
+          <a :href="getTotpUri(users.totpModal.user?.username || users.totpModal.user?.email, users.totpModal.secret)" class="mt-1 text-xs text-indigo-600 hover:text-indigo-800 font-bold underline">
+            Mở trực tiếp trên ứng dụng (Điện thoại) &rarr;
+          </a>
+        </div>
+
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-left space-y-1">
           <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Khóa bí mật (Secret Key)</span>
           <p class="font-mono text-xs font-black text-slate-800 break-all select-all">{{ users.totpModal.secret }}</p>
@@ -1931,7 +1949,7 @@
             <i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline-block align-[-2px] mr-1"></i>Cấp lại khóa mới
           </button>
         </div>
-        <p class="text-[11px] text-slate-500 font-medium">Nhập khóa bí mật này vào Microsoft Authenticator (chọn Nhập mã thủ công) để lấy mã xác thực mở cổng.</p>
+        <p class="text-[11px] text-slate-500 font-medium">Quét mã QR hoặc nhập khóa bí mật này vào Microsoft Authenticator để lấy mã xác thực mở cổng.</p>
       </div>
     </div>
   </div>
@@ -2252,6 +2270,7 @@
 </div>
 
 <script src="/src/version.js"></script>
+<script src="/src/vendor/qrcode.js"></script>
 <script src="/src/app.js"></script>
 </body>
 </html>

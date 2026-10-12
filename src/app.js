@@ -227,7 +227,7 @@ createApp({
     isAllCurrentPageSelected() {
       const parts = this.displayedParts || [];
       if (!parts.length) return false;
-      return parts.every(p => this.bulkSelection.selectedIds.includes(p.id));
+      return parts.every(p => this.isPartSelected(p.id));
     },
 
     // ---------------- Quy đổi định lượng ----------------
@@ -1468,7 +1468,7 @@ createApp({
         this.processMorisVectorQueue()
           .catch(error => console.warn('Moris vector queue failed', error));
 
-        this.closeEditor(); this.closeDetail(); await this.loadParts(true);
+        this.closeEditor(); this.closeDetail(); await this.loadParts(false);
       } catch(e) { this.toast('error', this.readError(e)); } finally { this.saving=false; }
     },
     async deleteCurrentPart() {
@@ -1482,7 +1482,13 @@ createApp({
       try {
         const row = await this.rpcRow('app_delete_part', {p_session_token:this.session.token, p_image_id:this.detail.item.id});
         if(!row?.ok) throw new Error(row?.message || 'Không xóa được.');
-        this.toast('success','Đã xóa thành công.'); this.closeDetail(); await this.loadParts(true);
+        this.toast('success','Đã xóa thành công.');
+        this.closeDetail();
+        await this.loadParts(false);
+        if (this.parts.length === 0 && this.page > 0) {
+          this.page = Math.max(0, this.page - 1);
+          await this.loadParts(false);
+        }
       } catch(e) { this.toast('error', this.readError(e)); }
     },
 
@@ -1499,16 +1505,19 @@ createApp({
     },
 
     isPartSelected(id) {
-      return this.bulkSelection.selectedIds.includes(id);
+      if (!id) return false;
+      const target = String(id);
+      return this.bulkSelection.selectedIds.some(sid => String(sid) === target);
     },
 
     togglePartSelection(id) {
       if (!id) return;
-      const idx = this.bulkSelection.selectedIds.indexOf(id);
+      const target = String(id);
+      const idx = this.bulkSelection.selectedIds.findIndex(sid => String(sid) === target);
       if (idx >= 0) {
         this.bulkSelection.selectedIds.splice(idx, 1);
       } else {
-        this.bulkSelection.selectedIds.push(id);
+        this.bulkSelection.selectedIds.push(target);
       }
       this.$nextTick(() => this.renderIcons());
     },
@@ -1517,11 +1526,11 @@ createApp({
       const parts = this.displayedParts || [];
       if (!parts.length) return;
       if (this.isAllCurrentPageSelected) {
-        const pageIds = new Set(parts.map(p => p.id));
-        this.bulkSelection.selectedIds = this.bulkSelection.selectedIds.filter(id => !pageIds.has(id));
+        const pageIds = new Set(parts.map(p => String(p.id)));
+        this.bulkSelection.selectedIds = this.bulkSelection.selectedIds.filter(id => !pageIds.has(String(id)));
       } else {
         const set = new Set(this.bulkSelection.selectedIds);
-        parts.forEach(p => { if (p?.id) set.add(p.id); });
+        parts.forEach(p => { if (p?.id) set.add(String(p.id)); });
         this.bulkSelection.selectedIds = Array.from(set);
       }
       this.$nextTick(() => this.renderIcons());
@@ -1574,7 +1583,11 @@ createApp({
         this.toast('success', data?.message || `Đã xóa thành công ${ids.length} mã linh kiện.`);
         this.bulkSelection.selectedIds = [];
         this.bulkSelection.active = false;
-        await this.loadParts(true);
+        await this.loadParts(false);
+        if (this.parts.length === 0 && this.page > 0) {
+          this.page = Math.max(0, this.page - 1);
+          await this.loadParts(false);
+        }
       } catch (e) {
         this.toast('error', this.readError(e));
       } finally {
@@ -1921,11 +1934,13 @@ createApp({
     async copyCreatedHandover() {
       const c = this.users.createdInfo;
       if (!c) return;
+      const uri = this.getTotpUri(c.username, c.secret);
       const text = [
         `[THÔNG TIN TÀI KHOẢN CATALOGUE]`,
         `- Tên đăng nhập: ${c.username}`,
         `- Mật khẩu: ${c.password}`,
-        `- Khóa 2FA (Secret Key): ${c.secret}`
+        `- Khóa 2FA (Secret Key): ${c.secret}`,
+        `- Link Authenticator: ${uri}`
       ].join('\n');
       try {
         await navigator.clipboard.writeText(text);
@@ -1942,6 +1957,26 @@ createApp({
       } catch(_) {
         this.toast('error', 'Không sao chép tự động được, vui lòng copy thủ công.');
       }
+    },
+    getTotpUri(username, secret) {
+      if (!secret) return '#';
+      const u = encodeURIComponent(String(username || 'user').trim());
+      const s = encodeURIComponent(String(secret || '').replace(/\s+/g, ''));
+      return `otpauth://totp/Catalogue:${u}?secret=${s}&issuer=Catalogue`;
+    },
+    generateTotpQrSvg(username, secret) {
+      if (!secret || typeof window === 'undefined') return '';
+      try {
+        const fn = window.qrcode || (typeof qrcode === 'function' ? qrcode : null);
+        if (typeof fn === 'function') {
+          const uri = this.getTotpUri(username, secret);
+          const qr = fn(0, 'M');
+          qr.addData(uri);
+          qr.make();
+          return qr.createSvgTag({ cellSize: 3, margin: 2 });
+        }
+      } catch (_) {}
+      return '';
     },
     async copyTempPw() {
       try { await navigator.clipboard.writeText(this.users.tempPw); this.toast('success', 'Đã sao chép mật khẩu tạm.'); }
@@ -2896,6 +2931,7 @@ createApp({
 
     async openMorisCandidate(candidate) {
       if (!candidate?.id) return;
+      this.closeMoris();
       await this.openDetail(candidate);
     },
 
