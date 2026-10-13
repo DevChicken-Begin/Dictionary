@@ -598,7 +598,7 @@
             <span class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5 text-blue-500"></i> {{ nowText }}</span>
           </div>
 
-          <!-- Nút Quản trị Admin: Chọn hàng loạt & Xóa tất cả (Chỉ Admin hệ thống) -->
+          <!-- Nút Quản trị Admin: Chọn hàng loạt (Chỉ Admin hệ thống) -->
           <div v-if="isAdmin" class="flex items-center gap-2">
             <button
               type="button"
@@ -615,16 +615,6 @@
               <span v-if="bulkSelection.active && bulkSelection.selectedIds.length" class="ml-1 px-1.5 py-0.5 bg-white text-amber-700 rounded-full text-[10px] font-black">
                 {{ bulkSelection.selectedIds.length }}
               </span>
-            </button>
-
-            <button
-              type="button"
-              @click="executeDeleteAll()"
-              :disabled="bulkSelection.busy || !displayedParts.length"
-              class="btn h-9 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-black transition shadow-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-              title="Xóa toàn bộ catalogue và làm sạch bucket R2">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-600"></i>
-              <span>Xóa tất cả</span>
             </button>
           </div>
         </div>

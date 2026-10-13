@@ -140,11 +140,25 @@
       },
       "solution": "1) Tạo API /api/catalogue/delete-part đồng bộ xóa bản ghi lẫn vector trong catalogue_image_vectors; 2) Cập nhật /api/catalogue/bulk-delete và /api/catalogue/delete-all trực tiếp xóa triệt để catalogue_image_vectors qua service role; 3) Cập nhật deleteCurrentPart và executeBulkDelete trong src/app.js dọn sạch hàng đợi vector local (removeMorisVectorJob, removeMorisVectorJobs); 4) Tạo migration SQL 2026101200020000_cascade_delete_vectors_on_part_delete.sql; 5) Dọn sạch 2 orphan vectors trong database thực tế về đúng 247 vectors / 123 linh kiện.",
       "evidence": "Đã dọn sạch 2 orphan vectors trong database thực tế, tests/catalogue-delete.test.js (12 tests) pass 100%, toàn bộ suite 173/173 tests pass 100%."
+    },
+    {
+      "id": "task_12_strict_identifying_features_and_remove_delete_all",
+      "title": "Tối ưu chuẩn xác logic tìm kiếm đặc điểm nhận dạng ở Main Catalogue & Chatbox Moris và Bỏ modal Xóa tất cả ở main chính",
+      "status": "completed",
+      "completed_at": "2026-10-13T08:37:00Z",
+      "diagnostics": {
+        "root_cause_1": "Thanh tìm kiếm ở main Catalogue Linh Kiện dùng SQL ilike '%search%', dẫn đến khi tìm '2 lỗ tròn' bị khớp substring với '22 lỗ tròn' và '12 lỗ tròn'; tìm '2 lỗ' bị khớp cả '20 lỗ nhỏ'.",
+        "root_cause_2": "Phân tách đặc điểm nhận dạng chưa bóc tách triệt để các phân đoạn ngăn cách bởi dấu phẩy và cặp key số + key chữ cho cả hai môi trường.",
+        "root_cause_3": "Nút 'Xóa tất cả' trên giao diện main của Admin gây rủi ro vô tình kích hoạt modal xóa toàn bộ catalogue."
+      },
+      "solution": "1) Bỏ hoàn toàn nút và modal 'Xóa tất cả' khỏi giao diện main Catalogue (index.html), bảo toàn nút Chọn hàng loạt cho Admin; 2) Nâng cấp functions/_lib/moris/v5/retrieval/featureMatcher.js: phân tách theo dấu phẩy thành các phân đoạn độc lập, bóc tách cặp Key Số và Key Chữ, ranh giới số nghiêm ngặt (2 chỉ lọc 2, không lọc 22, 20 hay 12), loại hình dáng nghiêm ngặt (lỗ tròn chỉ lọc lỗ tròn, không lọc lỗ vuông/oval), hỗ trợ AND logic cho nhiều đặc điểm ngăn cách dấu phẩy; 3) Đồng bộ logic featureMatcher vào thanh tìm kiếm main Catalogue (src/app.js loadParts): nhận diện truy vấn đặc điểm và lọc nghiêm ngặt trước khi render, loại bỏ 100% mã 22 lỗ tròn, 20 lỗ, 12 lỗ khi tìm 2 lỗ tròn; 4) Đồng bộ vào Chatbox Moris (chat.js & orchestrator.js): quét đầy đủ catalogue khi lọc đặc điểm nhận dạng, không nhồi nhét mã rác; 5) Tạo migration PostgreSQL 2026101300010000_strict_feature_search_catalogue.sql cập nhật RPC app_search_catalogue hỗ trợ word boundary số và đã thực thi thành công lên Supabase thực tế.",
+      "evidence": "Đã kiểm thử thực tế trên DB: tìm '2 lỗ tròn' trả đúng 4 mã 2 lỗ tròn to, loại bỏ triệt để mã 22 lỗ tròn và 20 lỗ; tìm '22 lỗ tròn' trả đúng 2 mã 22 lỗ tròn; tests/moris-features-filter.test.js (25 tests pass), tests/frontend.test.js (30 tests pass), toàn bộ 182/182 unit tests pass 100%."
     }
   ],
   "verification": {
-    "total_unit_tests": 173,
-    "passing_tests": 173,
+    "total_unit_tests": 182,
+    "passing_tests": 182,
     "failing_tests": 0
   }
 }
+

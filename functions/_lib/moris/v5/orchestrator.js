@@ -23,6 +23,7 @@ import { finalizeCandidatePool } from "./retrieval/candidatePool.js";
 import { collapseBestVectorHitPerRecord } from "./retrieval/vectorHitCollapse.js";
 import { orientationWarnings } from "./guards/orientation.js";
 import { publicCandidate } from "./schemas/candidate.js";
+import { filterCatalogueByQueryFeatures } from "./retrieval/featureMatcher.js";
 import { trace } from "./runtime/trace.js";
 
 function dedupeRows(rows) {
@@ -132,6 +133,26 @@ export async function runMorisSearch(env, config, {
 
   // TEXT-ONLY: deterministic first, no AI.
   if (!query.image_data_url && !query.query_embedding) {
+    const featCheck = filterCatalogueByQueryFeatures(
+      textRetrieval.pool,
+      query.message
+    );
+    if (featCheck.isFeatureQuery) {
+      let featPool = textRetrieval.pool;
+      if (featPool.length < 500) {
+        const scanned = await scanCatalogue(env, token, { maxRows: 1500 }).catch(() => []);
+        featPool = dedupeRows([...featPool, ...scanned]);
+      }
+      const featMatched = filterCatalogueByQueryFeatures(featPool, query.message).matchedRows;
+      return {
+        mode: featMatched.length ? "MORIS_FEATURE_MATCH" : "MORIS_FEATURE_NO_MATCH",
+        summary: featMatched.length ? "Đã lọc theo đặc điểm nhận dạng chính xác." : "Không tìm thấy mã khớp đặc điểm nhận dạng.",
+        candidates: featMatched.slice(0, 10).map(publicCandidate),
+        warnings: [],
+        ai_calls: null
+      };
+    }
+
     const strict = strictConstraintMatches(
       textRetrieval.pool,
       query.message

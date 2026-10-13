@@ -104,5 +104,24 @@
   - [x] Chạy toàn bộ test suite (`npm test`: 173/173 tests pass 100%) và build static (`npm run build`).
   - [x] Cập nhật bộ nhớ RAM `state.json` và checklist `plan.md`.
 
+- [x] **Task 12: Tối ưu chuẩn xác logic tìm kiếm đặc điểm nhận dạng ở Main Catalogue & Chatbox Moris và Bỏ modal Xóa tất cả ở main chính**
+  - [x] Bỏ nút và modal "Xóa tất cả" ở giao diện main chính (`index.html`).
+  - [x] Nâng cấp thuật toán bóc tách và so khớp đặc điểm nhận dạng (`functions/_lib/moris/v5/retrieval/featureMatcher.js`):
+    - Phân tách theo dấu phẩy `,` thành các phân đoạn độc lập.
+    - Bóc tách trong từng phân đoạn thành cặp Key Số ("2") và Key Chữ ("lỗ tròn").
+    - Ranh giới số nghiêm ngặt: số 2 chỉ lọc đúng 2 (tuyệt đối không lọc 20, 22, 12).
+    - Loại hình dáng nghiêm ngặt: "lỗ tròn" chỉ lọc đúng lỗ tròn (tuyệt đối không lọc lỗ vuông, oval).
+    - Hỗ trợ so khớp nhiều đặc điểm kết hợp ngăn cách bởi dấu phẩy (AND logic).
+  - [x] Đồng bộ logic tìm kiếm đặc điểm nhận dạng vào Thanh tìm kiếm ở Main Catalogue Linh Kiện (`src/app.js`):
+    - Nhận diện query đặc điểm nhận dạng trên thanh tìm kiếm main.
+    - Lọc nghiêm ngặt theo cặp Số + Chữ, loại bỏ triệt để mã 22 lỗ tròn, 20 lỗ tròn, 12 lỗ tròn khi tìm 2 lỗ tròn.
+  - [x] Đồng bộ vào Chatbox Moris (`functions/api/moris/chat.js` & `functions/_lib/moris/v5/orchestrator.js`):
+    - Đảm bảo quét đầy đủ danh mục khi lọc đặc điểm nhận dạng.
+    - Tích hợp featureMatcher vào cả chat RAG lẫn orchestrator search fallback.
+  - [x] Tạo migration PostgreSQL `supabase/migrations/2026101300010000_strict_feature_search_catalogue.sql` cập nhật RPC `app_search_catalogue` hỗ trợ word boundary số và phân tách dấu phẩy (đã thực thi thành công lên Supabase).
+  - [x] Viết bộ unit test toàn diện cho các case 2 lỗ tròn vs 22 lỗ tròn vs 20 lỗ tròn, lỗ vuông, lỗ oval, dấu phẩy và kiểm tra giao diện.
+  - [x] Chạy toàn bộ unit test (`npm test`: 182/182 tests pass 100%), build static (`npm run build`), cập nhật `state.json` và đánh dấu `plan.md`.
+
+
 
 

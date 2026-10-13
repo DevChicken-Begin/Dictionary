@@ -1073,6 +1073,139 @@ createApp({
     assetTypeUrl(type) { const a = type==='detail' ? this.detailAssets[0] : this.findAsset(type,1); return a ? this.assetUrl(a) : ''; },
     findEditorAsset(type, order=1) { return this.editor.assets.find(a => a.asset_type===type && Number(a.sort_order||1)===order) || null; },
 
+    // --- Identifying Features Matcher Helpers (Đặc điểm nhận dạng) ---
+    cleanFeatureText(str) {
+      return String(str || '')
+        .toLowerCase()
+        .replace(/[.,;:!?()[\]{}"'`]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    },
+    removeVietnameseAccents(str) {
+      return String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D');
+    },
+    extractShapeKeyword(text) {
+      const norm = this.removeVietnameseAccents(this.cleanFeatureText(text));
+      const KNOWN_SHAPES = [
+        { shape: 'tam giac', match: /\b(?:tam giac|triangle)\b/i },
+        { shape: 'chu nhat', match: /\b(?:chu nhat|rectangle|chu\s+nhat)\b/i },
+        { shape: 'oval', match: /\b(?:oval|bau duc|ellipse)\b/i },
+        { shape: 'vuong', match: /\b(?:vuong|square)\b/i },
+        { shape: 'tron', match: /\b(?:tron|round|circular)\b/i }
+      ];
+      for (const item of KNOWN_SHAPES) {
+        if (item.match.test(norm)) return item.shape;
+      }
+      const words = norm.split(/\s+/).filter(w => !['lo', 'hole', 'holes', 'cai', 'hinh', 'co', 'than'].includes(w));
+      return words.join(' ').trim();
+    },
+    parseSingleFeature(segment) {
+      const raw = String(segment || '').trim();
+      if (!raw) return null;
+      const cleaned = this.cleanFeatureText(raw);
+      const match = cleaned.match(/^(\d+)\s*(.+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        const textPart = match[2].trim();
+        return { number: num, text: textPart, shape: this.extractShapeKeyword(textPart), raw };
+      }
+      const innerMatch = cleaned.match(/(\d+)\s+([a-zA-Zà-ỹÀ-Ỹ\s]+)/);
+      if (innerMatch) {
+        const num = parseInt(innerMatch[1], 10);
+        const textPart = innerMatch[2].trim();
+        return { number: num, text: textPart, shape: this.extractShapeKeyword(textPart), raw };
+      }
+      return { number: null, text: cleaned, shape: this.extractShapeKeyword(cleaned), raw };
+    },
+    parseIdentifyingFeatures(featuresString) {
+      if (!featuresString) return [];
+      const segments = String(featuresString).split(',').map(s => s.trim()).filter(Boolean);
+      const results = [];
+      for (const seg of segments) {
+        if (seg.includes('+')) {
+          const plusParts = seg.split('+').map(p => p.trim()).filter(Boolean);
+          for (const pp of plusParts) {
+            const pf = this.parseSingleFeature(pp);
+            if (pf && pf.number != null) results.push(pf);
+          }
+        }
+        const parsed = this.parseSingleFeature(seg);
+        if (parsed) results.push(parsed);
+      }
+      return results;
+    },
+    extractQueryFeatures(queryMessage) {
+      const msg = String(queryMessage || '').trim();
+      if (!msg) return [];
+      if (msg.includes(',')) {
+        const commaParts = msg.split(',').map(p => p.trim()).filter(Boolean);
+        const candidateParts = [];
+        for (const part of commaParts) {
+          const parsed = this.parseSingleFeature(part);
+          if (parsed && (parsed.number != null || parsed.shape)) {
+            candidateParts.push(parsed);
+          } else {
+            const sub = this.extractQueryFeatures(part);
+            if (sub.length) candidateParts.push(...sub);
+          }
+        }
+        if (candidateParts.length > 0) return candidateParts;
+      }
+      const results = [];
+      const pattern = /(?:^|[^\d])(\d+)\s*(?:lo|lỗ|hole|holes)?\s*([a-zA-Zà-ỹÀ-Ỹ]+(?:\s+[a-zA-Zà-ỹÀ-Ỹ]+)?)/gi;
+      let m;
+      const regex = new RegExp(pattern);
+      while ((m = regex.exec(msg)) !== null) {
+        const num = parseInt(m[1], 10);
+        const textPart = m[2].trim();
+        const cleaned = this.cleanFeatureText(textPart);
+        const stopwords = ['ngay', 'thang', 'nam', 'gio', 'phut', 'lan', 'con', 'ma', 'chiec', 'dong', 'trang'];
+        if (stopwords.includes(this.removeVietnameseAccents(cleaned))) continue;
+        const fullText = `lỗ ${cleaned}`;
+        results.push({
+          number: num,
+          text: fullText,
+          shape: this.extractShapeKeyword(fullText),
+          raw: m[0].trim()
+        });
+      }
+      if (results.length === 0) {
+        const directParsed = this.parseSingleFeature(msg);
+        if (directParsed && directParsed.number != null && directParsed.text.length > 0) {
+          results.push(directParsed);
+        }
+      }
+      return results;
+    },
+    isSingleFeatureMatch(dbFeature, queryFeature) {
+      if (!dbFeature || !queryFeature) return false;
+      if (queryFeature.number != null) {
+        if (dbFeature.number == null || dbFeature.number !== queryFeature.number) {
+          return false;
+        }
+      }
+      const qShape = queryFeature.shape || this.extractShapeKeyword(queryFeature.text);
+      const dbShape = dbFeature.shape || this.extractShapeKeyword(dbFeature.text);
+      if (qShape) {
+        if (!dbShape) return false;
+        if (qShape !== dbShape) return false;
+        return true;
+      }
+      const dbText = this.removeVietnameseAccents(this.cleanFeatureText(dbFeature.text));
+      const qText = this.removeVietnameseAccents(this.cleanFeatureText(queryFeature.text));
+      return dbText === qText || dbText.includes(qText) || qText.includes(dbText);
+    },
+    matchRowWithFeatures(row, queryFeatures) {
+      if (!row || !queryFeatures || queryFeatures.length === 0) return false;
+      const dbFeatures = this.parseIdentifyingFeatures(row.identifying_features);
+      if (dbFeatures.length === 0) return false;
+      return queryFeatures.every(qf => dbFeatures.some(df => this.isSingleFeatureMatch(df, qf)));
+    },
+
     async loadParts(reset=false) {
       if (reset) this.page = 0;
 
@@ -1080,22 +1213,34 @@ createApp({
       this.loadingImages = true;
 
       try {
-        // Lấy dư 1 row để biết chắc còn trang sau hay không.
-        // DOM vẫn chỉ render đúng CONFIG.PAGE_LIMIT rows.
+        const qFeatures = this.extractQueryFeatures(this.filters.search);
+        const isFeatureSearch = qFeatures.length > 0;
+
+        const fetchLimit = isFeatureSearch ? 300 : CONFIG.PAGE_LIMIT + 1;
+        const fetchOffset = isFeatureSearch ? 0 : this.page * CONFIG.PAGE_LIMIT;
+
         const rows = await this.rpcRows('app_search_catalogue', {
           p_session_token:this.session.token,
           p_search:this.filters.search || '',
           p_usage_side:this.filters.usage,
           p_view_mode:this.filters.viewMode,
-          p_limit:CONFIG.PAGE_LIMIT + 1,
-          p_offset:this.page * CONFIG.PAGE_LIMIT
+          p_limit:fetchLimit,
+          p_offset:fetchOffset
         });
 
         // Search/filter cũ trả về trễ không được ghi đè request mới.
         if (requestSeq !== this.catalogueRequestSeq) return;
 
-        this.hasMore = rows.length > CONFIG.PAGE_LIMIT;
-        this.parts = rows.slice(0, CONFIG.PAGE_LIMIT);
+        if (isFeatureSearch) {
+          // Lọc nghiêm ngặt: số 2 chỉ lọc 2 (không lọc 20, 22, 12), lỗ tròn chỉ lọc lỗ tròn (không lọc lỗ vuông, oval)
+          const matched = rows.filter(r => this.matchRowWithFeatures(r, qFeatures));
+          const start = this.page * CONFIG.PAGE_LIMIT;
+          this.hasMore = matched.length > (this.page + 1) * CONFIG.PAGE_LIMIT;
+          this.parts = matched.slice(start, start + CONFIG.PAGE_LIMIT);
+        } else {
+          this.hasMore = rows.length > CONFIG.PAGE_LIMIT;
+          this.parts = rows.slice(0, CONFIG.PAGE_LIMIT);
+        }
       } catch(e) {
         if (requestSeq === this.catalogueRequestSeq) {
           this.toast('error', this.readError(e));

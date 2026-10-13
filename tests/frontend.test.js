@@ -286,4 +286,22 @@ describe('yêu cầu mới — icon, tab Quy đổi, Vector AI, quản lý user'
     expect(html).toContain('debugger');
     expect(html).not.toContain('isDebug');
   });
+
+  it('đã loại bỏ nút và modal Xóa tất cả ở giao diện main Catalogue', () => {
+    // Không còn nút hoặc trigger executeDeleteAll() trên giao diện main
+    expect(html).not.toContain('executeDeleteAll()');
+    expect(html).not.toContain('Xóa tất cả</span>');
+    // Vẫn bảo toàn nút Chọn hàng loạt cho Admin
+    expect(html).toContain('toggleBulkSelectionMode()');
+    expect(html).toContain('Chọn hàng loạt');
+  });
+
+  it('main Catalogue tích hợp bộ lọc đặc điểm nhận dạng theo cặp số + chữ và phân tách dấu phẩy', () => {
+    expect(js).toContain('matchRowWithFeatures');
+    expect(js).toContain('extractQueryFeatures');
+    expect(js).toContain('isSingleFeatureMatch');
+    expect(js).toContain('cleanFeatureText');
+    expect(js).toContain('extractShapeKeyword');
+  });
 });
+

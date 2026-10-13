@@ -184,12 +184,9 @@ export async function onRequestPost({ request, env }) {
     // ── 1. KIỂM TRA BỘ LỌC ĐẶC ĐIỂM NHẬN DẠNG (Số + Chữ, ngăn cách bởi dấu phẩy) ──
     const featureCheck = filterCatalogueByQueryFeatures(pool, message);
     if (featureCheck.isFeatureQuery) {
-      // Để đảm bảo không bỏ sót mã nào trong kho, quét toàn bộ catalogue (122 mã hiện có)
-      let fullPool = pool;
-      if (fullPool.length < 150) {
-        const scanned = await scanCatalogue(env, token, { maxRows: 300 }).catch(() => []);
-        fullPool = dedupeRows([...pool, ...scanned]);
-      }
+      // Để đảm bảo không bỏ sót mã nào trong kho, quét toàn bộ catalogue
+      const scanned = await scanCatalogue(env, token, { maxRows: 1500 }).catch(() => []);
+      const fullPool = dedupeRows([...pool, ...scanned]);
       const matched = filterCatalogueByQueryFeatures(fullPool, message).matchedRows;
 
       // QUAN TRỌNG: CHỈ LỌC NHỮNG GÌ ĐÃ "TRUE", TUYỆT ĐỐI KHÔNG LỌC TOP 10 RÁC HAY NHỒI NHÉT POOL

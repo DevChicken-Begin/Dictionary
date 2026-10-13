@@ -280,5 +280,146 @@ describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", ()
         globalThis.fetch = originalFetch;
       }
     });
+
+    it("gửi '2 lỗ tròn': CHỈ trả về đúng mã có 2 lỗ tròn, TUYỆT ĐỐI loại bỏ mã 22 lỗ tròn, 20 lỗ và 2 lỗ vuông", async () => {
+      const { onRequestPost } = await import("../functions/api/moris/chat.js");
+
+      const realisticParts = [
+        { id: "p-2", code: "3887000001", identifying_features: "2 lỗ tròn to, có rãnh khoét toàn thân" },
+        { id: "p-22", code: "3960480101", identifying_features: "22 lỗ tròn, 4 lỗ vuông, 2 lỗ oval, 2 lỗ chữ nhật" },
+        { id: "p-20", code: "3888130001", identifying_features: "21 lỗ tròn 20 lỗ nhỏ + 1 lỗ to, 4 lỗ chữ nhật" },
+        { id: "p-2v", code: "3411160299", identifying_features: "2 lỗ vuông" }
+      ];
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes("app_me")) {
+          return new Response(JSON.stringify([{ ok: true, id: "test-user-id" }]), { status: 200 });
+        }
+        if (u.includes("app_search_catalogue")) {
+          return new Response(JSON.stringify(realisticParts), { status: 200 });
+        }
+        return new Response("Not found", { status: 404 });
+      };
+
+      try {
+        const fakeJwt = "header.payload.signature";
+        const request = new Request("https://example.com/api/moris/chat", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-session-token": fakeJwt
+          },
+          body: JSON.stringify({
+            message: "2 lỗ tròn",
+            session_token: fakeJwt
+          })
+        });
+
+        const res = await onRequestPost({ request, env: createMockEnv() });
+        const data = await res.json();
+
+        expect(data.ok).toBe(true);
+        expect(data.candidates).toHaveLength(1);
+        expect(data.candidates[0].code).toBe("3887000001");
+        expect(data.candidates.some(c => c.code === "3960480101")).toBe(false);
+        expect(data.candidates.some(c => c.code === "3888130001")).toBe(false);
+        expect(data.candidates.some(c => c.code === "3411160299")).toBe(false);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("gửi '22 lỗ tròn': CHỈ trả về đúng mã 22 lỗ tròn (3960480101), không trả về mã 2 lỗ tròn", async () => {
+      const { onRequestPost } = await import("../functions/api/moris/chat.js");
+
+      const realisticParts = [
+        { id: "p-2", code: "3887000001", identifying_features: "2 lỗ tròn to, có rãnh khoét toàn thân" },
+        { id: "p-22", code: "3960480101", identifying_features: "22 lỗ tròn, 4 lỗ vuông, 2 lỗ oval, 2 lỗ chữ nhật" }
+      ];
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes("app_me")) {
+          return new Response(JSON.stringify([{ ok: true, id: "test-user-id" }]), { status: 200 });
+        }
+        if (u.includes("app_search_catalogue")) {
+          return new Response(JSON.stringify(realisticParts), { status: 200 });
+        }
+        return new Response("Not found", { status: 404 });
+      };
+
+      try {
+        const fakeJwt = "header.payload.signature";
+        const request = new Request("https://example.com/api/moris/chat", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-session-token": fakeJwt
+          },
+          body: JSON.stringify({
+            message: "22 lỗ tròn",
+            session_token: fakeJwt
+          })
+        });
+
+        const res = await onRequestPost({ request, env: createMockEnv() });
+        const data = await res.json();
+
+        expect(data.ok).toBe(true);
+        expect(data.candidates).toHaveLength(1);
+        expect(data.candidates[0].code).toBe("3960480101");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
+
+  describe("Nghiêm ngặt case '2 lỗ tròn' vs '22 lỗ tròn' vs '20 lỗ tròn' vs 'lỗ vuông, oval'", () => {
+    const dataset = [
+      { id: "1", code: "3887000001", identifying_features: "2 lỗ tròn to, có rãnh khoét toàn thân" },
+      { id: "2", code: "3960480101", identifying_features: "22 lỗ tròn, 4 lỗ vuông, 2 lỗ oval, 2 lỗ chữ nhật" },
+      { id: "3", code: "3888130001", identifying_features: "21 lỗ tròn 20 lỗ nhỏ + 1 lỗ to, 4 lỗ chữ nhật" },
+      { id: "4", code: "TEST_12", identifying_features: "12 lỗ tròn" },
+      { id: "5", code: "TEST_2V", identifying_features: "2 lỗ vuông" },
+      { id: "6", code: "TEST_2O", identifying_features: "2 lỗ oval" }
+    ];
+
+    it("lọc '2 lỗ tròn': chỉ giữ đúng mã 3887000001, loại 22 lỗ tròn, 20 lỗ, 12 lỗ, 2 lỗ vuông, 2 lỗ oval", () => {
+      const res = filterCatalogueByQueryFeatures(dataset, "2 lỗ tròn");
+      expect(res.isFeatureQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(1);
+      expect(res.matchedRows[0].code).toBe("3887000001");
+    });
+
+    it("lọc '22 lỗ tròn': chỉ giữ đúng mã 3960480101, không bị lẫn mã 2 lỗ tròn", () => {
+      const res = filterCatalogueByQueryFeatures(dataset, "22 lỗ tròn");
+      expect(res.isFeatureQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(1);
+      expect(res.matchedRows[0].code).toBe("3960480101");
+    });
+
+    it("lọc '2 lỗ vuông': chỉ giữ đúng mã TEST_2V, không nhầm sang 2 lỗ tròn hay 4 lỗ vuông", () => {
+      const res = filterCatalogueByQueryFeatures(dataset, "2 lỗ vuông");
+      expect(res.isFeatureQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(1);
+      expect(res.matchedRows[0].code).toBe("TEST_2V");
+    });
+
+    it("lọc nhiều đặc điểm ngăn cách dấu phẩy: '22 lỗ tròn, 4 lỗ vuông' -> chỉ mã 3960480101 thỏa mãn AND", () => {
+      const res = filterCatalogueByQueryFeatures(dataset, "22 lỗ tròn, 4 lỗ vuông");
+      expect(res.isFeatureQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(1);
+      expect(res.matchedRows[0].code).toBe("3960480101");
+    });
+
+    it("lọc nhiều đặc điểm: '2 lỗ tròn, 4 lỗ vuông' -> trả về rỗng vì không có mã nào vừa có 2 lỗ tròn vừa có 4 lỗ vuông", () => {
+      const res = filterCatalogueByQueryFeatures(dataset, "2 lỗ tròn, 4 lỗ vuông");
+      expect(res.isFeatureQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(0);
+    });
   });
 });
+
