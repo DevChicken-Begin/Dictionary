@@ -1199,8 +1199,223 @@ createApp({
       const qText = this.removeVietnameseAccents(this.cleanFeatureText(queryFeature.text));
       return dbText === qText || dbText.includes(qText) || qText.includes(dbText);
     },
-    matchRowWithFeatures(row, queryFeatures) {
-      if (!row || !queryFeatures || queryFeatures.length === 0) return false;
+    parseIdentifyingFeaturesAST(text) {
+      const raw = String(text || '').trim();
+      if (!raw) {
+        return {
+          totalHoles: null,
+          bigHoles: null,
+          smallHoles: null,
+          holeShapes: [],
+          otherNumberedPairs: [],
+          keywords: []
+        };
+      }
+
+      const cleaned = this.cleanFeatureText(raw);
+      const norm = this.removeVietnameseAccents(cleaned);
+
+      let totalHoles = null;
+      let bigHoles = null;
+      let smallHoles = null;
+      const holeShapes = [];
+      const otherNumberedPairs = [];
+      const keywords = [];
+
+      const bigMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:(?:lo\s*(?:tron\s*)?|lo\s+)?(?:to|lon)\b|(?:to|lon)\b)/i);
+      if (bigMatch) bigHoles = parseInt(bigMatch[1], 10);
+
+      const smallMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:(?:lo\s*(?:tron\s*)?|lo\s+)?(?:nho|be)\b|(?:nho|be)\b)/i);
+      if (smallMatch) smallHoles = parseInt(smallMatch[1], 10);
+
+      const totalRegex = /(?:^|[^\d])(\d+)\s*(?:lo|hole|holes)\b(?!\s*(?:to|lon|nho|be))/gi;
+      let tMatch;
+      while ((tMatch = totalRegex.exec(norm)) !== null) {
+        const n = parseInt(tMatch[1], 10);
+        if (totalHoles == null) totalHoles = n;
+      }
+
+      if (totalHoles == null) {
+        const directShapeMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:tron|vuong|oval|bau duc|chu nhat|tam giac)\b/i);
+        if (directShapeMatch) totalHoles = parseInt(directShapeMatch[1], 10);
+      }
+
+      if (totalHoles == null && bigHoles != null && smallHoles != null) {
+        totalHoles = bigHoles + smallHoles;
+      } else if (totalHoles == null && bigHoles != null && smallHoles == null) {
+        totalHoles = bigHoles;
+      } else if (totalHoles == null && smallHoles != null && bigHoles == null) {
+        totalHoles = smallHoles;
+      } else if (totalHoles != null && bigHoles != null && smallHoles == null && totalHoles >= bigHoles) {
+        smallHoles = totalHoles - bigHoles;
+      } else if (totalHoles != null && smallHoles != null && bigHoles == null && totalHoles >= smallHoles) {
+        bigHoles = totalHoles - smallHoles;
+      }
+
+      const knownShapes = [
+        { shape: 'tam giac', match: /\b(?:tam giac|triangle)\b/i },
+        { shape: 'chu nhat', match: /\b(?:chu nhat|rectangle|chu\s+nhat)\b/i },
+        { shape: 'oval', match: /\b(?:oval|bau duc|ellipse)\b/i },
+        { shape: 'vuong', match: /\b(?:vuong|square)\b/i },
+        { shape: 'tron', match: /\b(?:tron|round|circular)\b/i }
+      ];
+
+      for (const item of knownShapes) {
+        if (item.match.test(norm) && !holeShapes.includes(item.shape)) {
+          holeShapes.push(item.shape);
+        }
+      }
+
+      const pairRegex = /(?:^|[^\d])(\d+)\s+([a-zA-Zà-ỹÀ-Ỹ]+)/gi;
+      let pMatch;
+      while ((pMatch = pairRegex.exec(cleaned)) !== null) {
+        const num = parseInt(pMatch[1], 10);
+        const noun = pMatch[2].trim().toLowerCase();
+        const nounNorm = this.removeVietnameseAccents(noun);
+        const isHoleWord = ['lo', 'to', 'lon', 'nho', 'be', 'tron', 'vuong', 'oval'].includes(nounNorm);
+        const isStopWord = ['ngay', 'thang', 'nam', 'gio', 'phut', 'lan', 'con', 'ma', 'chiec', 'dong', 'trang'].includes(nounNorm);
+        if (!isHoleWord && !isStopWord) {
+          otherNumberedPairs.push({ count: num, noun: nounNorm });
+        }
+      }
+
+      const structuralKeywords = ['uon cong', 'dap noi', 'vat goc', 'tai bat oc', 'go dap', 'gan noi', 'dap gan', 'chot dinh vi', 'ngam'];
+      for (const kw of structuralKeywords) {
+        if (norm.includes(kw)) keywords.push(kw);
+      }
+
+      return { totalHoles, bigHoles, smallHoles, holeShapes, otherNumberedPairs, keywords };
+    },
+
+    matchFeatureQueryFlexible(dbText, queryText) {
+      if (!dbText || !queryText) return { matched: false, tier: 'none', score: 0 };
+
+      if (queryText.includes(',')) {
+        const parts = queryText.split(',').map(p => p.trim()).filter(Boolean);
+        if (parts.length > 1) {
+          let minScore = 1.0;
+          let worstTier = 'exact_match';
+          for (const part of parts) {
+            const sub = this.matchFeatureQueryFlexible(dbText, part);
+            if (!sub.matched) return { matched: false, tier: 'none', score: 0 };
+            if (sub.score < minScore) minScore = sub.score;
+            if (sub.tier === 'perceptual_tolerance') worstTier = 'perceptual_tolerance';
+            else if (sub.tier === 'partial_match' && worstTier !== 'perceptual_tolerance') worstTier = 'partial_match';
+          }
+          return { matched: true, tier: worstTier, score: minScore };
+        }
+      }
+
+      const dbAST = this.parseIdentifyingFeaturesAST(dbText);
+      const qAST = this.parseIdentifyingFeaturesAST(queryText);
+
+      const qHasHoleNumber = qAST.totalHoles != null || qAST.bigHoles != null || qAST.smallHoles != null;
+      const qHasOtherNumber = qAST.otherNumberedPairs.length > 0;
+      const qHasKeywords = qAST.keywords.length > 0;
+      const qHasShapes = qAST.holeShapes.length > 0;
+
+      if (!qHasHoleNumber && !qHasOtherNumber && !qHasKeywords && !qHasShapes) {
+        return { matched: false, tier: 'none', score: 0 };
+      }
+
+      if (qHasShapes) {
+        if (dbAST.holeShapes.length > 0) {
+          const allShapesMatch = qAST.holeShapes.every(qs => dbAST.holeShapes.includes(qs));
+          if (!allShapesMatch) return { matched: false, tier: 'none', score: 0 };
+        } else {
+          const normDb = this.removeVietnameseAccents(this.cleanFeatureText(dbText));
+          for (const qs of qAST.holeShapes) {
+            if (!normDb.includes(qs)) return { matched: false, tier: 'none', score: 0 };
+          }
+        }
+      }
+
+      for (const qPair of qAST.otherNumberedPairs) {
+        const matchedPair = dbAST.otherNumberedPairs.find(
+          dbPair => dbPair.count === qPair.count && (dbPair.noun.includes(qPair.noun) || qPair.noun.includes(dbPair.noun))
+        );
+        if (!matchedPair) return { matched: false, tier: 'none', score: 0 };
+      }
+
+      const normDb = this.removeVietnameseAccents(this.cleanFeatureText(dbText));
+      for (const kw of qAST.keywords) {
+        if (!normDb.includes(kw)) return { matched: false, tier: 'none', score: 0 };
+      }
+
+      if (qHasHoleNumber) {
+        if (qAST.totalHoles != null) {
+          if (dbAST.totalHoles == null || dbAST.totalHoles !== qAST.totalHoles) {
+            return { matched: false, tier: 'none', score: 0 };
+          }
+          if (qAST.bigHoles != null && qAST.smallHoles != null) {
+            if (dbAST.bigHoles != null && dbAST.smallHoles != null) {
+              if (qAST.bigHoles === dbAST.bigHoles && qAST.smallHoles === dbAST.smallHoles) {
+                return { matched: true, tier: 'exact_match', score: 1.0 };
+              }
+              if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1 && Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) {
+                return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
+              }
+              return { matched: false, tier: 'none', score: 0 };
+            }
+            return { matched: true, tier: 'partial_match', score: 0.90 };
+          }
+          if (qAST.bigHoles != null) {
+            if (dbAST.bigHoles != null) {
+              if (qAST.bigHoles === dbAST.bigHoles) return { matched: true, tier: 'exact_match', score: 1.0 };
+              if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1) return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
+              return { matched: false, tier: 'none', score: 0 };
+            }
+            return { matched: true, tier: 'partial_match', score: 0.90 };
+          }
+          if (qAST.smallHoles != null) {
+            if (dbAST.smallHoles != null) {
+              if (qAST.smallHoles === dbAST.smallHoles) return { matched: true, tier: 'exact_match', score: 1.0 };
+              if (Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
+              return { matched: false, tier: 'none', score: 0 };
+            }
+            return { matched: true, tier: 'partial_match', score: 0.90 };
+          }
+          return { matched: true, tier: 'exact_match', score: 1.0 };
+        }
+
+        if (qAST.bigHoles != null) {
+          if (dbAST.bigHoles != null) {
+            if (qAST.bigHoles === dbAST.bigHoles) return { matched: true, tier: 'exact_match', score: 1.0 };
+            if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1) return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
+          }
+          return { matched: false, tier: 'none', score: 0 };
+        }
+
+        if (qAST.smallHoles != null) {
+          if (dbAST.smallHoles != null) {
+            if (qAST.smallHoles === dbAST.smallHoles) return { matched: true, tier: 'exact_match', score: 1.0 };
+            if (Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
+          }
+          return { matched: false, tier: 'none', score: 0 };
+        }
+
+        return { matched: false, tier: 'none', score: 0 };
+      }
+
+      if (qHasShapes || qHasKeywords || qHasOtherNumber) {
+        return { matched: true, tier: 'partial_match', score: 0.80 };
+      }
+
+      return { matched: false, tier: 'none', score: 0 };
+    },
+
+    matchRowWithFeatures(row, queryFeatures, rawQuery = '') {
+      if (!row) return false;
+      if (rawQuery) {
+        const flex = this.matchFeatureQueryFlexible(row.identifying_features, rawQuery);
+        if (flex.matched) return true;
+      }
+      if (Array.isArray(queryFeatures) && queryFeatures.length > 0) {
+        const queryStr = queryFeatures.map(q => q.raw || `${q.number || ''} ${q.text || ''}`).join(', ');
+        const flex = this.matchFeatureQueryFlexible(row.identifying_features, queryStr);
+        if (flex.matched) return true;
+      }
+      if (!queryFeatures || queryFeatures.length === 0) return false;
       const dbFeatures = this.parseIdentifyingFeatures(row.identifying_features);
       if (dbFeatures.length === 0) return false;
       return queryFeatures.every(qf => dbFeatures.some(df => this.isSingleFeatureMatch(df, qf)));
@@ -1214,7 +1429,8 @@ createApp({
 
       try {
         const qFeatures = this.extractQueryFeatures(this.filters.search);
-        const isFeatureSearch = qFeatures.length > 0;
+        const qAST = this.parseIdentifyingFeaturesAST(this.filters.search);
+        const isFeatureSearch = qFeatures.length > 0 || qAST.totalHoles != null || qAST.bigHoles != null || qAST.smallHoles != null || qAST.holeShapes.length > 0;
 
         const fetchLimit = isFeatureSearch ? 300 : CONFIG.PAGE_LIMIT + 1;
         const fetchOffset = isFeatureSearch ? 0 : this.page * CONFIG.PAGE_LIMIT;
@@ -1233,7 +1449,7 @@ createApp({
 
         if (isFeatureSearch) {
           // Lọc nghiêm ngặt: số 2 chỉ lọc 2 (không lọc 20, 22, 12), lỗ tròn chỉ lọc lỗ tròn (không lọc lỗ vuông, oval)
-          const matched = rows.filter(r => this.matchRowWithFeatures(r, qFeatures));
+          const matched = rows.filter(r => this.matchRowWithFeatures(r, qFeatures, this.filters.search));
           const start = this.page * CONFIG.PAGE_LIMIT;
           this.hasMore = matched.length > (this.page + 1) * CONFIG.PAGE_LIMIT;
           this.parts = matched.slice(start, start + CONFIG.PAGE_LIMIT);
@@ -3529,37 +3745,24 @@ createApp({
           return;
         }
 
-        // Tích hợp kết quả Funnel 3 Lớp Moris V2 nếu có
-        if (vectorResult?.v2SearchResult?.top10?.length > 0) {
+        // Unified 3-Layer Supabase Search: server candidates are primary single source of truth.
+        // v2SearchResult is only used as defensive fallback if server returns empty candidates.
+        if ((!data?.candidates || data.candidates.length === 0) && vectorResult?.v2SearchResult?.top10?.length > 0) {
           const v2Top10 = vectorResult.v2SearchResult.top10;
-          const v2Map = new Map(v2Top10.map(item => [String(item.skuId), item]));
-
-          if (Array.isArray(data?.candidates) && data.candidates.length > 0) {
-            for (const cand of data.candidates) {
-              const matched = v2Map.get(String(cand.id)) || v2Map.get(String(cand.code));
-              if (matched) {
-                cand.v2_score = matched.finalScore;
-                cand.final_score = Math.max(Number(cand.final_score || 0), matched.finalScore);
-                cand.match_score = Math.max(Number(cand.match_score || 0), matched.finalScore);
-              }
+          const localMatched = [];
+          for (const item of v2Top10) {
+            const part = (this.parts || []).find(p => String(p.id) === String(item.skuId) || String(p.code) === String(item.skuId));
+            if (part) {
+              localMatched.push({
+                ...part,
+                final_score: item.finalScore,
+                match_score: item.finalScore,
+                v2_score: item.finalScore
+              });
             }
-          } else if (!data?.candidates || data.candidates.length === 0) {
-            // Local 3-Layer funnel results fallback when server returns empty
-            const localMatched = [];
-            for (const item of v2Top10) {
-              const part = (this.parts || []).find(p => String(p.id) === String(item.skuId) || String(p.code) === String(item.skuId));
-              if (part) {
-                localMatched.push({
-                  ...part,
-                  final_score: item.finalScore,
-                  match_score: item.finalScore,
-                  v2_score: item.finalScore
-                });
-              }
-            }
-            if (localMatched.length > 0) {
-              data.candidates = localMatched;
-            }
+          }
+          if (localMatched.length > 0) {
+            data.candidates = localMatched;
           }
         }
 

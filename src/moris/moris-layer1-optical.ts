@@ -20,18 +20,78 @@
  */
 
 export interface HoleFeature {
-  u: number;       // Normalized X coordinate relative to canonical center [-0.5, 0.5]
-  v: number;       // Normalized Y coordinate relative to canonical center [-0.5, 0.5]
-  relArea: number; // sqrt(holeArea / partForegroundArea)
-  pixelArea: number;
+  x?: number;       // Normalized X [0, 1] relative to bounding box
+  y?: number;       // Normalized Y [0, 1] relative to bounding box
+  u: number;        // Normalized X coordinate relative to canonical center [-0.5, 0.5]
+  v: number;        // Normalized Y coordinate relative to canonical center [-0.5, 0.5]
+  area?: number;    // Pixel area
+  radius?: number;  // sqrt(area / PI) / max(bw, bh)
+  relArea: number;  // sqrt(holeArea / partForegroundArea)
+  pixelArea?: number;
+  isBig?: boolean;
+  is_big?: boolean; // Supabase compatible
+}
+
+export interface HoleSizeClassification {
+  totalHoles: number;
+  bigHoles: number;
+  smallHoles: number;
+  splitArea: number;
+}
+
+/**
+ * 1D Log-Area Otsu / K-Means variance minimization to classify holes into Big and Small.
+ */
+export function classifyHoleSizes1D(holeAreas: number[]): HoleSizeClassification {
+  const N = holeAreas.length;
+  if (N === 0) {
+    return { totalHoles: 0, bigHoles: 0, smallHoles: 0, splitArea: 0 };
+  }
+  const sorted = [...holeAreas].sort((a, b) => b - a);
+  if (N === 1 || sorted[0] / Math.max(1, sorted[N - 1]) < 1.45) {
+    return { totalHoles: N, bigHoles: N, smallHoles: 0, splitArea: sorted[0] };
+  }
+
+  const logA = sorted.map(a => Math.log(Math.max(1, a)));
+  let bestK = 1;
+  let maxBetweenVar = -1;
+
+  for (let k = 1; k < N; k++) {
+    const w1 = k / N;
+    const w2 = (N - k) / N;
+
+    let sum1 = 0;
+    for (let i = 0; i < k; i++) sum1 += logA[i];
+    const mu1 = sum1 / k;
+
+    let sum2 = 0;
+    for (let i = k; i < N; i++) sum2 += logA[i];
+    const mu2 = sum2 / (N - k);
+
+    const betweenVar = w1 * w2 * Math.pow(mu1 - mu2, 2);
+    if (betweenVar > maxBetweenVar) {
+      maxBetweenVar = betweenVar;
+      bestK = k;
+    }
+  }
+
+  const splitArea = Math.sqrt(sorted[bestK - 1] * sorted[bestK]);
+  return {
+    totalHoles: N,
+    bigHoles: bestK,
+    smallHoles: N - bestK,
+    splitArea
+  };
 }
 
 export interface OpticalNormalizationResult {
   fgMask: Uint8Array;               // 224 x 224 binary mask (1 = metal, 0 = bg/hole)
   canonicalRgba: Uint8ClampedArray; // 224 x 224 x 4 RGBA canonical image
-  aspectRatio: number;              // MajorAxisLength / MinorAxisWidth
+  aspectRatio: number;              // MajorAxisLength / MinorAxisWidth (>= 1.0)
   solidity: number;                 // ForegroundArea / ConvexHullArea
-  holeCount: number;                // Count of internal holes with area > 0.8% of part area
+  holeCount: number;                // Count of internal holes
+  bigHoleCount: number;             // Count of big punched holes
+  smallHoleCount: number;           // Count of small locating holes
   holeFeatures: HoleFeature[];      // Normalized hole list
   pseudoRgbTensor: Float32Array;    // [1, 3, 224, 224] ImageNet-normalized tensor
   scharrEdgeMap: Float32Array;      // 224 x 224 normalized gradient [0..1]
@@ -44,6 +104,7 @@ export interface OpticalNormalizationResult {
     flipV: boolean;
     rawForegroundArea: number;
     convexHullArea: number;
+    segmentationMode?: string;
   };
 }
 
@@ -153,10 +214,12 @@ interface RawSegmentation {
     relArea: number;
   }>;
   bbox: { minX: number; minY: number; maxX: number; maxY: number; width: number; height: number };
+  diagnostics?: { segmentationMode: string };
 }
 
 /**
  * Extracts foreground mask and enclosed punched holes using border-seeded flood fill.
+ * Dual-Mode: R2 transparent/black-matte cutouts vs. Live camera bright-background photos.
  */
 export function segmentForegroundAndHoles(
   rgba: Uint8ClampedArray | Uint8Array,
@@ -165,18 +228,23 @@ export function segmentForegroundAndHoles(
 ): RawSegmentation {
   const total = width * height;
 
-  // Estimate background color from outer border samples
+  // 1. Estimate background and mode from outer border samples
   const borderThickness = Math.max(2, Math.floor(Math.min(width, height) * 0.04));
+  let transparentBorderCount = 0;
   let bgR = 0, bgG = 0, bgB = 0, bgCount = 0;
+  let totalBorderSamples = 0;
 
   for (let y = 0; y < height; y++) {
     const isYBorder = y < borderThickness || y >= height - borderThickness;
     for (let x = 0; x < width; x++) {
       const isXBorder = x < borderThickness || x >= width - borderThickness;
       if (isYBorder || isXBorder) {
+        totalBorderSamples++;
         const idx = (y * width + x) * 4;
         const a = rgba[idx + 3];
-        if (a >= 20) {
+        if (a < 36) {
+          transparentBorderCount++;
+        } else {
           bgR += rgba[idx];
           bgG += rgba[idx + 1];
           bgB += rgba[idx + 2];
@@ -186,58 +254,87 @@ export function segmentForegroundAndHoles(
     }
   }
 
-  if (bgCount === 0) {
-    bgR = 240; bgG = 240; bgB = 240; bgCount = 1;
-  } else {
+  const isTransparentCutout = transparentBorderCount > totalBorderSamples * 0.35 || transparentBorderCount > 20;
+
+  let bgLuma = 0;
+  let bgSpread = 0;
+  if (bgCount > 0) {
     bgR /= bgCount;
     bgG /= bgCount;
     bgB /= bgCount;
-  }
+    bgLuma = 0.299 * bgR + 0.587 * bgG + 0.114 * bgB;
 
-  // Calculate standard deviation / spread of border
-  let bgSpread = 0;
-  for (let y = 0; y < height; y += 2) {
-    const isYBorder = y < borderThickness || y >= height - borderThickness;
-    for (let x = 0; x < width; x += 2) {
-      const isXBorder = x < borderThickness || x >= width - borderThickness;
-      if (isYBorder || isXBorder) {
-        const idx = (y * width + x) * 4;
-        if (rgba[idx + 3] >= 20) {
-          const d = Math.hypot(rgba[idx] - bgR, rgba[idx + 1] - bgG, rgba[idx + 2] - bgB);
-          bgSpread += d;
+    let spreadSum = 0;
+    for (let y = 0; y < height; y += 2) {
+      const isYBorder = y < borderThickness || y >= height - borderThickness;
+      for (let x = 0; x < width; x += 2) {
+        const isXBorder = x < borderThickness || x >= width - borderThickness;
+        if (isYBorder || isXBorder) {
+          const idx = (y * width + x) * 4;
+          if (rgba[idx + 3] >= 36) {
+            spreadSum += Math.hypot(rgba[idx] - bgR, rgba[idx + 1] - bgG, rgba[idx + 2] - bgB);
+          }
         }
       }
     }
+    bgSpread = spreadSum / Math.max(1, bgCount / 4);
   }
-  bgSpread /= Math.max(1, bgCount / 4);
 
-  const threshold = Math.max(24, Math.min(80, 24 + bgSpread * 1.35));
-  const bgLuma = 0.299 * bgR + 0.587 * bgG + 0.114 * bgB;
+  const isBlackMatteCutout = !isTransparentCutout && bgLuma < 8 && bgSpread < 5;
+  const isCutoutMode = isTransparentCutout || isBlackMatteCutout;
+  const segmentationMode = isTransparentCutout ? "cutout_alpha" : isBlackMatteCutout ? "cutout_black" : "live_camera";
 
-  // Raw initial classification: metal vs. potential background
-  // 0: background/hole, 1: metal foreground candidate
+  // 2. Initial pixel classification: metal foreground candidate vs. background
   const initialMask = new Uint8Array(total);
   let rawPartPixels = 0;
+  let metalLumaSum = 0;
 
-  for (let i = 0; i < total; i++) {
-    const idx = i * 4;
-    const a = rgba[idx + 3];
-    if (a < 36) {
-      initialMask[i] = 0;
-      continue;
+  if (isCutoutMode) {
+    for (let i = 0; i < total; i++) {
+      const idx = i * 4;
+      const a = rgba[idx + 3];
+      if (isTransparentCutout) {
+        if (a >= 36) {
+          initialMask[i] = 1;
+          rawPartPixels++;
+          metalLumaSum += 0.299 * rgba[idx] + 0.587 * rgba[idx + 1] + 0.114 * rgba[idx + 2];
+        } else {
+          initialMask[i] = 0;
+        }
+      } else {
+        const luma = 0.299 * rgba[idx] + 0.587 * rgba[idx + 1] + 0.114 * rgba[idx + 2];
+        if (luma >= 10 && a >= 36) {
+          initialMask[i] = 1;
+          rawPartPixels++;
+          metalLumaSum += luma;
+        } else {
+          initialMask[i] = 0;
+        }
+      }
     }
-    const r = rgba[idx];
-    const g = rgba[idx + 1];
-    const b = rgba[idx + 2];
-    const dist = Math.hypot(r - bgR, g - bgG, b - bgB);
-    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+  } else {
+    const threshold = Math.max(24, Math.min(80, 24 + bgSpread * 1.35));
+    for (let i = 0; i < total; i++) {
+      const idx = i * 4;
+      const a = rgba[idx + 3];
+      if (a < 36) {
+        initialMask[i] = 0;
+        continue;
+      }
+      const r = rgba[idx];
+      const g = rgba[idx + 1];
+      const b = rgba[idx + 2];
+      const dist = Math.hypot(r - bgR, g - bgG, b - bgB);
+      const luma = 0.299 * r + 0.587 * g + 0.114 * b;
 
-    const isMetal = dist > threshold && luma < Math.max(160, bgLuma - 15);
-    if (isMetal) {
-      initialMask[i] = 1;
-      rawPartPixels++;
-    } else {
-      initialMask[i] = 0;
+      const isMetal = dist > threshold && luma < Math.max(160, bgLuma - 15);
+      if (isMetal) {
+        initialMask[i] = 1;
+        rawPartPixels++;
+        metalLumaSum += luma;
+      } else {
+        initialMask[i] = 0;
+      }
     }
   }
 
@@ -246,13 +343,12 @@ export function segmentForegroundAndHoles(
     initialMask.fill(1);
     rawPartPixels = total;
   }
+  const avgMetalLuma = rawPartPixels > 0 ? metalLumaSum / rawPartPixels : 100;
 
-  // -------------------------------------------------------------------------
-  // Connected Components Flood-Fill from Borders to identify OUTER BACKGROUND
+  // 3. Connected Components Flood-Fill from Borders to identify OUTER BACKGROUND
   // Label 0: unvisited background / internal cavity
   // Label 1: verified outer background
   // Label 2: foreground metal
-  // -------------------------------------------------------------------------
   const labels = new Uint8Array(total);
   for (let i = 0; i < total; i++) {
     if (initialMask[i] === 1) {
@@ -344,11 +440,9 @@ export function segmentForegroundAndHoles(
   const hullArea = computePolygonArea(hullPoints);
   const solidity = Number((fgArea / Math.max(fgArea, hullArea)).toFixed(4));
 
-  // -------------------------------------------------------------------------
-  // Identify enclosed internal cavities (labels[idx] === 0)
-  // Hole threshold: area > 0.8% of foreground area (fgArea * 0.008)
-  // -------------------------------------------------------------------------
-  const minHoleArea = Math.max(6, Math.round(fgArea * 0.008));
+  // 4. Identify enclosed internal cavities (labels[idx] === 0)
+  // Lowered threshold: 0.04% of foreground area (fgArea * 0.0004) to preserve small locating holes
+  const minHoleArea = Math.max(8, Math.round(fgArea * 0.0004));
   const maxHoleArea = Math.round(fgArea * 0.45);
 
   const holeMasks = new Uint8Array(total);
@@ -374,6 +468,8 @@ export function segmentForegroundAndHoles(
         let hArea = 0;
         let sumX = 0;
         let sumY = 0;
+        let cavityLumaSum = 0;
+        let transparentCavityCount = 0;
 
         visitedHole[idx] = 1;
         hQueue[hTail++] = idx;
@@ -382,10 +478,13 @@ export function segmentForegroundAndHoles(
           const cur = hQueue[hHead++];
           const hx = cur % width;
           const hy = (cur / width) | 0;
+          const curIdx = cur * 4;
 
           hArea++;
           sumX += hx;
           sumY += hy;
+          cavityLumaSum += 0.299 * rgba[curIdx] + 0.587 * rgba[curIdx + 1] + 0.114 * rgba[curIdx + 2];
+          if (rgba[curIdx + 3] < 36) transparentCavityCount++;
 
           if (hx > minX) {
             const n = cur - 1;
@@ -413,15 +512,24 @@ export function segmentForegroundAndHoles(
           }
         }
 
-        if (hArea >= minHoleArea && hArea <= maxHoleArea) {
+        const meanCavityLuma = cavityLumaSum / Math.max(1, hArea);
+        let isTrueHole = false;
+
+        if (isTransparentCutout) {
+          isTrueHole = transparentCavityCount >= hArea * 0.35;
+        } else if (isBlackMatteCutout) {
+          isTrueHole = meanCavityLuma < 8;
+        } else {
+          isTrueHole = meanCavityLuma >= bgLuma * 0.55 || meanCavityLuma >= avgMetalLuma * 1.35;
+        }
+
+        if (isTrueHole && hArea >= minHoleArea && hArea <= maxHoleArea) {
           const cx = sumX / hArea;
           const cy = sumY / hArea;
-          // Mark in holeMasks
           for (let k = 0; k < hTail; k++) {
             holeMasks[hQueue[k]] = 1;
           }
 
-          // Normalized relative coordinates to bounding box center [-0.5, 0.5]
           const u = Number(((cx - (minX + bw / 2)) / bw).toFixed(4));
           const v = Number(((cy - (minY + bh / 2)) / bh).toFixed(4));
           const relArea = Number(Math.sqrt(hArea / fgArea).toFixed(4));
@@ -449,7 +557,8 @@ export function segmentForegroundAndHoles(
     solidity,
     aspectRatio,
     holes,
-    bbox: { minX, minY, maxX, maxY, width: bw, height: bh }
+    bbox: { minX, minY, maxX, maxY, width: bw, height: bh },
+    diagnostics: { segmentationMode }
   };
 }
 
@@ -1132,7 +1241,7 @@ export function processLayer1Optical(
 
   const rbw = rMaxX - rMinX + 1;
   const rbh = rMaxY - rMinY + 1;
-  const orientedAspectRatio = Number((rbw / Math.max(1, rbh)).toFixed(4));
+  const orientedAspectRatio = Number((Math.max(rbw, rbh) / Math.max(1, Math.min(rbw, rbh))).toFixed(4));
 
   // Apply 6% padding margin
   const padX = Math.round(rbw * 0.06);
@@ -1195,9 +1304,12 @@ export function processLayer1Optical(
   let flipH = false;
   let flipV = false;
 
-  // Enforce deterministic orientation: dx >= 0 and dy >= 0
-  if (dx < -0.05) flipH = true;
-  if (dy < -0.05) flipV = true;
+  // Enforce deterministic orientation: true 2D in-plane 180-degree rotation (flipH AND flipV together)
+  // NEVER perform a single-axis mirror reflection
+  if (dx < -0.05 || (Math.abs(dx) <= 0.05 && dy < -0.05)) {
+    flipH = true;
+    flipV = true;
+  }
 
   if (flipH || flipV) {
     const flippedRgba = new Uint8ClampedArray(224 * 224 * 4);
@@ -1355,7 +1467,7 @@ export function processLayer1Optical(
     }
   }
 
-  const minCanonicalHoleArea = Math.max(4, Math.round(canonicalFgArea * 0.008));
+  const minCanonicalHoleArea = Math.max(2, Math.round(canonicalFgArea * 0.0004));
   const maxCanonicalHoleArea = Math.round(canonicalFgArea * 0.45);
   const visitedCanonicalHole = new Uint8Array(224 * 224);
   const canonicalHoles: HoleFeature[] = [];
@@ -1410,13 +1522,36 @@ export function processLayer1Optical(
           const cy = sumY / hArea;
           const u = Number(((cx - (cMinX + cW / 2)) / cW).toFixed(4));
           const v = Number(((cy - (cMinY + cH / 2)) / cH).toFixed(4));
+          const normX = Number(((cx - cMinX) / cW).toFixed(4));
+          const normY = Number(((cy - cMinY) / cH).toFixed(4));
           const relArea = Number(Math.sqrt(hArea / canonicalFgArea).toFixed(4));
-          canonicalHoles.push({ u, v, relArea, pixelArea: hArea });
+          const approxRadius = Math.sqrt(hArea / Math.PI);
+          const normRadius = Number((approxRadius / Math.max(cW, cH)).toFixed(4));
+
+          canonicalHoles.push({
+            x: normX,
+            y: normY,
+            u,
+            v,
+            area: hArea,
+            radius: normRadius,
+            relArea,
+            pixelArea: hArea,
+            isBig: true,
+            is_big: true
+          });
         }
       }
     }
   }
-  canonicalHoles.sort((a, b) => a.u - b.u);
+
+  const holeSizes = classifyHoleSizes1D(canonicalHoles.map(h => h.area ?? 0));
+  for (const h of canonicalHoles) {
+    const isBig = (h.area ?? 0) >= holeSizes.splitArea;
+    h.isBig = isBig;
+    h.is_big = isBig;
+  }
+  canonicalHoles.sort((a, b) => (a.x ?? a.u) - (b.x ?? b.u));
 
   return {
     fgMask: mask224,
@@ -1424,6 +1559,8 @@ export function processLayer1Optical(
     aspectRatio: orientedAspectRatio,
     solidity: canonicalSolidity,
     holeCount: canonicalHoles.length,
+    bigHoleCount: holeSizes.bigHoles,
+    smallHoleCount: holeSizes.smallHoles,
     holeFeatures: canonicalHoles,
     pseudoRgbTensor,
     scharrEdgeMap,
@@ -1435,7 +1572,8 @@ export function processLayer1Optical(
       flipH,
       flipV,
       rawForegroundArea: canonicalFgArea,
-      convexHullArea: Math.round(canonicalFgArea / Math.max(0.01, canonicalSolidity))
+      convexHullArea: Math.round(canonicalFgArea / Math.max(0.01, canonicalSolidity)),
+      segmentationMode: seg.diagnostics?.segmentationMode || "unknown"
     }
   };
 }

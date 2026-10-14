@@ -143,4 +143,84 @@ describe("Moris Layer 3 — Geometric Re-Ranking Engine", () => {
     // Kiểm tra text trả về trong user_message: mã Top 1 phải là 3465490001
     expect(publicOut.user_message).toContain("1. 3465490001");
   });
+
+  it("Cross-Modal Recovery: tự động phục hồi số lượng lỗ từ text identifying_features khi DB hole_count = 0", () => {
+    const queryGeometry = {
+      hole_count: 4,
+      aspect_ratio: 2.0
+    };
+
+    const candidateWithoutText = {
+      id: "cand-no-text",
+      code: "NO-TEXT-PART",
+      vector_similarity: 0.90,
+      hole_count: 0,
+      aspect_ratio: 2.0
+    };
+
+    const candidateWithText = {
+      id: "cand-with-text",
+      code: "RECOVERED-PART",
+      vector_similarity: 0.90,
+      hole_count: 0, // Corrupted legacy 0
+      aspect_ratio: 2.0,
+      identifying_features: "4 lỗ tròn to"
+    };
+
+    const scoreNoText = scoreCandidateGeometry(candidateWithoutText, queryGeometry);
+    const scoreWithText = scoreCandidateGeometry(candidateWithText, queryGeometry);
+
+    expect(scoreNoText.s_holes).toBe(0.0);
+    expect(scoreWithText.s_holes).toBeGreaterThanOrEqual(0.85);
+    expect(scoreWithText.final_score).toBeGreaterThan(scoreNoText.final_score);
+  });
+
+  it("phân bổ lỗ to/nhỏ: ứng viên có phân bổ lỗ to/nhỏ khớp chính xác đạt điểm s_holes cao hơn", () => {
+    const queryGeometry = {
+      hole_count: 5,
+      big_hole_count: 4,
+      small_hole_count: 1,
+      aspect_ratio: 2.0
+    };
+
+    const candidateExact = {
+      id: "cand-exact-clusters",
+      code: "PART-4BIG-1SMALL",
+      vector_similarity: 0.88,
+      hole_count: 5,
+      big_hole_count: 4,
+      small_hole_count: 1,
+      aspect_ratio: 2.0
+    };
+
+    const candidateDifferent = {
+      id: "cand-diff-clusters",
+      code: "PART-2BIG-3SMALL",
+      vector_similarity: 0.88,
+      hole_count: 5,
+      big_hole_count: 2,
+      small_hole_count: 3,
+      aspect_ratio: 2.0
+    };
+
+    const scoreExact = scoreCandidateGeometry(candidateExact, queryGeometry);
+    const scoreDiff = scoreCandidateGeometry(candidateDifferent, queryGeometry);
+
+    expect(scoreExact.s_holes).toBeGreaterThan(scoreDiff.s_holes);
+    expect(scoreExact.final_score).toBeGreaterThan(scoreDiff.final_score);
+  });
+
+  it("classifyHoleSizes1D: phân cụm lỗ to và lỗ nhỏ chuẩn xác theo diện tích logarit", async () => {
+    const { classifyHoleSizes1D } = await import("../src/moris/moris-layer1-optical.js");
+
+    const holeAreas = [125, 120, 118, 115, 24];
+    const clustered = classifyHoleSizes1D(holeAreas);
+
+    expect(clustered.totalHoles).toBe(5);
+    expect(clustered.bigHoles).toBe(4);
+    expect(clustered.smallHoles).toBe(1);
+    expect(clustered.splitArea).toBeGreaterThan(24);
+    expect(clustered.splitArea).toBeLessThan(115);
+  });
 });
+

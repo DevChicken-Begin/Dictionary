@@ -20,6 +20,16 @@ import {
   deserializeSignature
 } from "../moris-idb.js";
 
+import {
+  extractDinov2Tokens,
+  downsampleTo16x16Grid,
+  computeSupabase384HybridEmbedding
+} from "../moris-layer2-embedding.js";
+
+import {
+  computeEllipticFourierDescriptors
+} from "../moris-layer3-rerank.js";
+
 const TRANSFORMERS_CDN =
   "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
@@ -220,6 +230,36 @@ function pseudoRgbTensorToCanvas(opt) {
   return canvas;
 }
 
+function computeReliefInvertedOptical(opt) {
+  const invClahe = new Float32Array(224 * 224);
+  const invEdge = new Float32Array(224 * 224);
+  const invChamfer = new Float32Array(224 * 224);
+  const invFgMask = new Uint8Array(224 * 224);
+
+  for (let y = 0; y < 224; y++) {
+    for (let x = 0; x < 224; x++) {
+      const dstIdx = y * 224 + x;
+      const srcIdx = y * 224 + (223 - x);
+      const isFg = opt.fgMask[srcIdx] === 1;
+      invFgMask[dstIdx] = isFg ? 1 : 0;
+      invEdge[dstIdx] = opt.scharrEdgeMap[srcIdx];
+      invChamfer[dstIdx] = opt.chamferDistMap[srcIdx];
+      if (isFg) {
+        invClahe[dstIdx] = Math.max(0, Math.min(1, 1.0 - opt.claheLuminance[srcIdx]));
+      } else {
+        invClahe[dstIdx] = 0;
+      }
+    }
+  }
+
+  return {
+    fgMask: invFgMask,
+    claheLuminance: invClahe,
+    scharrEdgeMap: invEdge,
+    chamferDistMap: invChamfer
+  };
+}
+
 async function extractFeaturesWithFallback(extractor, canvas) {
   try {
     return await extractor(canvas, { pooling: "none" });
@@ -268,6 +308,93 @@ self.onmessage = async event => {
         result: {
           embedding,
           runtime: runtimeInfo
+        }
+      });
+      return;
+    }
+
+    // -----------------------------------------------------------------------
+    // Message Type: embed-variants-v2 (Native 384D Supabase Dual-Probe & Rich Geometry)
+    // -----------------------------------------------------------------------
+    if (message.type === "embed-variants-v2") {
+      const img = await resolveImageRgba(message.image);
+      const opt = processLayer1Optical(img.rgba, img.width, img.height);
+      const extractor = await getExtractor();
+
+      // Probe 1: canon_rgb_v2
+      const canvas1 = pseudoRgbTensorToCanvas(opt);
+      const output1 = await extractFeaturesWithFallback(extractor, canvas1);
+      const tokens1 = extractDinov2Tokens(output1);
+      const grid1 = downsampleTo16x16Grid(opt.fgMask, opt.scharrEdgeMap, 224, 16);
+      const canonRgbVec = computeSupabase384HybridEmbedding(tokens1.patchTokens, grid1.mask16x16, grid1.edge16x16);
+
+      const probes = [
+        {
+          probe_id: "canon_rgb_v2",
+          view_variant: "canon_rgb_v2",
+          embedding: Array.from(canonRgbVec),
+          profile: {
+            model: MODEL_ID,
+            model_version: MODEL_REVISION,
+            preprocess_version: "kim_canon_v2",
+            profile: "cls_l2_v1",
+            dimension: DIMENSION
+          },
+          runtime: runtimeInfo,
+          diagnostics: opt.diagnostics
+        }
+      ];
+
+      // Probe 2: canon_gray_v2 (Relief-inverted convex<->concave flip)
+      if (message.includeGray !== false) {
+        const relInv = computeReliefInvertedOptical(opt);
+        const canvas2 = pseudoRgbTensorToCanvas(relInv);
+        const output2 = await extractFeaturesWithFallback(extractor, canvas2);
+        const tokens2 = extractDinov2Tokens(output2);
+        const grid2 = downsampleTo16x16Grid(relInv.fgMask, relInv.scharrEdgeMap, 224, 16);
+        const canonGrayVec = computeSupabase384HybridEmbedding(tokens2.patchTokens, grid2.mask16x16, grid2.edge16x16);
+
+        probes.push({
+          probe_id: "canon_gray_v2",
+          view_variant: "canon_gray_v2",
+          embedding: Array.from(canonGrayVec),
+          profile: {
+            model: MODEL_ID,
+            model_version: MODEL_REVISION,
+            preprocess_version: "kim_canon_v2",
+            profile: "cls_l2_v1",
+            dimension: DIMENSION
+          },
+          runtime: runtimeInfo,
+          diagnostics: opt.diagnostics
+        });
+      }
+
+      const efdCoefficients = Array.from(computeEllipticFourierDescriptors(opt.outerContour, 16));
+
+      const geometry = {
+        hole_count: opt.holeCount,
+        big_hole_count: opt.bigHoleCount,
+        small_hole_count: opt.smallHoleCount,
+        aspect_ratio: opt.aspectRatio,
+        solidity: opt.solidity,
+        hole_centroids: (opt.holeFeatures || []).map(h => ({
+          x: h.x,
+          y: h.y,
+          radius: h.radius,
+          area: h.area,
+          is_big: h.isBig
+        })),
+        efd_coefficients: efdCoefficients
+      };
+
+      post("result", {
+        requestId,
+        result: {
+          probes,
+          geometry,
+          diagnostics: opt.diagnostics,
+          preprocess_version: "kim_canon_v2"
         }
       });
       return;

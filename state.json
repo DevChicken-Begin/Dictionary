@@ -8,8 +8,8 @@
   },
   "current_session": {
     "active_task": "all_tasks_completed",
-    "last_checkpoint": "Moris 5-Bug Hotfix completed and verified (202 passing unit tests, tsc clean, build clean)",
-    "resumption_prompt": "Hệ thống đã sửa triệt để 5 lỗi theo MORIS_HOTFIX_PLAN.md, pass 100% tsc và unit test."
+    "last_checkpoint": "Moris Supabase Unified Upgrade (Steps 1-5) completed and verified (210 passing unit tests, tsc clean, build clean)",
+    "resumption_prompt": "Hệ thống đã hoàn tất nâng cấp 5 bước theo MORIS_SUPABASE_UNIFIED_PLAN.md, pass 100% tsc và 210/210 unit tests."
   },
   "tasks": [
     {
@@ -179,11 +179,24 @@
       },
       "solution": "1) Truyền opt trực tiếp vào extractor(pseudoRgbTensor, opt), OffscreenCanvas render từ pseudoRgbTensorToCanvas(opt) và gọi extractor với { pooling: 'none' } có fallback; 2) synthesizePerspectiveCentroid re-pooling patchTokens (256x384) qua gradient cột, gradient hàng, edge boost mũ 0.75 và border attenuation; 3) processLayer1Optical tính orientedAspectRatio từ trục chính xoay ngang PCA và tính solidity/holeFeatures chuẩn xác; 4) Wire enrollSkuSignatureV2 vào vectorizeSavedPart, deleteSignatureV2 vào deleteCurrentPart/executeBulkDelete/executeDeleteAll, searchPartTop10V2 vào buildMorisQueryVector và boost/merge kết quả vào sendMorisMessage; 5) Cập nhật unit test, đồng bộ .ts/.js/dist, chạy tsc --noEmit và vitest 100% pass.",
       "evidence": "npx tsc --noEmit sạch 0 lỗi, npm test pass 18/18 test suites (202/202 tests pass 100%), npm run build sinh 41 file dist/ sạch sẽ."
+    },
+    {
+      "id": "task_15_moris_supabase_unified_upgrade",
+      "title": "Nâng cấp toàn diện Moris Unified 3-Layer Supabase & Semantic-Geometric theo MORIS_SUPABASE_UNIFIED_PLAN.md",
+      "status": "completed",
+      "completed_at": "2026-10-14T05:05:00Z",
+      "diagnostics": {
+        "finding_1": "Bề mặt kim loại dập nổi (convex) bị chụp từ mặt sau (concave) làm sai lệch hướng đổ bóng và cosine similarity trong pgvector Supabase.",
+        "finding_2": "72 bản ghi front legacy trong DB bị gán nhầm hole_count = 0 mặc dù identifying_features mô tả rõ số lượng lỗ, gây phạt điểm nhầm trong Layer 3 reranker.",
+        "finding_3": "Tìm kiếm text đặc điểm nhận dạng nhạy cảm với thứ tự chuỗi ('5 lỗ tròn 4 lỗ to + 1 lỗ nhỏ' vs '1 lỗ nhỏ 4 lỗ to 5 lỗ tròn') và ranh giới số chưa chuẩn hoá AST."
+      },
+      "solution": "1) Step 1: Nâng cấp Layer 1 (moris-layer1-optical.ts) Dual-Mode segmentation (R2 cutouts vs Live camera), hạ ngưỡng diện tích lỗ tối thiểu xuống 0.04% (0.0004), phân cụm 1D Log-Area Otsu (classifyHoleSizes1D) tách bigHoleCount & smallHoleCount, chuẩn hoá in-plane 180° rotation (flipH + flipV đồng thời), aspectRatio >= 1.0; 2) Step 2: Nâng cấp Layer 2 (moris-layer2-embedding.ts) sinh vector 384D chuẩn Supabase pgvector qua computeSupabase384HybridEmbedding (0.55 GeM + 0.45 Edge-Detail), tính biến thể đảo ngược phù điêu computeReliefInvertedOptical, handler embed-variants-v2 trong Worker sinh canon_rgb_v2 & canon_gray_v2 cùng rich geometry; 3) Step 3: Nâng cấp featureMatcher.js và src/app.js với parseIdentifyingFeaturesAST và matchFeatureQueryFlexible hỗ trợ giao hoán thứ tự, suy luận tổng số lỗ ngầm định (big + small = total), sai số cảm tính (+/- 1) và ranh giới số nghiêm ngặt; 4) Step 4: Nâng cấp geometricReranker.js Cross-Modal Recovery phục hồi số lượng lỗ cho 72 mã legacy từ text identifying_features, so khớp phân bổ lỗ to/nhỏ, bất biến phản xạ gương tâm lỗ và bất biến xoay tỷ lệ khung hình; làm sạch src/app.js xoá bỏ split-brain IndexedDB; 5) Step 5: Đồng bộ dist/ 42 files, bổ sung unit tests trong tests/moris-features-filter.test.js và tests/moris-reranker.test.js.",
+      "evidence": "npx tsc --noEmit sạch 0 lỗi, npm test pass 18/18 test suites (210/210 unit tests pass 100%), npm run build sinh 42 files dist/ sạch sẽ."
     }
   ],
   "verification": {
-    "total_unit_tests": 202,
-    "passing_tests": 202,
+    "total_unit_tests": 210,
+    "passing_tests": 210,
     "failing_tests": 0
   }
 }

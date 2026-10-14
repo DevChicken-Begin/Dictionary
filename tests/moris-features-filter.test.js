@@ -4,7 +4,9 @@ import {
   extractQueryFeatures,
   isSingleFeatureMatch,
   matchRowWithFeatures,
-  filterCatalogueByQueryFeatures
+  filterCatalogueByQueryFeatures,
+  parseIdentifyingFeaturesAST,
+  matchFeatureQueryFlexible
 } from "../functions/_lib/moris/v5/retrieval/featureMatcher.js";
 
 describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", () => {
@@ -421,5 +423,66 @@ describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", ()
       expect(res.matchedRows).toHaveLength(0);
     });
   });
+
+  describe("parseIdentifyingFeaturesAST & matchFeatureQueryFlexible — Bất biến thứ tự & Suy luận", () => {
+    it("trích xuất AST chính xác và tự động suy luận tổng số lỗ (big + small = total)", () => {
+      const ast1 = parseIdentifyingFeaturesAST("5 lỗ tròn 4 lỗ to + 1 lỗ nhỏ");
+      expect(ast1.totalHoles).toBe(5);
+      expect(ast1.bigHoles).toBe(4);
+      expect(ast1.smallHoles).toBe(1);
+      expect(ast1.holeShapes).toContain("tron");
+
+      // Đảo thứ tự chuỗi đầu vào nhưng AST thu được giống hệt
+      const ast2 = parseIdentifyingFeaturesAST("1 lỗ nhỏ 4 lỗ to 5 lỗ tròn");
+      expect(ast2.totalHoles).toBe(5);
+      expect(ast2.bigHoles).toBe(4);
+      expect(ast2.smallHoles).toBe(1);
+      expect(ast2.holeShapes).toContain("tron");
+
+      // Tự suy luận totalHoles = 3 + 2 = 5
+      const ast3 = parseIdentifyingFeaturesAST("3 lỗ to 2 lỗ nhỏ");
+      expect(ast3.totalHoles).toBe(5);
+      expect(ast3.bigHoles).toBe(3);
+      expect(ast3.smallHoles).toBe(2);
+    });
+
+    it("so khớp giao hoán (Order-Independent): '5 lỗ tròn 2 lỗ nhỏ + 3 lỗ to' khớp '5 lỗ tròn 3 lỗ to + 2 lỗ nhỏ'", () => {
+      const dbText = "5 lỗ tròn, 3 lỗ to + 2 lỗ nhỏ";
+      const queryReversed = "5 lỗ tròn 2 lỗ nhỏ + 3 lỗ to";
+
+      const res = matchFeatureQueryFlexible(dbText, queryReversed);
+      expect(res.matched).toBe(true);
+      expect(res.tier).toBe("exact_match");
+      expect(res.score).toBe(1.0);
+    });
+
+    it("so khớp ngầm định không cần nêu '5 lỗ tròn': '2 nhỏ 3 to' khớp DB '5 lỗ tròn 3 lỗ to + 2 lỗ nhỏ'", () => {
+      const dbText = "5 lỗ tròn 3 lỗ to + 2 lỗ nhỏ";
+      const queryShort = "2 nhỏ 3 to";
+
+      const res = matchFeatureQueryFlexible(dbText, queryShort);
+      expect(res.matched).toBe(true);
+      expect(res.tier).toBe("exact_match");
+      expect(res.score).toBe(1.0);
+    });
+
+    it("ngưỡng sai số cảm tính mắt thường (perceptual_tolerance): lệch 1 lỗ to/nhỏ khi tổng số lỗ khớp", () => {
+      const dbText = "5 lỗ tròn 3 lỗ to + 2 lỗ nhỏ";
+      const queryShift = "5 lỗ tròn 2 lỗ to + 3 lỗ nhỏ";
+
+      const res = matchFeatureQueryFlexible(dbText, queryShift);
+      expect(res.matched).toBe(true);
+      expect(res.tier).toBe("perceptual_tolerance");
+      expect(res.score).toBe(0.85);
+    });
+
+    it("ranh giới số nghiêm ngặt: '2 lỗ' tuyệt đối không khớp '22 lỗ' hay '12 lỗ'", () => {
+      expect(matchFeatureQueryFlexible("22 lỗ tròn", "2 lỗ tròn").matched).toBe(false);
+      expect(matchFeatureQueryFlexible("12 lỗ tròn", "2 lỗ tròn").matched).toBe(false);
+      expect(matchFeatureQueryFlexible("20 lỗ tròn", "2 lỗ tròn").matched).toBe(false);
+      expect(matchFeatureQueryFlexible("2 lỗ tròn to", "2 lỗ tròn").matched).toBe(true);
+    });
+  });
 });
+
 

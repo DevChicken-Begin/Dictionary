@@ -222,6 +222,84 @@ edge16x16 // 256
     }
     return l2NormalizeVector(hybridVec);
 }
+/**
+ * Computes 384-dim Native Supabase Hybrid Vector:
+ * - 384-dim Signed GeM (p = 3.0) on foreground patches (mask16x16 >= 0.15)
+ * - 384-dim Edge-Detail Weighted Pooling (detailVec) using weight = mask16x16 * edge16x16
+ * - Fused directly in 384-dim space: L2Normalize(0.55 * gemVec + 0.45 * detailVec)
+ */
+export function computeSupabase384HybridEmbedding(patchTokens, // 256 * 384
+mask16x16, // 256
+edge16x16 // 256
+) {
+    const dim = 384;
+    const numPatches = 256;
+    const pPower = 3.0;
+    const invP = 1.0 / pPower;
+    let sumFgW = 0;
+    const fgWeights = new Float32Array(numPatches);
+    for (let i = 0; i < numPatches; i++) {
+        const m = mask16x16[i];
+        if (m >= 0.15) {
+            fgWeights[i] = m;
+            sumFgW += m;
+        }
+    }
+    if (sumFgW < 1e-4) {
+        for (let i = 0; i < numPatches; i++) {
+            fgWeights[i] = 1.0;
+        }
+        sumFgW = numPatches;
+    }
+    const gemVec = new Float32Array(dim);
+    const invFgW = 1.0 / sumFgW;
+    for (let d = 0; d < dim; d++) {
+        let acc = 0;
+        for (let i = 0; i < numPatches; i++) {
+            const w = fgWeights[i];
+            if (w > 0) {
+                const val = patchTokens[i * dim + d];
+                const sign = Math.sign(val);
+                const absVal = Math.max(Math.abs(val), 1e-6);
+                acc += w * sign * Math.pow(absVal, pPower);
+            }
+        }
+        const meanVal = acc * invFgW;
+        gemVec[d] = Math.sign(meanVal) * Math.pow(Math.abs(meanVal), invP);
+    }
+    l2NormalizeVector(gemVec);
+    let sumEdgeW = 0;
+    const edgeWeights = new Float32Array(numPatches);
+    for (let i = 0; i < numPatches; i++) {
+        const ew = mask16x16[i] * edge16x16[i];
+        edgeWeights[i] = ew;
+        sumEdgeW += ew;
+    }
+    if (sumEdgeW < 1e-4) {
+        for (let i = 0; i < numPatches; i++) {
+            edgeWeights[i] = fgWeights[i];
+        }
+        sumEdgeW = sumFgW;
+    }
+    const detailVec = new Float32Array(dim);
+    const invEdgeW = 1.0 / sumEdgeW;
+    for (let d = 0; d < dim; d++) {
+        let acc = 0;
+        for (let i = 0; i < numPatches; i++) {
+            const ew = edgeWeights[i];
+            if (ew > 0) {
+                acc += ew * patchTokens[i * dim + d];
+            }
+        }
+        detailVec[d] = acc * invEdgeW;
+    }
+    l2NormalizeVector(detailVec);
+    const v384 = new Float32Array(dim);
+    for (let d = 0; d < dim; d++) {
+        v384[d] = 0.55 * gemVec[d] + 0.45 * detailVec[d];
+    }
+    return l2NormalizeVector(v384);
+}
 // ---------------------------------------------------------------------------
 // 6. TOP-32 KEY PATCHES EXTRACTION (FOR LAYER 3 SPATIAL MATCHING)
 // ---------------------------------------------------------------------------
