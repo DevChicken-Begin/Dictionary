@@ -1329,6 +1329,7 @@ createApp({
         }
       }
 
+      const keywords = [];
       const structuralKeywords = ['uon cong', 'dap noi', 'vat goc', 'tai bat oc', 'go dap', 'gan noi', 'dap gan', 'chot dinh vi', 'ngam'];
       for (const kw of structuralKeywords) {
         if (norm.includes(kw)) keywords.push(kw);
