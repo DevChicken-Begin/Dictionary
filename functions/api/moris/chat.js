@@ -122,6 +122,8 @@ function toCandidate(row, rank, isFeatureMatch = false) {
     probe_consensus: 0,
     structural_score: null,
     score_source: isFeatureMatch ? "identifying_features_match" : "metadata_rank",
+    is_feature_match: isFeatureMatch,
+    badge_label: isFeatureMatch ? "Khớp" : null,
     reason: features.slice(0, 160) || null,
     matched: [],
     conflicts: [],

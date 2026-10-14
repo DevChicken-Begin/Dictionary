@@ -195,6 +195,8 @@ describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", ()
         // CHỈ ĐÚNG 1 MÃ TRUE, KHÔNG PHẢI TOP 10 RÁC
         expect(data.candidates).toHaveLength(1);
         expect(data.candidates[0].code).toBe("3411160201");
+        expect(data.candidates[0].is_feature_match).toBe(true);
+        expect(data.candidates[0].badge_label).toBe("Khớp");
         expect(data.answer).toContain("3411160201");
         expect(data.answer).not.toContain("3411160202");
         expect(data.answer).not.toContain("3411160203");
@@ -466,11 +468,16 @@ describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", ()
       expect(res.score).toBe(1.0);
     });
 
-    it("ngưỡng sai số cảm tính mắt thường (perceptual_tolerance): lệch 1 lỗ to/nhỏ khi tổng số lỗ khớp", () => {
+    it("ngưỡng sai số cảm tính mắt thường (perceptual_tolerance): lệch 1 lỗ to/nhỏ khi bật allowPerceptualTolerance", () => {
       const dbText = "5 lỗ tròn 3 lỗ to + 2 lỗ nhỏ";
       const queryShift = "5 lỗ tròn 2 lỗ to + 3 lỗ nhỏ";
 
-      const res = matchFeatureQueryFlexible(dbText, queryShift);
+      // Mặc định allowPerceptualTolerance = false -> tuyệt đối không khớp
+      const strictRes = matchFeatureQueryFlexible(dbText, queryShift);
+      expect(strictRes.matched).toBe(false);
+
+      // Khi bật allowPerceptualTolerance: true -> khớp sai số cảm tính
+      const res = matchFeatureQueryFlexible(dbText, queryShift, { allowPerceptualTolerance: true });
       expect(res.matched).toBe(true);
       expect(res.tier).toBe("perceptual_tolerance");
       expect(res.score).toBe(0.85);
@@ -481,6 +488,70 @@ describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", ()
       expect(matchFeatureQueryFlexible("12 lỗ tròn", "2 lỗ tròn").matched).toBe(false);
       expect(matchFeatureQueryFlexible("20 lỗ tròn", "2 lỗ tròn").matched).toBe(false);
       expect(matchFeatureQueryFlexible("2 lỗ tròn to", "2 lỗ tròn").matched).toBe(true);
+    });
+  });
+
+  describe("Production Hotfix Cases: '3 lỗ nhỏ + 1 lỗ to' vs false positives", () => {
+    const productionParts = [
+      { id: "1", code: "3687110001", identifying_features: "4 lỗ tròn 3 lỗ nhỏ + 1 lỗ to" },
+      { id: "2", code: "3885600001", identifying_features: "4 lỗ tròn 3 lỗ nhỏ 1 lỗ to, có uốn cong 2 đoạn" },
+      { id: "3", code: "3883310001", identifying_features: "4 lỗ tròn 2 lỗ to + 2 lỗ nhỏ" },
+      { id: "4", code: "3889630101", identifying_features: "4 lỗ oval, 5 lỗ tròn, 1 lỗ vuông nhỏ, 1 lỗ vuông to, uốn cong giữa thân" },
+      { id: "5", code: "3889510001", identifying_features: "4 lỗ tròn, có uốn cong" },
+      { id: "6", code: "3960230001", identifying_features: "4 lỗ tròn, 1 lỗ vuông" }
+    ];
+
+    const testQueries = [
+      "3 lỗ nhỏ + 1 lỗ to",
+      "1 lỗ to + 3 lỗ nhỏ",
+      "4 lỗ tròn 3 lỗ nhỏ + 1 lỗ to"
+    ];
+
+    for (const q of testQueries) {
+      it(`truy vấn "${q}": MUST match 3687110001 & 3885600001, MUST NOT match 3883310001, 3889630101, 3889510001, 3960230001`, () => {
+        const res = filterCatalogueByQueryFeatures(productionParts, q);
+        expect(res.isFeatureQuery).toBe(true);
+        const codes = res.matchedRows.map(r => r.code);
+        expect(codes).toContain("3687110001");
+        expect(codes).toContain("3885600001");
+        expect(codes).not.toContain("3883310001");
+        expect(codes).not.toContain("3889630101");
+        expect(codes).not.toContain("3889510001");
+        expect(codes).not.toContain("3960230001");
+        expect(res.matchedRows).toHaveLength(2);
+      });
+    }
+
+    it("Moris Chat candidate trả về nhãn 'Khớp' và is_feature_match: true thay vì 100%", async () => {
+      const { onRequestPost } = await import("../functions/api/moris/chat.js");
+      const fakeJwt = "header.payload.signature";
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes("app_me")) return new Response(JSON.stringify([{ ok: true, id: "test-user-id" }]), { status: 200 });
+        if (u.includes("app_search_catalogue")) return new Response(JSON.stringify(productionParts), { status: 200 });
+        return new Response("Not found", { status: 404 });
+      };
+
+      try {
+        const request = new Request("https://example.com/api/moris/chat", {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-session-token": fakeJwt },
+          body: JSON.stringify({ message: "3 lỗ nhỏ + 1 lỗ to", session_token: fakeJwt })
+        });
+
+        const res = await onRequestPost({ request, env: { SUPABASE_URL: "https://test.supabase.co", SUPABASE_ANON_KEY: "anon", SUPABASE_SERVICE_ROLE_KEY: "srv" } });
+        const data = await res.json();
+        expect(data.ok).toBe(true);
+        expect(data.candidates).toHaveLength(2);
+        for (const cand of data.candidates) {
+          expect(cand.is_feature_match).toBe(true);
+          expect(cand.badge_label).toBe("Khớp");
+        }
+        expect(data.answer).not.toContain("100%");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
   });
 });

@@ -2,14 +2,14 @@
   "system": {
     "project": "Catalogue AI (Dictionary)",
     "stack": "Vue 3 CDN + Cloudflare Pages Functions + Supabase (pgvector) + Cloudflare R2",
-    "updated_at": "2026-10-14T03:24:00Z",
-    "memory_version": "2.0.0",
+    "updated_at": "2026-10-14T07:40:00Z",
+    "memory_version": "2.1.0",
     "status": "completed"
   },
   "current_session": {
     "active_task": "all_tasks_completed",
-    "last_checkpoint": "Moris Supabase Unified Upgrade (Steps 1-5) completed and verified (210 passing unit tests, tsc clean, build clean)",
-    "resumption_prompt": "Hệ thống đã hoàn tất nâng cấp 5 bước theo MORIS_SUPABASE_UNIFIED_PLAN.md, pass 100% tsc và 210/210 unit tests."
+    "last_checkpoint": "Moris Hotfix Filter (BUG 1, BUG 2, BUG 3) completed and verified (214 passing unit tests, tsc clean, build clean)",
+    "resumption_prompt": "Hệ thống đã hoàn tất sửa triệt để 3 bug theo MORIS_HOTFIX_FILTER.md, pass 100% tsc và 214/214 unit tests."
   },
   "tasks": [
     {
@@ -192,11 +192,24 @@
       },
       "solution": "1) Step 1: Nâng cấp Layer 1 (moris-layer1-optical.ts) Dual-Mode segmentation (R2 cutouts vs Live camera), hạ ngưỡng diện tích lỗ tối thiểu xuống 0.04% (0.0004), phân cụm 1D Log-Area Otsu (classifyHoleSizes1D) tách bigHoleCount & smallHoleCount, chuẩn hoá in-plane 180° rotation (flipH + flipV đồng thời), aspectRatio >= 1.0; 2) Step 2: Nâng cấp Layer 2 (moris-layer2-embedding.ts) sinh vector 384D chuẩn Supabase pgvector qua computeSupabase384HybridEmbedding (0.55 GeM + 0.45 Edge-Detail), tính biến thể đảo ngược phù điêu computeReliefInvertedOptical, handler embed-variants-v2 trong Worker sinh canon_rgb_v2 & canon_gray_v2 cùng rich geometry; 3) Step 3: Nâng cấp featureMatcher.js và src/app.js với parseIdentifyingFeaturesAST và matchFeatureQueryFlexible hỗ trợ giao hoán thứ tự, suy luận tổng số lỗ ngầm định (big + small = total), sai số cảm tính (+/- 1) và ranh giới số nghiêm ngặt; 4) Step 4: Nâng cấp geometricReranker.js Cross-Modal Recovery phục hồi số lượng lỗ cho 72 mã legacy từ text identifying_features, so khớp phân bổ lỗ to/nhỏ, bất biến phản xạ gương tâm lỗ và bất biến xoay tỷ lệ khung hình; làm sạch src/app.js xoá bỏ split-brain IndexedDB; 5) Step 5: Đồng bộ dist/ 42 files, bổ sung unit tests trong tests/moris-features-filter.test.js và tests/moris-reranker.test.js.",
       "evidence": "npx tsc --noEmit sạch 0 lỗi, npm test pass 18/18 test suites (210/210 unit tests pass 100%), npm run build sinh 42 files dist/ sạch sẽ."
+    },
+    {
+      "id": "task_16_moris_hotfix_filter",
+      "title": "Sửa triệt để 3 lỗi lọc thanh Filter chính, AST Feature Matching & nhãn 'Khớp' theo MORIS_HOTFIX_FILTER.md",
+      "status": "completed",
+      "completed_at": "2026-10-14T07:40:00Z",
+      "diagnostics": {
+        "bug_1": "loadParts() trong src/app.js truyền raw search và fetchLimit = 300 vào Supabase SQL app_search_catalogue, khiến SQL string match trả về 0 dòng cho các query chứa dấu '+' hoặc đảo thứ tự từ.",
+        "bug_2": "parseIdentifyingFeaturesAST đếm sai tổng số lỗ khi có nhiều phân đoạn độc lập và auto-subtract bừa bãi; matchFeatureQueryFlexible trả về partial_match khi DB thiếu subset big/small; tolerance +/- 1 bị bật mặc định trong text search làm khớp nhầm 2 to + 2 nhỏ.",
+        "bug_3": "Moris Chat candidate hiển thị 100% thay vì nhãn 'Khớp' khi tìm kiếm bằng văn bản đặc điểm nhận dạng."
+      },
+      "solution": "1) Sửa loadParts() khi isFeatureSearch truyền p_search: '' và p_limit: 2000, p_offset: 0 để tải toàn bộ catalogue từ Supabase và cho client-side AST matcher xử lý; 2) Sửa parseIdentifyingFeaturesAST phân tách mệnh đề phụ vs các phân đoạn hình dạng độc lập (shapeCounts), cấm auto-subtract bừa; cập nhật matchFeatureQueryFlexible kiểm tra nghiêm ngặt bigHoles/smallHoles, tắt perceptual tolerance mặc định, loại bỏ fallback lỏng lẻo trong matchRowWithFeatures cho hole queries; 3) Gán cờ is_feature_match: true và badge_label: 'Khớp' trong toCandidate, publicResult.js, cập nhật morisCandidatePercent trả về null và index.html render badge 'Khớp'.",
+      "evidence": "npx -p typescript tsc --noEmit sạch 0 lỗi, npm test pass 18/18 test suites (214/214 unit tests pass 100%), npm run build sinh 42 files dist/ sạch sẽ."
     }
   ],
   "verification": {
-    "total_unit_tests": 210,
-    "passing_tests": 210,
+    "total_unit_tests": 214,
+    "passing_tests": 214,
     "failing_tests": 0
   }
 }

@@ -1207,6 +1207,7 @@ createApp({
           bigHoles: null,
           smallHoles: null,
           holeShapes: [],
+          shapeCounts: {},
           otherNumberedPairs: [],
           keywords: []
         };
@@ -1215,41 +1216,52 @@ createApp({
       const cleaned = this.cleanFeatureText(raw);
       const norm = this.removeVietnameseAccents(cleaned);
 
-      let totalHoles = null;
       let bigHoles = null;
+      const bigRegex = /(?<!\d)(\d+)\s*(?:lo\s*(?:tron|vuong|oval|bau duc|chu nhat|tam giac)?\s*)?(?:to|lon)\b/gi;
+      let bMatch;
+      while ((bMatch = bigRegex.exec(norm)) !== null) {
+        const n = parseInt(bMatch[1], 10);
+        bigHoles = (bigHoles === null ? 0 : bigHoles) + n;
+      }
+
       let smallHoles = null;
+      const smallRegex = /(?<!\d)(\d+)\s*(?:lo\s*(?:tron|vuong|oval|bau duc|chu nhat|tam giac)?\s*)?(?:nho|be)\b/gi;
+      let sMatch;
+      while ((sMatch = smallRegex.exec(norm)) !== null) {
+        const n = parseInt(sMatch[1], 10);
+        smallHoles = (smallHoles === null ? 0 : smallHoles) + n;
+      }
+
+      const segments = raw.split(',').map(s => s.trim()).filter(Boolean);
+      const shapeCounts = {};
+      const generalShapeCounts = {};
       const holeShapes = [];
-      const otherNumberedPairs = [];
-      const keywords = [];
 
-      const bigMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:(?:lo\s*(?:tron\s*)?|lo\s+)?(?:to|lon)\b|(?:to|lon)\b)/i);
-      if (bigMatch) bigHoles = parseInt(bigMatch[1], 10);
+      const holeRegex = /(?<!\d)(\d+)\s*(?:lo\b\s*)?(?:(tron|vuong|oval|bau duc|chu nhat|tam giac)\b\s*)?(to|lon|nho|be)?\b/gi;
 
-      const smallMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:(?:lo\s*(?:tron\s*)?|lo\s+)?(?:nho|be)\b|(?:nho|be)\b)/i);
-      if (smallMatch) smallHoles = parseInt(smallMatch[1], 10);
+      let explicitGeneralHoles = 0;
+      let match;
+      while ((match = holeRegex.exec(norm)) !== null) {
+        const full = match[0].trim();
+        const num = parseInt(match[1], 10);
+        let shape = match[2] ? match[2].toLowerCase() : null;
+        if (shape === 'bau duc') shape = 'oval';
+        const size = match[3] ? match[3].toLowerCase() : null;
 
-      const totalRegex = /(?:^|[^\d])(\d+)\s*(?:lo|hole|holes)\b(?!\s*(?:to|lon|nho|be))/gi;
-      let tMatch;
-      while ((tMatch = totalRegex.exec(norm)) !== null) {
-        const n = parseInt(tMatch[1], 10);
-        if (totalHoles == null) totalHoles = n;
-      }
+        const hasLo = /\blo\b/i.test(full);
+        if (!hasLo && !shape && !size) continue;
 
-      if (totalHoles == null) {
-        const directShapeMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:tron|vuong|oval|bau duc|chu nhat|tam giac)\b/i);
-        if (directShapeMatch) totalHoles = parseInt(directShapeMatch[1], 10);
-      }
+        if (shape) {
+          shapeCounts[shape] = (shapeCounts[shape] || 0) + num;
+          if (!holeShapes.includes(shape)) holeShapes.push(shape);
+        }
 
-      if (totalHoles == null && bigHoles != null && smallHoles != null) {
-        totalHoles = bigHoles + smallHoles;
-      } else if (totalHoles == null && bigHoles != null && smallHoles == null) {
-        totalHoles = bigHoles;
-      } else if (totalHoles == null && smallHoles != null && bigHoles == null) {
-        totalHoles = smallHoles;
-      } else if (totalHoles != null && bigHoles != null && smallHoles == null && totalHoles >= bigHoles) {
-        smallHoles = totalHoles - bigHoles;
-      } else if (totalHoles != null && smallHoles != null && bigHoles == null && totalHoles >= smallHoles) {
-        bigHoles = totalHoles - smallHoles;
+        if (!size) {
+          explicitGeneralHoles += num;
+          if (shape) {
+            generalShapeCounts[shape] = (generalShapeCounts[shape] || 0) + num;
+          }
+        }
       }
 
       const knownShapes = [
@@ -1266,8 +1278,46 @@ createApp({
         }
       }
 
-      const pairRegex = /(?:^|[^\d])(\d+)\s+([a-zA-Zà-ỹÀ-Ỹ]+)/gi;
+      let totalHoles = null;
+      const hasBigOrSmall = bigHoles != null || smallHoles != null;
+      const subSum = (bigHoles || 0) + (smallHoles || 0);
+
+      if (hasBigOrSmall) {
+        if (explicitGeneralHoles === subSum && explicitGeneralHoles > 0) {
+          totalHoles = explicitGeneralHoles;
+        } else if (explicitGeneralHoles === 0) {
+          if (bigHoles != null && smallHoles != null) {
+            totalHoles = subSum;
+          } else if (Object.keys(shapeCounts).length === 1 && (bigHoles != null || smallHoles != null)) {
+            totalHoles = subSum;
+          }
+        } else {
+          const isShapeBreakdown = Object.values(generalShapeCounts).some(cnt => cnt === subSum);
+          if (isShapeBreakdown) {
+            totalHoles = explicitGeneralHoles;
+          } else if (explicitGeneralHoles > 0 && segments.length > 1) {
+            totalHoles = explicitGeneralHoles + subSum;
+          } else if (explicitGeneralHoles > 0) {
+            totalHoles = explicitGeneralHoles;
+          }
+        }
+
+        if (totalHoles != null && holeShapes.length <= 1 && explicitGeneralHoles > 0) {
+          if (bigHoles != null && smallHoles == null && totalHoles >= bigHoles) {
+            smallHoles = totalHoles - bigHoles;
+          } else if (smallHoles != null && bigHoles == null && totalHoles >= smallHoles) {
+            bigHoles = totalHoles - smallHoles;
+          }
+        }
+      } else {
+        if (explicitGeneralHoles > 0) {
+          totalHoles = explicitGeneralHoles;
+        }
+      }
+
+      const pairRegex = /(?<!\d)(\d+)\s+([a-zA-Zà-ỹÀ-Ỹ]+)/gi;
       let pMatch;
+      const otherNumberedPairs = [];
       while ((pMatch = pairRegex.exec(cleaned)) !== null) {
         const num = parseInt(pMatch[1], 10);
         const noun = pMatch[2].trim().toLowerCase();
@@ -1284,10 +1334,10 @@ createApp({
         if (norm.includes(kw)) keywords.push(kw);
       }
 
-      return { totalHoles, bigHoles, smallHoles, holeShapes, otherNumberedPairs, keywords };
+      return { totalHoles, bigHoles, smallHoles, holeShapes, shapeCounts, otherNumberedPairs, keywords };
     },
 
-    matchFeatureQueryFlexible(dbText, queryText) {
+    matchFeatureQueryFlexible(dbText, queryText, options = { allowPerceptualTolerance: false }) {
       if (!dbText || !queryText) return { matched: false, tier: 'none', score: 0 };
 
       if (queryText.includes(',')) {
@@ -1296,7 +1346,7 @@ createApp({
           let minScore = 1.0;
           let worstTier = 'exact_match';
           for (const part of parts) {
-            const sub = this.matchFeatureQueryFlexible(dbText, part);
+            const sub = this.matchFeatureQueryFlexible(dbText, part, options);
             if (!sub.matched) return { matched: false, tier: 'none', score: 0 };
             if (sub.score < minScore) minScore = sub.score;
             if (sub.tier === 'perceptual_tolerance') worstTier = 'perceptual_tolerance';
@@ -1328,6 +1378,15 @@ createApp({
             if (!normDb.includes(qs)) return { matched: false, tier: 'none', score: 0 };
           }
         }
+
+        // Nếu query có số lượng cho từng hình dáng:
+        for (const [shape, count] of Object.entries(qAST.shapeCounts || {})) {
+          if (dbAST.shapeCounts && dbAST.shapeCounts[shape] != null) {
+            if (dbAST.shapeCounts[shape] !== count) {
+              return { matched: false, tier: 'none', score: 0 };
+            }
+          }
+        }
       }
 
       for (const qPair of qAST.otherNumberedPairs) {
@@ -1343,58 +1402,57 @@ createApp({
       }
 
       if (qHasHoleNumber) {
-        if (qAST.totalHoles != null) {
-          if (dbAST.totalHoles == null || dbAST.totalHoles !== qAST.totalHoles) {
+        let usedTolerance = false;
+
+        // a. Big holes strict check
+        if (qAST.bigHoles != null) {
+          if (dbAST.bigHoles == null) {
             return { matched: false, tier: 'none', score: 0 };
           }
-          if (qAST.bigHoles != null && qAST.smallHoles != null) {
-            if (dbAST.bigHoles != null && dbAST.smallHoles != null) {
-              if (qAST.bigHoles === dbAST.bigHoles && qAST.smallHoles === dbAST.smallHoles) {
-                return { matched: true, tier: 'exact_match', score: 1.0 };
-              }
-              if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1 && Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) {
-                return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
-              }
+          if (qAST.bigHoles !== dbAST.bigHoles) {
+            if (options?.allowPerceptualTolerance && Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1) {
+              usedTolerance = true;
+            } else {
               return { matched: false, tier: 'none', score: 0 };
             }
-            return { matched: true, tier: 'partial_match', score: 0.90 };
           }
-          if (qAST.bigHoles != null) {
-            if (dbAST.bigHoles != null) {
-              if (qAST.bigHoles === dbAST.bigHoles) return { matched: true, tier: 'exact_match', score: 1.0 };
-              if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1) return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
-              return { matched: false, tier: 'none', score: 0 };
-            }
-            return { matched: true, tier: 'partial_match', score: 0.90 };
-          }
-          if (qAST.smallHoles != null) {
-            if (dbAST.smallHoles != null) {
-              if (qAST.smallHoles === dbAST.smallHoles) return { matched: true, tier: 'exact_match', score: 1.0 };
-              if (Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
-              return { matched: false, tier: 'none', score: 0 };
-            }
-            return { matched: true, tier: 'partial_match', score: 0.90 };
-          }
-          return { matched: true, tier: 'exact_match', score: 1.0 };
         }
 
-        if (qAST.bigHoles != null) {
-          if (dbAST.bigHoles != null) {
-            if (qAST.bigHoles === dbAST.bigHoles) return { matched: true, tier: 'exact_match', score: 1.0 };
-            if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1) return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
-          }
-          return { matched: false, tier: 'none', score: 0 };
-        }
-
+        // b. Small holes strict check
         if (qAST.smallHoles != null) {
-          if (dbAST.smallHoles != null) {
-            if (qAST.smallHoles === dbAST.smallHoles) return { matched: true, tier: 'exact_match', score: 1.0 };
-            if (Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
+          if (dbAST.smallHoles == null) {
+            return { matched: false, tier: 'none', score: 0 };
           }
-          return { matched: false, tier: 'none', score: 0 };
+          if (qAST.smallHoles !== dbAST.smallHoles) {
+            if (options?.allowPerceptualTolerance && Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) {
+              usedTolerance = true;
+            } else {
+              return { matched: false, tier: 'none', score: 0 };
+            }
+          }
         }
 
-        return { matched: false, tier: 'none', score: 0 };
+        // c. Total holes check
+        if (qAST.totalHoles != null) {
+          const queryHasShapeCounts = Object.keys(qAST.shapeCounts || {}).length > 0;
+          if (!queryHasShapeCounts || qAST.bigHoles != null || qAST.smallHoles != null) {
+            if (dbAST.totalHoles == null || dbAST.totalHoles !== qAST.totalHoles) {
+              return { matched: false, tier: 'none', score: 0 };
+            }
+          } else {
+            if (dbAST.holeShapes.length <= 1) {
+              if (dbAST.totalHoles == null || dbAST.totalHoles !== qAST.totalHoles) {
+                return { matched: false, tier: 'none', score: 0 };
+              }
+            }
+          }
+        }
+
+        if (usedTolerance) {
+          return { matched: true, tier: 'perceptual_tolerance', score: 0.85 };
+        }
+
+        return { matched: true, tier: 'exact_match', score: 1.0 };
       }
 
       if (qHasShapes || qHasKeywords || qHasOtherNumber) {
@@ -1406,14 +1464,20 @@ createApp({
 
     matchRowWithFeatures(row, queryFeatures, rawQuery = '') {
       if (!row) return false;
+      const qAST = rawQuery ? this.parseIdentifyingFeaturesAST(rawQuery) : null;
+      const isHoleQuery = qAST && (qAST.totalHoles != null || qAST.bigHoles != null || qAST.smallHoles != null);
+
       if (rawQuery) {
         const flex = this.matchFeatureQueryFlexible(row.identifying_features, rawQuery);
         if (flex.matched) return true;
+        if (isHoleQuery) return false;
       }
       if (Array.isArray(queryFeatures) && queryFeatures.length > 0) {
         const queryStr = queryFeatures.map(q => q.raw || `${q.number || ''} ${q.text || ''}`).join(', ');
         const flex = this.matchFeatureQueryFlexible(row.identifying_features, queryStr);
         if (flex.matched) return true;
+        const qfAST = this.parseIdentifyingFeaturesAST(queryStr);
+        if (qfAST.totalHoles != null || qfAST.bigHoles != null || qfAST.smallHoles != null) return false;
       }
       if (!queryFeatures || queryFeatures.length === 0) return false;
       const dbFeatures = this.parseIdentifyingFeatures(row.identifying_features);
@@ -1432,12 +1496,12 @@ createApp({
         const qAST = this.parseIdentifyingFeaturesAST(this.filters.search);
         const isFeatureSearch = qFeatures.length > 0 || qAST.totalHoles != null || qAST.bigHoles != null || qAST.smallHoles != null || qAST.holeShapes.length > 0;
 
-        const fetchLimit = isFeatureSearch ? 300 : CONFIG.PAGE_LIMIT + 1;
+        const fetchLimit = isFeatureSearch ? 2000 : CONFIG.PAGE_LIMIT + 1;
         const fetchOffset = isFeatureSearch ? 0 : this.page * CONFIG.PAGE_LIMIT;
 
         const rows = await this.rpcRows('app_search_catalogue', {
           p_session_token:this.session.token,
-          p_search:this.filters.search || '',
+          p_search: isFeatureSearch ? '' : (this.filters.search || ''),
           p_usage_side:this.filters.usage,
           p_view_mode:this.filters.viewMode,
           p_limit:fetchLimit,
@@ -2876,6 +2940,9 @@ createApp({
     },
 
     morisCandidatePercent(candidate) {
+      if (candidate?.is_feature_match || candidate?.badge_label === 'Khớp' || candidate?.score_source === 'identifying_features_match') {
+        return null;
+      }
       const match = Number(candidate?.match_score);
       const vector = Number(candidate?.vector_similarity);
       const final = Number(candidate?.compatibility_score ?? candidate?.final_score);
@@ -3465,9 +3532,22 @@ createApp({
     },
 
     applyMorisSearchResults(data) {
-      const candidatesList = Array.isArray(data?.candidates)
+      const rawCandidates = Array.isArray(data?.candidates)
         ? data.candidates.slice(0, 10)
         : [];
+
+      const isFeatureSearchMode = !this.moris.imageDataUrl || data?.engine === 'moris-feature-filter' || data?.mode === 'feature_filter';
+
+      const candidatesList = rawCandidates.map(c => {
+        if (c?.is_feature_match || c?.badge_label === 'Khớp' || c?.score_source === 'identifying_features_match' || (isFeatureSearchMode && (c?.vector_similarity == null || c?.vector_similarity === 0))) {
+          return {
+            ...c,
+            is_feature_match: true,
+            badge_label: 'Khớp'
+          };
+        }
+        return c;
+      });
 
       // Sắp xếp danh sách Top 10 giảm dần theo tỷ lệ phần trăm hiển thị (từ lớn trở xuống)
       candidatesList.sort((a, b) => {

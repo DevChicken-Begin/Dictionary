@@ -277,6 +277,7 @@ export function parseIdentifyingFeaturesAST(text) {
       bigHoles: null,
       smallHoles: null,
       holeShapes: [],
+      shapeCounts: {},
       otherNumberedPairs: [],
       keywords: []
     };
@@ -285,68 +286,100 @@ export function parseIdentifyingFeaturesAST(text) {
   const cleaned = cleanFeatureText(raw);
   const norm = removeVietnameseAccents(cleaned);
 
-  let totalHoles = null;
   let bigHoles = null;
+  const bigRegex = /(?<!\d)(\d+)\s*(?:lo\s*(?:tron|vuong|oval|bau duc|chu nhat|tam giac)?\s*)?(?:to|lon)\b/gi;
+  let bMatch;
+  while ((bMatch = bigRegex.exec(norm)) !== null) {
+    const n = parseInt(bMatch[1], 10);
+    bigHoles = (bigHoles === null ? 0 : bigHoles) + n;
+  }
+
   let smallHoles = null;
+  const smallRegex = /(?<!\d)(\d+)\s*(?:lo\s*(?:tron|vuong|oval|bau duc|chu nhat|tam giac)?\s*)?(?:nho|be)\b/gi;
+  let sMatch;
+  while ((sMatch = smallRegex.exec(norm)) !== null) {
+    const n = parseInt(sMatch[1], 10);
+    smallHoles = (smallHoles === null ? 0 : smallHoles) + n;
+  }
+
+  const segments = raw.split(",").map(s => s.trim()).filter(Boolean);
+  const shapeCounts = {};
+  const generalShapeCounts = {};
   const holeShapes = [];
-  const otherNumberedPairs = [];
-  const keywords = [];
 
-  // 1. Trích xuất Big Holes (ví dụ: "4 lỗ to", "4 to", "4 lỗ tròn to", "4 lo to")
-  const bigMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:(?:lo\s*(?:tron\s*)?|lo\s+)?(?:to|lon)\b|(?:to|lon)\b)/i);
-  if (bigMatch) {
-    bigHoles = parseInt(bigMatch[1], 10);
-  }
+  const holeRegex = /(?<!\d)(\d+)\s*(?:lo\b\s*)?(?:(tron|vuong|oval|bau duc|chu nhat|tam giac)\b\s*)?(to|lon|nho|be)?\b/gi;
 
-  // 2. Trích xuất Small Holes (ví dụ: "1 lỗ nhỏ", "1 nhỏ", "1 lỗ tròn nhỏ", "1 lo nho")
-  const smallMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:(?:lo\s*(?:tron\s*)?|lo\s+)?(?:nho|be)\b|(?:nho|be)\b)/i);
-  if (smallMatch) {
-    smallHoles = parseInt(smallMatch[1], 10);
-  }
+  let explicitGeneralHoles = 0;
+  let match;
+  while ((match = holeRegex.exec(norm)) !== null) {
+    const full = match[0].trim();
+    const num = parseInt(match[1], 10);
+    let shape = match[2] ? match[2].toLowerCase() : null;
+    if (shape === "bau duc") shape = "oval";
+    const size = match[3] ? match[3].toLowerCase() : null;
 
-  // 3. Trích xuất Total Holes trên norm (ví dụ: "5 lo tron", "5 lo", "8 lo", nhưng không phải "4 lo to" hay "1 lo nho")
-  const totalRegex = /(?:^|[^\d])(\d+)\s*(?:lo|hole|holes)\b(?!\s*(?:to|lon|nho|be))/gi;
-  let tMatch;
-  while ((tMatch = totalRegex.exec(norm)) !== null) {
-    const n = parseInt(tMatch[1], 10);
-    if (totalHoles == null) {
-      totalHoles = n;
+    const hasLo = /\blo\b/i.test(full);
+    if (!hasLo && !shape && !size) continue;
+
+    if (shape) {
+      shapeCounts[shape] = (shapeCounts[shape] || 0) + num;
+      if (!holeShapes.includes(shape)) holeShapes.push(shape);
     }
-  }
 
-  if (totalHoles == null) {
-    const directShapeMatch = norm.match(/(?:^|[^\d])(\d+)\s*(?:tron|vuong|oval|bau duc|chu nhat|tam giac)\b/i);
-    if (directShapeMatch) {
-      totalHoles = parseInt(directShapeMatch[1], 10);
-    }
-  }
-
-  // 4. Auto-inference rule:
-  // - Nếu có bigHoles và smallHoles mà chưa có totalHoles: totalHoles = bigHoles + smallHoles
-  if (totalHoles == null && bigHoles != null && smallHoles != null) {
-    totalHoles = bigHoles + smallHoles;
-  } else if (totalHoles == null && bigHoles != null && smallHoles == null) {
-    totalHoles = bigHoles;
-  } else if (totalHoles == null && smallHoles != null && bigHoles == null) {
-    totalHoles = smallHoles;
-  } else if (totalHoles != null && bigHoles != null && smallHoles == null && totalHoles >= bigHoles) {
-    smallHoles = totalHoles - bigHoles;
-  } else if (totalHoles != null && smallHoles != null && bigHoles == null && totalHoles >= smallHoles) {
-    bigHoles = totalHoles - smallHoles;
-  }
-
-  // 5. Trích xuất các hình dạng lỗ xuất hiện trong chuỗi
-  for (const item of KNOWN_SHAPES) {
-    if (item.match.test(norm)) {
-      if (!holeShapes.includes(item.shape)) {
-        holeShapes.push(item.shape);
+    if (!size) {
+      explicitGeneralHoles += num;
+      if (shape) {
+        generalShapeCounts[shape] = (generalShapeCounts[shape] || 0) + num;
       }
     }
   }
 
-  // 6. Trích xuất các cặp số khác (otherNumberedPairs) với ranh giới số nghiêm ngặt
-  const pairRegex = /(?:^|[^\d])(\d+)\s+([a-zA-Zà-ỹÀ-Ỹ]+)/gi;
+  for (const item of KNOWN_SHAPES) {
+    if (item.match.test(norm) && !holeShapes.includes(item.shape)) {
+      holeShapes.push(item.shape);
+    }
+  }
+
+  let totalHoles = null;
+  const hasBigOrSmall = bigHoles != null || smallHoles != null;
+  const subSum = (bigHoles || 0) + (smallHoles || 0);
+
+  if (hasBigOrSmall) {
+    if (explicitGeneralHoles === subSum && explicitGeneralHoles > 0) {
+      totalHoles = explicitGeneralHoles;
+    } else if (explicitGeneralHoles === 0) {
+      if (bigHoles != null && smallHoles != null) {
+        totalHoles = subSum;
+      } else if (Object.keys(shapeCounts).length === 1 && (bigHoles != null || smallHoles != null)) {
+        totalHoles = subSum;
+      }
+    } else {
+      const isShapeBreakdown = Object.values(generalShapeCounts).some(cnt => cnt === subSum);
+      if (isShapeBreakdown) {
+        totalHoles = explicitGeneralHoles;
+      } else if (explicitGeneralHoles > 0 && segments.length > 1) {
+        totalHoles = explicitGeneralHoles + subSum;
+      } else if (explicitGeneralHoles > 0) {
+        totalHoles = explicitGeneralHoles;
+      }
+    }
+
+    if (totalHoles != null && holeShapes.length <= 1 && explicitGeneralHoles > 0) {
+      if (bigHoles != null && smallHoles == null && totalHoles >= bigHoles) {
+        smallHoles = totalHoles - bigHoles;
+      } else if (smallHoles != null && bigHoles == null && totalHoles >= smallHoles) {
+        bigHoles = totalHoles - smallHoles;
+      }
+    }
+  } else {
+    if (explicitGeneralHoles > 0) {
+      totalHoles = explicitGeneralHoles;
+    }
+  }
+
+  const pairRegex = /(?<!\d)(\d+)\s+([a-zA-Zà-ỹÀ-Ỹ]+)/gi;
   let pMatch;
+  const otherNumberedPairs = [];
   while ((pMatch = pairRegex.exec(cleaned)) !== null) {
     const num = parseInt(pMatch[1], 10);
     const noun = pMatch[2].trim().toLowerCase();
@@ -358,10 +391,10 @@ export function parseIdentifyingFeaturesAST(text) {
     }
   }
 
-  // 7. Trích xuất keywords cấu trúc
   const STRUCTURAL_KEYWORDS = [
     "uon cong", "dap noi", "vat goc", "tai bat oc", "go dap", "gan noi", "dap gan", "chot dinh vi", "ngam"
   ];
+  const keywords = [];
   for (const kw of STRUCTURAL_KEYWORDS) {
     if (norm.includes(kw)) {
       keywords.push(kw);
@@ -373,6 +406,7 @@ export function parseIdentifyingFeaturesAST(text) {
     bigHoles,
     smallHoles,
     holeShapes,
+    shapeCounts,
     otherNumberedPairs,
     keywords
   };
@@ -383,7 +417,7 @@ export function parseIdentifyingFeaturesAST(text) {
  * Hỗ trợ đảo vị trí ("5 lỗ tròn 2 lỗ nhỏ + 3 lỗ to" == "5 lỗ tròn 3 lỗ to + 2 lỗ nhỏ"),
  * suy luận tổng số lỗ ngầm định, và ngưỡng sai số cảm tính (+/- 1 lỗ to/nhỏ).
  */
-export function matchFeatureQueryFlexible(dbText, queryText) {
+export function matchFeatureQueryFlexible(dbText, queryText, options = { allowPerceptualTolerance: false }) {
   if (!dbText || !queryText) {
     return { matched: false, tier: "none", score: 0 };
   }
@@ -395,7 +429,7 @@ export function matchFeatureQueryFlexible(dbText, queryText) {
       let minScore = 1.0;
       let worstTier = "exact_match";
       for (const part of parts) {
-        const sub = matchFeatureQueryFlexible(dbText, part);
+        const sub = matchFeatureQueryFlexible(dbText, part, options);
         if (!sub.matched) {
           return { matched: false, tier: "none", score: 0 };
         }
@@ -435,6 +469,15 @@ export function matchFeatureQueryFlexible(dbText, queryText) {
         }
       }
     }
+
+    // Nếu query có số lượng cho từng hình dáng (ví dụ "6 lỗ tròn", "4 lỗ oval", "22 lỗ tròn"):
+    for (const [shape, count] of Object.entries(qAST.shapeCounts || {})) {
+      if (dbAST.shapeCounts && dbAST.shapeCounts[shape] != null) {
+        if (dbAST.shapeCounts[shape] !== count) {
+          return { matched: false, tier: "none", score: 0 };
+        }
+      }
+    }
   }
 
   // 2. Kiểm tra các cặp số khác (ví dụ: "2 ngàm")
@@ -457,78 +500,57 @@ export function matchFeatureQueryFlexible(dbText, queryText) {
 
   // 4. Nếu query có chỉ định số lượng lỗ (total, big, small)
   if (qHasHoleNumber) {
-    if (qAST.totalHoles != null) {
-      if (dbAST.totalHoles == null || dbAST.totalHoles !== qAST.totalHoles) {
+    let usedTolerance = false;
+
+    // a. Big holes strict check
+    if (qAST.bigHoles != null) {
+      if (dbAST.bigHoles == null) {
         return { matched: false, tier: "none", score: 0 };
       }
-
-      if (qAST.bigHoles != null && qAST.smallHoles != null) {
-        if (dbAST.bigHoles != null && dbAST.smallHoles != null) {
-          if (qAST.bigHoles === dbAST.bigHoles && qAST.smallHoles === dbAST.smallHoles) {
-            return { matched: true, tier: "exact_match", score: 1.0 };
-          }
-          if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1 && Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) {
-            return { matched: true, tier: "perceptual_tolerance", score: 0.85 };
-          }
+      if (qAST.bigHoles !== dbAST.bigHoles) {
+        if (options?.allowPerceptualTolerance && Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1) {
+          usedTolerance = true;
+        } else {
           return { matched: false, tier: "none", score: 0 };
         }
-        return { matched: true, tier: "partial_match", score: 0.90 };
       }
-
-      if (qAST.bigHoles != null) {
-        if (dbAST.bigHoles != null) {
-          if (qAST.bigHoles === dbAST.bigHoles) {
-            return { matched: true, tier: "exact_match", score: 1.0 };
-          }
-          if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1) {
-            return { matched: true, tier: "perceptual_tolerance", score: 0.85 };
-          }
-          return { matched: false, tier: "none", score: 0 };
-        }
-        return { matched: true, tier: "partial_match", score: 0.90 };
-      }
-
-      if (qAST.smallHoles != null) {
-        if (dbAST.smallHoles != null) {
-          if (qAST.smallHoles === dbAST.smallHoles) {
-            return { matched: true, tier: "exact_match", score: 1.0 };
-          }
-          if (Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) {
-            return { matched: true, tier: "perceptual_tolerance", score: 0.85 };
-          }
-          return { matched: false, tier: "none", score: 0 };
-        }
-        return { matched: true, tier: "partial_match", score: 0.90 };
-      }
-
-      return { matched: true, tier: "exact_match", score: 1.0 };
     }
 
-    if (qAST.bigHoles != null) {
-      if (dbAST.bigHoles != null) {
-        if (qAST.bigHoles === dbAST.bigHoles) {
-          return { matched: true, tier: "exact_match", score: 1.0 };
-        }
-        if (Math.abs(qAST.bigHoles - dbAST.bigHoles) === 1) {
-          return { matched: true, tier: "perceptual_tolerance", score: 0.85 };
-        }
-      }
-      return { matched: false, tier: "none", score: 0 };
-    }
-
+    // b. Small holes strict check
     if (qAST.smallHoles != null) {
-      if (dbAST.smallHoles != null) {
-        if (qAST.smallHoles === dbAST.smallHoles) {
-          return { matched: true, tier: "exact_match", score: 1.0 };
-        }
-        if (Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) {
-          return { matched: true, tier: "perceptual_tolerance", score: 0.85 };
+      if (dbAST.smallHoles == null) {
+        return { matched: false, tier: "none", score: 0 };
+      }
+      if (qAST.smallHoles !== dbAST.smallHoles) {
+        if (options?.allowPerceptualTolerance && Math.abs(qAST.smallHoles - dbAST.smallHoles) === 1) {
+          usedTolerance = true;
+        } else {
+          return { matched: false, tier: "none", score: 0 };
         }
       }
-      return { matched: false, tier: "none", score: 0 };
     }
 
-    return { matched: false, tier: "none", score: 0 };
+    // c. Total holes check
+    if (qAST.totalHoles != null) {
+      const queryHasShapeCounts = Object.keys(qAST.shapeCounts || {}).length > 0;
+      if (!queryHasShapeCounts || qAST.bigHoles != null || qAST.smallHoles != null) {
+        if (dbAST.totalHoles == null || dbAST.totalHoles !== qAST.totalHoles) {
+          return { matched: false, tier: "none", score: 0 };
+        }
+      } else {
+        if (dbAST.holeShapes.length <= 1) {
+          if (dbAST.totalHoles == null || dbAST.totalHoles !== qAST.totalHoles) {
+            return { matched: false, tier: "none", score: 0 };
+          }
+        }
+      }
+    }
+
+    if (usedTolerance) {
+      return { matched: true, tier: "perceptual_tolerance", score: 0.85 };
+    }
+
+    return { matched: true, tier: "exact_match", score: 1.0 };
   }
 
   // 5. Nếu không có số lượng lỗ, chỉ lọc theo shapes hoặc keywords
@@ -547,19 +569,27 @@ export function matchFeatureQueryFlexible(dbText, queryText) {
 export function matchRowWithFeatures(row, queryFeatures, rawQuery = "") {
   if (!row) return false;
 
+  const qAST = rawQuery ? parseIdentifyingFeaturesAST(rawQuery) : null;
+  const isHoleQuery = qAST && (qAST.totalHoles != null || qAST.bigHoles != null || qAST.smallHoles != null);
+
   // 1. Kiểm tra bằng Flexible AST Match nếu có rawQuery
   if (rawQuery) {
     const flex = matchFeatureQueryFlexible(row.identifying_features, rawQuery);
     if (flex.matched) return true;
+    // Khi qAST là truy vấn số lượng lỗ, matchFeatureQueryFlexible là cơ quan thẩm quyền duy nhất,
+    // TUYỆT ĐỐI không fallback xuống parseIdentifyingFeatures lỏng lẻo
+    if (isHoleQuery) return false;
   }
 
   if (Array.isArray(queryFeatures) && queryFeatures.length > 0) {
     const queryStr = queryFeatures.map(q => q.raw || `${q.number || ''} ${q.text || ''}`).join(", ");
     const flex = matchFeatureQueryFlexible(row.identifying_features, queryStr);
     if (flex.matched) return true;
+    const qfAST = parseIdentifyingFeaturesAST(queryStr);
+    if (qfAST.totalHoles != null || qfAST.bigHoles != null || qfAST.smallHoles != null) return false;
   }
 
-  // 2. Cơ chế phân đoạn dấu phẩy gốc (bảo toàn 100% tương thích)
+  // 2. Cơ chế phân đoạn dấu phẩy gốc (bảo toàn 100% tương thích cho các query phi số lượng lỗ)
   if (!queryFeatures || queryFeatures.length === 0) return false;
   const dbFeatures = parseIdentifyingFeatures(row.identifying_features);
   if (dbFeatures.length === 0) return false;
