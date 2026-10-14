@@ -140,3 +140,28 @@ export async function embedImageDinov2Variants(image,{includeGray=true}={}){
     preprocess_version:'kim_canon_v2'
   };
 }
+
+export async function processLayer1InWorker(image) {
+  return request("layer1", { image });
+}
+
+export async function enrollSkuSignatureV2(skuId, image) {
+  return request("enroll-signature-v2", { skuId, image });
+}
+
+export async function searchPartTop10V2(image, candidates) {
+  return request("search-v2", { image, candidates });
+}
+
+export async function reindexBatchV2(items) {
+  return request("reindex-batch-v2", { items });
+}
+
+export async function countSignaturesV2() {
+  const res = await request("count-signatures");
+  return Number(res?.count || 0);
+}
+
+export async function clearSignaturesV2() {
+  return request("clear-signatures");
+}

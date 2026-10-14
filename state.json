@@ -2,14 +2,14 @@
   "system": {
     "project": "Catalogue AI (Dictionary)",
     "stack": "Vue 3 CDN + Cloudflare Pages Functions + Supabase (pgvector) + Cloudflare R2",
-    "updated_at": "2026-10-12T02:08:00Z",
-    "memory_version": "1.0.0",
+    "updated_at": "2026-10-14T02:30:00Z",
+    "memory_version": "2.0.0",
     "status": "completed"
   },
   "current_session": {
     "active_task": "all_tasks_completed",
-    "last_checkpoint": "All tasks completed, tested and verified (147 passing unit tests, build clean, Supabase updated)",
-    "resumption_prompt": "Hệ thống đã hoàn tất toàn bộ 6 task theo đúng yêu cầu người dùng và tuân thủ tuyệt đối Hiến pháp Agent (agent.md)."
+    "last_checkpoint": "Moris 3-Layer Upgrade completed and verified (202 passing unit tests, tsc clean, build clean)",
+    "resumption_prompt": "Hệ thống đã hoàn tất nâng cấp kiến trúc 3 lớp Moris theo MORIS_UPGRADE_PLAN.md và tuân thủ Hiến pháp Agent."
   },
   "tasks": [
     {
@@ -153,11 +153,22 @@
       },
       "solution": "1) Bỏ hoàn toàn nút và modal 'Xóa tất cả' khỏi giao diện main Catalogue (index.html), bảo toàn nút Chọn hàng loạt cho Admin; 2) Nâng cấp functions/_lib/moris/v5/retrieval/featureMatcher.js: phân tách theo dấu phẩy thành các phân đoạn độc lập, bóc tách cặp Key Số và Key Chữ, ranh giới số nghiêm ngặt (2 chỉ lọc 2, không lọc 22, 20 hay 12), loại hình dáng nghiêm ngặt (lỗ tròn chỉ lọc lỗ tròn, không lọc lỗ vuông/oval), hỗ trợ AND logic cho nhiều đặc điểm ngăn cách dấu phẩy; 3) Đồng bộ logic featureMatcher vào thanh tìm kiếm main Catalogue (src/app.js loadParts): nhận diện truy vấn đặc điểm và lọc nghiêm ngặt trước khi render, loại bỏ 100% mã 22 lỗ tròn, 20 lỗ, 12 lỗ khi tìm 2 lỗ tròn; 4) Đồng bộ vào Chatbox Moris (chat.js & orchestrator.js): quét đầy đủ catalogue khi lọc đặc điểm nhận dạng, không nhồi nhét mã rác; 5) Tạo migration PostgreSQL 2026101300010000_strict_feature_search_catalogue.sql cập nhật RPC app_search_catalogue hỗ trợ word boundary số và đã thực thi thành công lên Supabase thực tế.",
       "evidence": "Đã kiểm thử thực tế trên DB: tìm '2 lỗ tròn' trả đúng 4 mã 2 lỗ tròn to, loại bỏ triệt để mã 22 lỗ tròn và 20 lỗ; tìm '22 lỗ tròn' trả đúng 2 mã 22 lỗ tròn; tests/moris-features-filter.test.js (25 tests pass), tests/frontend.test.js (30 tests pass), toàn bộ 182/182 unit tests pass 100%."
+    },
+    {
+      "id": "task_13_moris_3_layer_upgrade",
+      "title": "Nâng cấp toàn diện kiến trúc Moris 3-Layer Computer Vision Harness theo MORIS_UPGRADE_PLAN.md",
+      "status": "completed",
+      "completed_at": "2026-10-14T02:30:00Z",
+      "diagnostics": {
+        "finding": "DINOv2 global [CLS] token bị pha loãng bởi bề mặt kim loại phẳng (>95%), làm trôi dạt các khác biệt hình học quan trọng (<5%) như lỗ đục, gờ dập nổi, tỉ lệ khung hình. Chưa có phễu lọc hình học cứng (Gate), chưa có GeM pooling theo mask, chưa có so khớp lân cận 3x3 spatial patch và chưa có bất biến biến dạng Fourier."
+      },
+      "solution": "1) Xây dựng src/moris/moris-layer1-optical.ts: thuật toán Connected-Components phân tách nền ngoài và lỗ đục bên trong, Convex Hull Monotone Chain & Shoelace tính solidity, PCA 2D moments xoay ngang -theta, 180-deg flip disambiguation, CIE L* + specular clamping 98th percentile + CLAHE 8x8 + Scharr 3x3 + Chamfer (3, 4) distance transform sinh tensor [1, 3, 224, 224] ImageNet normalized; 2) Xây dựng src/moris/moris-layer2-embedding.ts: trích xuất 256 patch tokens từ DINOv2 ONNX [1, 257, 384] bỏ CLS (fallback [1, 384]), Stage 2A Hard Geometric Gate (AR <= 0.22, Solidity <= 0.12, Holes <= 1, widen fallback 1.5x), Signed GeM Pooling p=3.0 + Edge-detail pooling tạo vector 768 chiều L2-normalized, Multi-prototype Cold-Start Enrollment; 3) Xây dựng src/moris/moris-layer3-rerank.ts: Dense Spatial Patch 3x3 neighborhood matching, Hole-Constellation Chamfer distance hỗ trợ phản xạ gương, 16-harmonic Elliptic Fourier Descriptors bất biến scale/rotation, Z-score standardization fusion trả về Top 10 SKUs; 4) Xây dựng src/moris/moris-idb.ts quản lý IndexedDB schema v2 moris_signatures_v2; 5) Tích hợp hoàn chỉnh vào Web Worker dinov2.worker.js và moris-worker-pipeline.ts.",
+      "evidence": "tsc --noEmit pass 100% không lỗi type, npm run build thành công, 18/18 test suites pass (202/202 unit tests pass 100%)."
     }
   ],
   "verification": {
-    "total_unit_tests": 182,
-    "passing_tests": 182,
+    "total_unit_tests": 202,
+    "passing_tests": 202,
     "failing_tests": 0
   }
 }

@@ -1,3 +1,24 @@
+import {
+  enrollSkuSignature,
+  searchPartTop10,
+  reindexBatchSignatures
+} from "../moris-worker-pipeline.js";
+
+import {
+  processLayer1Optical
+} from "../moris-layer1-optical.js";
+
+import {
+  getAllSignatures,
+  getSignatureBySku,
+  saveSignature,
+  saveSignaturesBatch,
+  clearAllSignatures,
+  countSignatures,
+  serializeSignature,
+  deserializeSignature
+} from "../moris-idb.js";
+
 const TRANSFORMERS_CDN =
   "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
@@ -8,8 +29,8 @@ const DIMENSION = 384;
 let extractorPromise = null;
 let runtimeInfo = null;
 
-function post(type, payload={}) {
-  self.postMessage({type, ...payload});
+function post(type, payload = {}) {
+  self.postMessage({ type, ...payload });
 }
 
 function l2Normalize(values) {
@@ -18,7 +39,6 @@ function l2Normalize(values) {
     const n = Number(value);
     sum += n * n;
   }
-
   const norm = Math.sqrt(sum) || 1;
   return Array.from(values, value => Number(value) / norm);
 }
@@ -55,7 +75,6 @@ function tensorToClsVector(output) {
   }
 
   // Defensive fallback: first 384 values are the CLS embedding
-  // for the supported DINOv2 hidden-state layouts.
   if (data.length >= DIMENSION) {
     return l2Normalize(data.slice(0, DIMENSION));
   }
@@ -64,10 +83,10 @@ function tensorToClsVector(output) {
 }
 
 async function createExtractor() {
-  const {pipeline} = await import(TRANSFORMERS_CDN);
+  const { pipeline } = await import(TRANSFORMERS_CDN);
 
   const progress_callback = progress => {
-    post("progress", {progress});
+    post("progress", { progress });
   };
 
   const isMobile = /android|iphone|ipad|ipod|mobile/i.test(self.navigator?.userAgent || "");
@@ -141,11 +160,73 @@ async function getExtractor() {
   }
 }
 
+async function resolveImageRgba(input) {
+  if (input?.rgba && input?.width && input?.height) {
+    return {
+      rgba: input.rgba instanceof Uint8ClampedArray ? input.rgba : new Uint8ClampedArray(input.rgba),
+      width: Number(input.width),
+      height: Number(input.height)
+    };
+  }
+
+  const s = String(input || "");
+  let blob;
+  if (s.startsWith("data:")) {
+    const comma = s.indexOf(",");
+    const byteString = atob(s.slice(comma + 1));
+    const mimeMatch = s.slice(0, comma).match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+    const u8 = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      u8[i] = byteString.charCodeAt(i);
+    }
+    blob = new Blob([u8], { type: mime });
+  } else {
+    const res = await fetch(s);
+    blob = await res.blob();
+  }
+
+  const bitmap = await createImageBitmap(blob);
+  const w = bitmap.width;
+  const h = bitmap.height;
+  const canvas = new OffscreenCanvas(w, h);
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(bitmap, 0, 0);
+  const imgData = ctx.getImageData(0, 0, w, h);
+  if (typeof bitmap.close === "function") {
+    try { bitmap.close(); } catch {}
+  }
+  return { rgba: imgData.data, width: w, height: h };
+}
+
+function pseudoRgbTensorToCanvas(opt) {
+  const canvas = new OffscreenCanvas(224, 224);
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const imgData = ctx.createImageData(224, 224);
+  const d = imgData.data;
+  const ch0 = opt.claheLuminance;
+  const ch1 = opt.scharrEdgeMap;
+  const ch2 = opt.chamferDistMap;
+
+  for (let i = 0; i < 224 * 224; i++) {
+    const idx = i * 4;
+    d[idx] = Math.round(ch0[i] * 255);
+    d[idx + 1] = Math.round(ch1[i] * 255);
+    d[idx + 2] = Math.round(ch2[i] * 255);
+    d[idx + 3] = 255;
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return canvas;
+}
+
 self.onmessage = async event => {
   const message = event?.data || {};
   const requestId = String(message.requestId || "");
 
   try {
+    // -----------------------------------------------------------------------
+    // Message Type: init (v1 & v2 compatible)
+    // -----------------------------------------------------------------------
     if (message.type === "init") {
       await getExtractor();
       post("result", {
@@ -158,6 +239,9 @@ self.onmessage = async event => {
       return;
     }
 
+    // -----------------------------------------------------------------------
+    // Message Type: embed (v1 backward compatibility)
+    // -----------------------------------------------------------------------
     if (message.type === "embed") {
       const image = String(message.image || "");
       if (!image) throw new Error("Thiếu ảnh để tạo vector.");
@@ -177,6 +261,154 @@ self.onmessage = async event => {
           runtime: runtimeInfo
         }
       });
+      return;
+    }
+
+    // -----------------------------------------------------------------------
+    // Message Type: layer1 (Process raw image with Layer 1 Optical Normalization)
+    // -----------------------------------------------------------------------
+    if (message.type === "layer1") {
+      const img = await resolveImageRgba(message.image);
+      const opt = processLayer1Optical(img.rgba, img.width, img.height);
+
+      post("result", {
+        requestId,
+        result: {
+          aspectRatio: opt.aspectRatio,
+          solidity: opt.solidity,
+          holeCount: opt.holeCount,
+          holeFeatures: opt.holeFeatures,
+          diagnostics: opt.diagnostics
+        }
+      });
+      return;
+    }
+
+    // -----------------------------------------------------------------------
+    // Message Type: enroll-signature-v2 (Enroll SKU into IndexedDB v2)
+    // -----------------------------------------------------------------------
+    if (message.type === "enroll-signature-v2") {
+      const skuId = String(message.skuId || "");
+      if (!skuId) throw new Error("Thiếu skuId để đăng ký linh kiện.");
+
+      const img = await resolveImageRgba(message.image);
+      const extractor = await getExtractor();
+
+      const signature = await enrollSkuSignature(
+        skuId,
+        img.rgba,
+        img.width,
+        img.height,
+        async pseudoTensor => {
+          // Wrap pseudo-RGB tensor as OffscreenCanvas for transformers.js
+          const opt = processLayer1Optical(img.rgba, img.width, img.height);
+          const canvas = pseudoRgbTensorToCanvas(opt);
+          return await extractor(canvas);
+        }
+      );
+
+      post("result", {
+        requestId,
+        result: {
+          enrolled: true,
+          skuId: signature.skuId,
+          version: signature.version,
+          aspectRatio: signature.aspectRatio,
+          solidity: signature.solidity,
+          holeCount: signature.holeCount
+        }
+      });
+      return;
+    }
+
+    // -----------------------------------------------------------------------
+    // Message Type: search-v2 (Full 3-Layer Search: Funnel 850 -> Top 10)
+    // -----------------------------------------------------------------------
+    if (message.type === "search-v2") {
+      const img = await resolveImageRgba(message.image);
+      const extractor = await getExtractor();
+
+      const searchResult = await searchPartTop10(
+        img.rgba,
+        img.width,
+        img.height,
+        async pseudoTensor => {
+          const opt = processLayer1Optical(img.rgba, img.width, img.height);
+          const canvas = pseudoRgbTensorToCanvas(opt);
+          return await extractor(canvas);
+        },
+        message.candidates // Optional pre-fetched candidate pool
+      );
+
+      post("result", {
+        requestId,
+        result: {
+          top10: searchResult.top10.map(r => ({
+            skuId: r.skuId,
+            rank: r.rank,
+            finalScore: r.finalScore,
+            sHybridVec: r.sHybridVec,
+            sSpatialPatch: r.sSpatialPatch,
+            dHoleGraph: r.dHoleGraph,
+            dEfd: r.dEfd,
+            zScores: r.zScores
+          })),
+          diagnostics: searchResult.opticalDiagnostics,
+          totalCandidates: searchResult.totalCandidates,
+          gatePassedCount: searchResult.gatePassedCount
+        }
+      });
+      return;
+    }
+
+    // -----------------------------------------------------------------------
+    // Message Type: reindex-batch-v2 (Batch re-index utility)
+    // -----------------------------------------------------------------------
+    if (message.type === "reindex-batch-v2") {
+      const items = Array.isArray(message.items) ? message.items : [];
+      const extractor = await getExtractor();
+
+      const preparedItems = [];
+      for (const item of items) {
+        const img = await resolveImageRgba(item.image);
+        preparedItems.push({
+          skuId: item.skuId,
+          rgba: img.rgba,
+          width: img.width,
+          height: img.height
+        });
+      }
+
+      const reindexResult = await reindexBatchSignatures(
+        preparedItems,
+        async pseudoTensor => {
+          const canvas = new OffscreenCanvas(224, 224);
+          return await extractor(canvas);
+        },
+        (processed, total) => {
+          post("progress", { progress: { processed, total } });
+        }
+      );
+
+      post("result", {
+        requestId,
+        result: reindexResult
+      });
+      return;
+    }
+
+    // -----------------------------------------------------------------------
+    // Message Type: idb operations
+    // -----------------------------------------------------------------------
+    if (message.type === "count-signatures") {
+      const count = await countSignatures();
+      post("result", { requestId, result: { count } });
+      return;
+    }
+
+    if (message.type === "clear-signatures") {
+      await clearAllSignatures();
+      post("result", { requestId, result: { cleared: true } });
       return;
     }
 

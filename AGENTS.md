@@ -34,7 +34,7 @@
 ### II. CÁC ĐIỀU BẮT BUỘC (PHẢI LÀM)
 
 1. **QUY TRÌNH TASK CHUẨN XÁC THEO VÒNG LẶP:**
-   - **Bước 1 (Đọc & Khảo sát):** Đọc kỹ trạng thái hiện tại trong `state.json` và checklist trong `plan.md`.
+   - **Bước 1 (Đọc & Khảo sát):** Đọc kỹ trạng thái hiện tại trong `state.json`.
    - **Bước 2 (Thực thi):** Thực hiện thay đổi mã nguồn tập trung, chính xác, không thừa thãi.
    - **Bước 3 (Kiểm thử Unit Test):** Chạy kiểm thử đầy đủ (`npm test` hoặc vitest file tương ứng). Kiểm tra kết quả thực tế.
    - **Bước 4 (Cập nhật Bộ nhớ RAM):** Ghi nhận tiến trình công việc đã hoàn thành vào `state.json`.
