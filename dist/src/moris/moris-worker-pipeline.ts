@@ -42,7 +42,7 @@ import {
   getAllSignatures
 } from "./moris-idb.js";
 
-export type Dinov2FeatureExtractor = (tensor: Float32Array) => Promise<any>;
+export type Dinov2FeatureExtractor = (pseudoRgbTensor: Float32Array, opt: OpticalNormalizationResult) => Promise<any>;
 
 /**
  * Enrolls a new SKU part into the Moris v2 signature representation:
@@ -59,13 +59,13 @@ export async function enrollSkuSignature(
   const opt: OpticalNormalizationResult = processLayer1Optical(rgba, width, height);
 
   // Step 2: DINOv2 Feature Extraction on [1, 3, 224, 224] Pseudo-RGB Tensor
-  const rawModelOutput = await extractor(opt.pseudoRgbTensor);
+  const rawModelOutput = await extractor(opt.pseudoRgbTensor, opt);
   const tokens: ExtractedTokens = extractDinov2Tokens(rawModelOutput);
 
   // Step 3: Layer 2 Downsampling and Masked GeM Pooling
   const { mask16x16, edge16x16 } = downsampleTo16x16Grid(opt.fgMask, opt.scharrEdgeMap, 224, 16);
   const canonicalEmbedding = computeHybridMaskedGemEmbedding(tokens.patchTokens, mask16x16, edge16x16);
-  const perspectiveCentroid = synthesizePerspectiveCentroid(canonicalEmbedding, mask16x16, edge16x16);
+  const perspectiveCentroid = synthesizePerspectiveCentroid(tokens.patchTokens, mask16x16, edge16x16);
   const keyPatches = extractTopKeyPatches(tokens.patchTokens, mask16x16, edge16x16, 32);
 
   // Step 4: Layer 3 Elliptic Fourier Descriptors
@@ -110,7 +110,7 @@ export async function searchPartTop10(
   const opt = processLayer1Optical(rgba, width, height);
 
   // 2. DINOv2 Feature Extraction
-  const rawModelOutput = await extractor(opt.pseudoRgbTensor);
+  const rawModelOutput = await extractor(opt.pseudoRgbTensor, opt);
   const tokens: ExtractedTokens = extractDinov2Tokens(rawModelOutput);
 
   // 3. Layer 2 Hybrid Query Vector & Key Patches
@@ -185,11 +185,11 @@ export async function reindexBatchSignatures(
     const item = items[i];
     try {
       const opt = processLayer1Optical(item.rgba, item.width, item.height);
-      const rawModelOutput = await extractor(opt.pseudoRgbTensor);
+      const rawModelOutput = await extractor(opt.pseudoRgbTensor, opt);
       const tokens = extractDinov2Tokens(rawModelOutput);
       const { mask16x16, edge16x16 } = downsampleTo16x16Grid(opt.fgMask, opt.scharrEdgeMap, 224, 16);
       const canonicalEmbedding = computeHybridMaskedGemEmbedding(tokens.patchTokens, mask16x16, edge16x16);
-      const perspectiveCentroid = synthesizePerspectiveCentroid(canonicalEmbedding, mask16x16, edge16x16);
+      const perspectiveCentroid = synthesizePerspectiveCentroid(tokens.patchTokens, mask16x16, edge16x16);
       const keyPatches = extractTopKeyPatches(tokens.patchTokens, mask16x16, edge16x16, 32);
       const efdCoefficients = computeEllipticFourierDescriptors(opt.outerContour, 16);
 

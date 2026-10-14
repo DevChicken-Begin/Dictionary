@@ -115,13 +115,23 @@ describe('moris-layer2-embedding: Layer 2 Coarse Gate & Hybrid Masked-GeM', () =
   });
 
   it('Multi-prototype enrollment sinh perspectiveCentroid và xếp hạng Top 40', () => {
-    const canonical = new Float32Array(768);
-    canonical.fill(0.03);
+    const patchTokens = new Float32Array(256 * 384);
+    for (let i = 0; i < patchTokens.length; i++) {
+      patchTokens[i] = Math.sin(i);
+    }
     const mask = new Float32Array(256).fill(0.9);
     const edge = new Float32Array(256).fill(0.5);
 
-    const centroid = synthesizePerspectiveCentroid(canonical, mask, edge);
+    const canonical = computeHybridMaskedGemEmbedding(patchTokens, mask, edge);
+    const centroid = synthesizePerspectiveCentroid(patchTokens, mask, edge);
     expect(centroid.length).toBe(768);
+
+    // Verify L2 norm of centroid is 1.0 (within float tolerance)
+    let normSq = 0;
+    for (let d = 0; d < 768; d++) {
+      normSq += centroid[d] * centroid[d];
+    }
+    expect(Math.abs(Math.sqrt(normSq) - 1.0)).toBeLessThan(1e-4);
 
     const candidate: MorisPartSignature = {
       skuId: 'TEST-SKU',
@@ -136,7 +146,7 @@ describe('moris-layer2-embedding: Layer 2 Coarse Gate & Hybrid Masked-GeM', () =
       keyPatches: []
     };
 
-    const queryHybrid = new Float32Array(768).fill(0.03);
+    const queryHybrid = canonical;
     const ranked = rankStage2Candidates(queryHybrid, [candidate], 10);
     expect(ranked.top40.length).toBe(1);
     expect(ranked.top40[0].score).toBeGreaterThan(0.5);

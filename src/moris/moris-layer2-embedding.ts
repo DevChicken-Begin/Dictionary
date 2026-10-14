@@ -463,71 +463,57 @@ export function executeGeometricGate(
 // ---------------------------------------------------------------------------
 
 /**
- * Synthesizes 4 geometric and optical perturbations from the canonical embedding
- * and computes the 768-dim centroid vector for multi-prototype enrollment.
+ * Synthesizes 4 geometric and optical perturbations by re-pooling patchTokens (256x384)
+ * over modulated spatial weights on the 16x16 grid and computes the 768-dim centroid vector.
  */
 export function synthesizePerspectiveCentroid(
-  canonicalEmbedding: Float32Array,
+  patchTokens: Float32Array,
   mask16x16: Float32Array,
   edge16x16: Float32Array
 ): Float32Array {
-  const dim = 768;
-  const centroid = new Float32Array(dim);
+  // Canonical embedding
+  const canonicalEmbedding = computeHybridMaskedGemEmbedding(patchTokens, mask16x16, edge16x16);
 
-  // Accumulate canonical base
-  for (let d = 0; d < dim; d++) {
-    centroid[d] += canonicalEmbedding[d];
+  // Perturbation 1 (Horizontal tilt foreshortening): Weight columns c = 0..15 with linear gradient 0.7 + 0.6 * (c / 15) on mask16x16
+  const m1 = new Float32Array(256);
+  for (let r = 0; r < 16; r++) {
+    for (let c = 0; c < 16; c++) {
+      const idx = r * 16 + c;
+      const wCol = 0.7 + 0.6 * (c / 15);
+      m1[idx] = mask16x16[idx] * wCol;
+    }
   }
+  const p1 = computeHybridMaskedGemEmbedding(patchTokens, m1, edge16x16);
 
-  // Adapt perturbation intensity based on actual surface relief and mask coverage
-  let avgMask = 0;
-  let avgEdge = 0;
+  // Perturbation 2 (Vertical tilt foreshortening): Weight rows r = 0..15 with 0.7 + 0.6 * (r / 15) on mask16x16
+  const m2 = new Float32Array(256);
+  for (let r = 0; r < 16; r++) {
+    const wRow = 0.7 + 0.6 * (r / 15);
+    for (let c = 0; c < 16; c++) {
+      const idx = r * 16 + c;
+      m2[idx] = mask16x16[idx] * wRow;
+    }
+  }
+  const p2 = computeHybridMaskedGemEmbedding(patchTokens, m2, edge16x16);
+
+  // Perturbation 3 (High-glare / Edge boost): Boost edge16x16 weights by Math.pow(edge16x16[i], 0.75)
+  const e3 = new Float32Array(256);
   for (let i = 0; i < 256; i++) {
-    avgMask += mask16x16[i];
-    avgEdge += edge16x16[i];
+    e3[i] = Math.pow(edge16x16[i], 0.75);
   }
-  avgMask /= 256;
-  avgEdge /= 256;
-  const reliefBoost = 1.0 + Math.min(0.08, avgEdge * 0.15);
-  const gemBoost = 1.0 + Math.min(0.06, avgMask * 0.1);
+  const p3 = computeHybridMaskedGemEmbedding(patchTokens, mask16x16, e3);
 
-  // Perturbation 1: Perspective tilt simulation (shift upper/lower patch balance)
-  const p1 = new Float32Array(dim);
-  p1.set(canonicalEmbedding);
-  for (let d = 0; d < 384; d++) {
-    p1[d] *= 1.05 * gemBoost;    // GeM emphasis
-    p1[384 + d] *= 0.95;         // Detail attenuation
+  // Perturbation 4 (Boundary erosion simulation): Attenuate border patches where mask16x16[i] < 0.65 by 0.35 * mask16x16[i]
+  const m4 = new Float32Array(256);
+  for (let i = 0; i < 256; i++) {
+    m4[i] = mask16x16[i] < 0.65 ? 0.35 * mask16x16[i] : mask16x16[i];
   }
-  l2NormalizeVector(p1);
+  const p4 = computeHybridMaskedGemEmbedding(patchTokens, m4, edge16x16);
 
-  // Perturbation 2: Edge relief enhancement (CLAHE clip shift)
-  const p2 = new Float32Array(dim);
-  p2.set(canonicalEmbedding);
-  for (let d = 0; d < 384; d++) {
-    p2[d] *= 0.92;
-    p2[384 + d] *= 1.08 * reliefBoost; // High-relief edge boost
-  }
-  l2NormalizeVector(p2);
-
-  // Perturbation 3: Morphological boundary erosion (1px shrinkage)
-  const p3 = new Float32Array(dim);
-  p3.set(canonicalEmbedding);
-  for (let d = 0; d < 384; d++) {
-    p3[d] = 0.5 * canonicalEmbedding[d] + 0.5 * canonicalEmbedding[(d + 7) % 384];
-    p3[384 + d] = 0.8 * canonicalEmbedding[384 + d] + 0.2 * canonicalEmbedding[384 + ((d + 13) % 384)];
-  }
-  l2NormalizeVector(p3);
-
-  // Perturbation 4: Symmetric flip invariant blend
-  const p4 = new Float32Array(dim);
-  for (let d = 0; d < dim; d++) {
-    p4[d] = canonicalEmbedding[dim - 1 - d] * 0.15 + canonicalEmbedding[d] * 0.85;
-  }
-  l2NormalizeVector(p4);
-
-  // Average all 5 representations
-  for (let d = 0; d < dim; d++) {
-    centroid[d] += p1[d] + p2[d] + p3[d] + p4[d];
+  // Average canonical embedding and 4 spatially-perturbed embeddings, then L2-normalize
+  const centroid = new Float32Array(768);
+  for (let d = 0; d < 768; d++) {
+    centroid[d] = canonicalEmbedding[d] + p1[d] + p2[d] + p3[d] + p4[d];
   }
 
   return l2NormalizeVector(centroid);

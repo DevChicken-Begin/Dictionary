@@ -190,6 +190,23 @@ export async function clearAllSignatures() {
     });
 }
 /**
+ * Deletes a single part signature by SKU ID.
+ */
+export async function deleteSignature(skuId) {
+    const db = await openMorisDatabase();
+    if (!db) {
+        memoryStore.delete(skuId);
+        return;
+    }
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.delete(skuId);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+/**
  * Returns total count of enrolled SKU signatures.
  */
 export async function countSignatures() {

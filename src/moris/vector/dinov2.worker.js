@@ -13,6 +13,7 @@ import {
   getSignatureBySku,
   saveSignature,
   saveSignaturesBatch,
+  deleteSignature,
   clearAllSignatures,
   countSignatures,
   serializeSignature,
@@ -219,6 +220,14 @@ function pseudoRgbTensorToCanvas(opt) {
   return canvas;
 }
 
+async function extractFeaturesWithFallback(extractor, canvas) {
+  try {
+    return await extractor(canvas, { pooling: "none" });
+  } catch {
+    return await extractor(canvas);
+  }
+}
+
 self.onmessage = async event => {
   const message = event?.data || {};
   const requestId = String(message.requestId || "");
@@ -299,11 +308,9 @@ self.onmessage = async event => {
         img.rgba,
         img.width,
         img.height,
-        async pseudoTensor => {
-          // Wrap pseudo-RGB tensor as OffscreenCanvas for transformers.js
-          const opt = processLayer1Optical(img.rgba, img.width, img.height);
+        async (pseudoTensor, opt) => {
           const canvas = pseudoRgbTensorToCanvas(opt);
-          return await extractor(canvas);
+          return await extractFeaturesWithFallback(extractor, canvas);
         }
       );
 
@@ -332,10 +339,9 @@ self.onmessage = async event => {
         img.rgba,
         img.width,
         img.height,
-        async pseudoTensor => {
-          const opt = processLayer1Optical(img.rgba, img.width, img.height);
+        async (pseudoTensor, opt) => {
           const canvas = pseudoRgbTensorToCanvas(opt);
-          return await extractor(canvas);
+          return await extractFeaturesWithFallback(extractor, canvas);
         },
         message.candidates // Optional pre-fetched candidate pool
       );
@@ -381,9 +387,9 @@ self.onmessage = async event => {
 
       const reindexResult = await reindexBatchSignatures(
         preparedItems,
-        async pseudoTensor => {
-          const canvas = new OffscreenCanvas(224, 224);
-          return await extractor(canvas);
+        async (pseudoTensor, opt) => {
+          const canvas = pseudoRgbTensorToCanvas(opt);
+          return await extractFeaturesWithFallback(extractor, canvas);
         },
         (processed, total) => {
           post("progress", { progress: { processed, total } });
@@ -400,6 +406,13 @@ self.onmessage = async event => {
     // -----------------------------------------------------------------------
     // Message Type: idb operations
     // -----------------------------------------------------------------------
+    if (message.type === "delete-signature") {
+      const skuId = String(message.skuId || "");
+      if (skuId) await deleteSignature(skuId);
+      post("result", { requestId, result: { deleted: true } });
+      return;
+    }
+
     if (message.type === "count-signatures") {
       const count = await countSignatures();
       post("result", { requestId, result: { count } });

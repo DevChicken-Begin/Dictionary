@@ -157,6 +157,10 @@ export async function reindexBatchV2(items) {
   return request("reindex-batch-v2", { items });
 }
 
+export async function deleteSignatureV2(skuId) {
+  return request("delete-signature", { skuId });
+}
+
 export async function countSignaturesV2() {
   const res = await request("count-signatures");
   return Number(res?.count || 0);

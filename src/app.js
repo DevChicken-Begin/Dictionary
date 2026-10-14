@@ -1657,6 +1657,13 @@ createApp({
         // Dọn dẹp hàng đợi vector local cho mã vừa xóa
         this.removeMorisVectorJob(partId);
 
+        try {
+          const mod = await this.loadMorisBrowserVectorModule();
+          if (typeof mod.deleteSignatureV2 === 'function') {
+            await mod.deleteSignatureV2(String(partId));
+          }
+        } catch (_) {}
+
         this.toast('success','Đã xóa mã linh kiện và toàn bộ vector AI liên quan.');
         this.closeDetail();
         await this.loadParts(false);
@@ -1760,6 +1767,15 @@ createApp({
         this.bulkSelection.active = false;
         // Dọn dẹp hàng đợi vector local cho toàn bộ các mã vừa xóa
         this.removeMorisVectorJobs(ids);
+        try {
+          const mod = await this.loadMorisBrowserVectorModule();
+          if (typeof mod.deleteSignatureV2 === 'function') {
+            for (const id of ids) {
+              await mod.deleteSignatureV2(String(id));
+            }
+          }
+        } catch (_) {}
+
         await this.loadParts(false);
         if (this.parts.length === 0 && this.page > 0) {
           this.page = Math.max(0, this.page - 1);
@@ -1824,6 +1840,12 @@ createApp({
         this.bulkSelection.active = false;
         // Dọn dẹp sạch toàn bộ hàng đợi vector local
         this.clearAllMorisVectorJobs();
+        try {
+          const mod = await this.loadMorisBrowserVectorModule();
+          if (typeof mod.clearSignaturesV2 === 'function') {
+            await mod.clearSignaturesV2();
+          }
+        } catch (_) {}
         await this.loadParts(true);
       } catch (e) {
         this.toast('error', this.readError(e));
@@ -2807,12 +2829,26 @@ createApp({
         this.setMorisScanStep(70, 'LỚP 2: TRÍCH XUẤT XONG', 'VECTOR 384D ĐÃ TẠO · TRUY VẤN KHO HNSW...');
       }
 
+      // Lớp 3: Chạy Funnel 3 Lớp Moris V2 nếu IndexedDB đã có signatures
+      let v2SearchResult = null;
+      try {
+        if (typeof mod.searchPartTop10V2 === 'function') {
+          const sigCount = typeof mod.countSignaturesV2 === 'function' ? await mod.countSignaturesV2() : 0;
+          if (sigCount > 0) {
+            v2SearchResult = await mod.searchPartTop10V2(imageDataUrl);
+          }
+        }
+      } catch (v2Err) {
+        console.warn('[Moris V2] Local 3-layer search error:', v2Err);
+      }
+
       return {
         embedding:probes[0].embedding,
         profile:probes[0].profile,
         probes,
         geometry:result?.geometry || null,
-        diagnostics:result?.diagnostics || null
+        diagnostics:result?.diagnostics || null,
+        v2SearchResult
       };
     },
 
@@ -3170,11 +3206,12 @@ createApp({
 
       for (const item of selected.slice(0,4)) {
         const mod = await this.loadMorisBrowserVectorModule();
+        const imageUrl = new URL(
+          this.mediaUrlForVectorPath(item.object_key),
+          location.origin
+        ).href;
         const result = await mod.embedImageDinov2Variants(
-          new URL(
-            this.mediaUrlForVectorPath(item.object_key),
-            location.origin
-          ).href,
+          imageUrl,
           {includeGray:true}
         );
 
@@ -3186,6 +3223,15 @@ createApp({
             embedding_profile:probe.profile,
             foreground_status:'browser_dinov2_v59_canonical'
           });
+        }
+
+        // Đăng ký Moris V2 Signature vào IndexedDB phục vụ funnel 3 lớp offline
+        try {
+          if (typeof mod.enrollSkuSignatureV2 === 'function' && item.record_id) {
+            await mod.enrollSkuSignatureV2(String(item.record_id), imageUrl);
+          }
+        } catch (v2Err) {
+          console.warn('[Moris V2] Enroll signature failed for', item.record_id, v2Err);
         }
       }
 
@@ -3481,6 +3527,40 @@ createApp({
             )
           });
           return;
+        }
+
+        // Tích hợp kết quả Funnel 3 Lớp Moris V2 nếu có
+        if (vectorResult?.v2SearchResult?.top10?.length > 0) {
+          const v2Top10 = vectorResult.v2SearchResult.top10;
+          const v2Map = new Map(v2Top10.map(item => [String(item.skuId), item]));
+
+          if (Array.isArray(data?.candidates) && data.candidates.length > 0) {
+            for (const cand of data.candidates) {
+              const matched = v2Map.get(String(cand.id)) || v2Map.get(String(cand.code));
+              if (matched) {
+                cand.v2_score = matched.finalScore;
+                cand.final_score = Math.max(Number(cand.final_score || 0), matched.finalScore);
+                cand.match_score = Math.max(Number(cand.match_score || 0), matched.finalScore);
+              }
+            }
+          } else if (!data?.candidates || data.candidates.length === 0) {
+            // Local 3-Layer funnel results fallback when server returns empty
+            const localMatched = [];
+            for (const item of v2Top10) {
+              const part = (this.parts || []).find(p => String(p.id) === String(item.skuId) || String(p.code) === String(item.skuId));
+              if (part) {
+                localMatched.push({
+                  ...part,
+                  final_score: item.finalScore,
+                  match_score: item.finalScore,
+                  v2_score: item.finalScore
+                });
+              }
+            }
+            if (localMatched.length > 0) {
+              data.candidates = localMatched;
+            }
+          }
         }
 
         this.applyMorisSearchResults(data);

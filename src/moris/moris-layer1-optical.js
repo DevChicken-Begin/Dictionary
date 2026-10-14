@@ -914,7 +914,7 @@ export function processLayer1Optical(rawRgba, rawWidth, rawHeight) {
     }
     const rbw = rMaxX - rMinX + 1;
     const rbh = rMaxY - rMinY + 1;
-    const canonicalAspectRatio = Number((rbw / Math.max(1, rbh)).toFixed(4));
+    const orientedAspectRatio = Number((rbw / Math.max(1, rbh)).toFixed(4));
     // Apply 6% padding margin
     const padX = Math.round(rbw * 0.06);
     const padY = Math.round(rbh * 0.06);
@@ -1023,20 +1023,173 @@ export function processLayer1Optical(rawRgba, rawWidth, rawHeight) {
     const pseudoRgbTensor = buildStructuralPseudoRGBTensor(claheLuminance, scharrEdgeMap, chamferDistMap);
     // Step 11: Outer Contour Tracing for Elliptic Fourier Descriptors
     const outerContour = traceOuterContour(mask224, 224);
-    // Extract Canonical Hole Constellation on 224x224 mask
-    const holeFeatures = seg.holes.map(h => ({
-        u: h.u,
-        v: h.v,
-        relArea: h.relArea,
-        pixelArea: h.area
-    }));
+    // Step 12 (BUG 3 Fix): Compute true oriented aspect ratio, solidity, and hole features
+    // strictly from the PCA-rotated and 180-degree disambiguated canonical mask224
+    let cMinX = 224, cMinY = 224, cMaxX = -1, cMaxY = -1;
+    let canonicalFgArea = 0;
+    for (let y = 0; y < 224; y++) {
+        const row = y * 224;
+        for (let x = 0; x < 224; x++) {
+            if (mask224[row + x] === 1) {
+                canonicalFgArea++;
+                if (x < cMinX)
+                    cMinX = x;
+                if (x > cMaxX)
+                    cMaxX = x;
+                if (y < cMinY)
+                    cMinY = y;
+                if (y > cMaxY)
+                    cMaxY = y;
+            }
+        }
+    }
+    if (canonicalFgArea === 0 || cMaxX < cMinX || cMaxY < cMinY) {
+        cMinX = 0;
+        cMinY = 0;
+        cMaxX = 223;
+        cMaxY = 223;
+        canonicalFgArea = 224 * 224;
+    }
+    const cW = cMaxX - cMinX + 1;
+    const cH = cMaxY - cMinY + 1;
+    const canonicalAspectRatio = Number((cW / Math.max(1, cH)).toFixed(4));
+    const canonicalPerim = extractPerimeterPoints(mask224, 224, 224);
+    const canonicalHull = computeConvexHull(canonicalPerim);
+    const canonicalHullArea = computePolygonArea(canonicalHull);
+    const canonicalSolidity = Number((canonicalFgArea / Math.max(canonicalFgArea, canonicalHullArea)).toFixed(4));
+    // Extract canonical holes on mask224 via border flood-fill
+    const cLabels = new Uint8Array(224 * 224);
+    for (let i = 0; i < 224 * 224; i++) {
+        if (mask224[i] === 1)
+            cLabels[i] = 2; // Metal body
+    }
+    const cQueue = new Int32Array(224 * 224);
+    let cqHead = 0, cqTail = 0;
+    for (let x = 0; x < 224; x++) {
+        if (cLabels[x] === 0) {
+            cLabels[x] = 1;
+            cQueue[cqTail++] = x;
+        }
+        const bIdx = 223 * 224 + x;
+        if (cLabels[bIdx] === 0) {
+            cLabels[bIdx] = 1;
+            cQueue[cqTail++] = bIdx;
+        }
+    }
+    for (let y = 1; y < 223; y++) {
+        const lIdx = y * 224;
+        if (cLabels[lIdx] === 0) {
+            cLabels[lIdx] = 1;
+            cQueue[cqTail++] = lIdx;
+        }
+        const rIdx = y * 224 + 223;
+        if (cLabels[rIdx] === 0) {
+            cLabels[rIdx] = 1;
+            cQueue[cqTail++] = rIdx;
+        }
+    }
+    while (cqHead < cqTail) {
+        const idx = cQueue[cqHead++];
+        const cx = idx % 224;
+        const cy = (idx / 224) | 0;
+        if (cx > 0) {
+            const n = idx - 1;
+            if (cLabels[n] === 0) {
+                cLabels[n] = 1;
+                cQueue[cqTail++] = n;
+            }
+        }
+        if (cx < 223) {
+            const n = idx + 1;
+            if (cLabels[n] === 0) {
+                cLabels[n] = 1;
+                cQueue[cqTail++] = n;
+            }
+        }
+        if (cy > 0) {
+            const n = idx - 224;
+            if (cLabels[n] === 0) {
+                cLabels[n] = 1;
+                cQueue[cqTail++] = n;
+            }
+        }
+        if (cy < 223) {
+            const n = idx + 224;
+            if (cLabels[n] === 0) {
+                cLabels[n] = 1;
+                cQueue[cqTail++] = n;
+            }
+        }
+    }
+    const minCanonicalHoleArea = Math.max(4, Math.round(canonicalFgArea * 0.008));
+    const maxCanonicalHoleArea = Math.round(canonicalFgArea * 0.45);
+    const visitedCanonicalHole = new Uint8Array(224 * 224);
+    const canonicalHoles = [];
+    const chQueue = new Int32Array(224 * 224);
+    for (let y = cMinY; y <= cMaxY; y++) {
+        const rowOffset = y * 224;
+        for (let x = cMinX; x <= cMaxX; x++) {
+            const idx = rowOffset + x;
+            if (cLabels[idx] === 0 && visitedCanonicalHole[idx] === 0) {
+                let chHead = 0, chTail = 0;
+                let hArea = 0, sumX = 0, sumY = 0;
+                visitedCanonicalHole[idx] = 1;
+                chQueue[chTail++] = idx;
+                while (chHead < chTail) {
+                    const cur = chQueue[chHead++];
+                    const hx = cur % 224;
+                    const hy = (cur / 224) | 0;
+                    hArea++;
+                    sumX += hx;
+                    sumY += hy;
+                    if (hx > cMinX) {
+                        const n = cur - 1;
+                        if (cLabels[n] === 0 && visitedCanonicalHole[n] === 0) {
+                            visitedCanonicalHole[n] = 1;
+                            chQueue[chTail++] = n;
+                        }
+                    }
+                    if (hx < cMaxX) {
+                        const n = cur + 1;
+                        if (cLabels[n] === 0 && visitedCanonicalHole[n] === 0) {
+                            visitedCanonicalHole[n] = 1;
+                            chQueue[chTail++] = n;
+                        }
+                    }
+                    if (hy > cMinY) {
+                        const n = cur - 224;
+                        if (cLabels[n] === 0 && visitedCanonicalHole[n] === 0) {
+                            visitedCanonicalHole[n] = 1;
+                            chQueue[chTail++] = n;
+                        }
+                    }
+                    if (hy < cMaxY) {
+                        const n = cur + 224;
+                        if (cLabels[n] === 0 && visitedCanonicalHole[n] === 0) {
+                            visitedCanonicalHole[n] = 1;
+                            chQueue[chTail++] = n;
+                        }
+                    }
+                }
+                if (hArea >= minCanonicalHoleArea && hArea <= maxCanonicalHoleArea) {
+                    const cx = sumX / hArea;
+                    const cy = sumY / hArea;
+                    const u = Number(((cx - (cMinX + cW / 2)) / cW).toFixed(4));
+                    const v = Number(((cy - (cMinY + cH / 2)) / cH).toFixed(4));
+                    const relArea = Number(Math.sqrt(hArea / canonicalFgArea).toFixed(4));
+                    canonicalHoles.push({ u, v, relArea, pixelArea: hArea });
+                }
+            }
+        }
+    }
+    canonicalHoles.sort((a, b) => a.u - b.u);
     return {
         fgMask: mask224,
         canonicalRgba: rgba224,
-        aspectRatio: canonicalAspectRatio,
-        solidity: seg.solidity,
-        holeCount: seg.holes.length,
-        holeFeatures,
+        aspectRatio: orientedAspectRatio,
+        solidity: canonicalSolidity,
+        holeCount: canonicalHoles.length,
+        holeFeatures: canonicalHoles,
         pseudoRgbTensor,
         scharrEdgeMap,
         chamferDistMap,
@@ -1046,8 +1199,8 @@ export function processLayer1Optical(rawRgba, rawWidth, rawHeight) {
             pcaAngleDeg: angleDeg,
             flipH,
             flipV,
-            rawForegroundArea: seg.foregroundArea,
-            convexHullArea: Math.round(seg.foregroundArea / Math.max(0.01, seg.solidity))
+            rawForegroundArea: canonicalFgArea,
+            convexHullArea: Math.round(canonicalFgArea / Math.max(0.01, canonicalSolidity))
         }
     };
 }
