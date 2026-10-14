@@ -630,3 +630,158 @@ export function filterCatalogueByQueryFeatures(catalogueRows, queryMessage) {
     matchedRows
   };
 }
+
+/**
+ * parseTargetQuery(message)
+ * Nhận diện truy vấn tìm kiếm mục tiêu theo ID hoặc Mã linh kiện.
+ * 
+ * Quy tắc:
+ * 1. ID:
+ *    - Key: "tìm id", "id", "tim id", "id:", "tìm kiếm id", "tra id", "tìm id linh kiện"
+ *    - Trường dữ liệu: part_id trong bảng image_library
+ *    - So khớp: Chính xác 100% (Exact match)
+ * 2. Mã linh kiện:
+ *    - Key: "mã hàng", "tìm mã hàng", "mã", "ma hang", "tim ma hang", "ma", "mã linh kiện", "tìm mã"
+ *    - Trường dữ liệu: code trong bảng image_library
+ *    - So khớp: Linh hoạt (Contains / Substring)
+ * 3. Chống nhầm với đặc điểm nhận dạng:
+ *    - Nếu sau "mã" là các từ khóa lỗ/hình dáng (ví dụ "mã 6 lỗ tròn", "mã 2 lỗ oval") thì trả về isTargetQuery = false
+ *      để chuyển tiếp sang bộ lọc đặc điểm nhận dạng.
+ */
+export function parseTargetQuery(message) {
+  const raw = String(message || "").trim();
+  if (!raw) {
+    return { isTargetQuery: false, type: null, value: "", rawKey: "" };
+  }
+
+  // 1. Kiểm tra prefix tìm ID
+  // Ví dụ: "tìm id 8363", "id 8363", "id: 8363", "tìm kiếm id 8363", "tra id 8363", "tim id 8363"
+  const idRegex = /^(?:(?:tìm\s+kiếm|tìm|tim|tra)\s+(?:giúp\s+(?:anh|em)\s+|cho\s+(?:anh|em)\s+)?|(?:giúp\s+(?:anh|em)\s+|cho\s+(?:anh|em)\s+)?)id(?:\s+linh\s+kiện|\s+linh\s+kien)?(?:\s*[:=-]\s*|\s+)(.+)$/i;
+  const idMatch = raw.match(idRegex);
+  if (idMatch) {
+    let val = idMatch[1].trim().replace(/[.,;:!?]+$/, "").trim();
+    val = val.replace(/^["']|["']$/g, "").trim();
+    if (val) {
+      return {
+        isTargetQuery: true,
+        type: "id",
+        value: val,
+        rawKey: "id"
+      };
+    }
+  }
+
+  // 2. Kiểm tra prefix tìm Mã linh kiện
+  // Ví dụ: "mã hàng 368701", "tìm mã hàng 368701", "mã 368701", "ma hang 368701", "tìm mã 368701"
+  const codeRegex = /^(?:(?:tìm\s+kiếm|tìm|tim|tra)\s+(?:giúp\s+(?:anh|em)\s+|cho\s+(?:anh|em)\s+)?|(?:giúp\s+(?:anh|em)\s+|cho\s+(?:anh|em)\s+)?)(?:mã\s+hàng|ma\s+hang|mã\s+linh\s+kiện|ma\s+linh\s+kien|mã|ma)(?:\s*[:=-]\s*|\s+)(.+)$/i;
+  const codeMatch = raw.match(codeRegex);
+  if (codeMatch) {
+    let val = codeMatch[1].trim().replace(/[.,;:!?]+$/, "").trim();
+    val = val.replace(/^["']|["']$/g, "").trim();
+
+    // Kiểm tra xem có phải đặc điểm nhận dạng (lỗ, hình dáng) đi sau từ "mã" không
+    const isFeatureLike = /\b(?:lỗ|lo|hole|holes|ngàm|ngam|tai|cánh|canh|chân|chan|ốc|oc|gờ|go|rãnh|ranh)\b/i.test(val) ||
+      /\b(?:tron|tròn|vuong|vuông|oval|tam\s*giac|tam\s*giác|chu\s*nhat|chữ\s*nhật)\b/i.test(val);
+
+    if (!isFeatureLike && val) {
+      return {
+        isTargetQuery: true,
+        type: "code",
+        value: val,
+        rawKey: "code"
+      };
+    }
+  }
+
+  return { isTargetQuery: false, type: null, value: "", rawKey: "" };
+}
+
+/**
+ * So khớp 1 dòng catalogue theo Target Query (ID hoặc Mã linh kiện)
+ */
+export function matchRowWithTarget(row, targetQuery) {
+  if (!row || !targetQuery || !targetQuery.isTargetQuery || !targetQuery.value) {
+    return false;
+  }
+  const val = String(targetQuery.value).trim().toLowerCase();
+  if (targetQuery.type === "id") {
+    // So khớp chính xác 100% cột part_id
+    if (!row.part_id) return false;
+    return String(row.part_id).trim().toLowerCase() === val;
+  }
+  if (targetQuery.type === "code") {
+    // So khớp linh hoạt (contains / substring) cột code
+    if (!row.code) return false;
+    return String(row.code).trim().toLowerCase().includes(val);
+  }
+  return false;
+}
+
+/**
+ * Lọc danh sách catalogue theo Target Query (ID hoặc Mã linh kiện)
+ * QUAN TRỌNG: Chỉ lọc những mã khớp thật, không lấy mã rác top 10.
+ */
+export function filterCatalogueByTargetQuery(catalogueRows, queryMessage) {
+  const targetQuery = typeof queryMessage === "object" && queryMessage !== null && queryMessage.isTargetQuery !== undefined
+    ? queryMessage
+    : parseTargetQuery(queryMessage);
+
+  if (!targetQuery.isTargetQuery) {
+    return {
+      isTargetQuery: false,
+      targetQuery,
+      matchedRows: []
+    };
+  }
+
+  const rows = Array.isArray(catalogueRows) ? catalogueRows : [];
+  const val = targetQuery.value.toLowerCase();
+
+  const matchedRows = rows.filter(row => matchRowWithTarget(row, targetQuery));
+
+  if (targetQuery.type === "code") {
+    // Sắp xếp: Ưu tiên mã khớp chính xác 100% lên đầu, tiếp đến startsWith, sau đó theo alphabet
+    matchedRows.sort((a, b) => {
+      const codeA = String(a.code || "").toLowerCase();
+      const codeB = String(b.code || "").toLowerCase();
+      if (codeA === val && codeB !== val) return -1;
+      if (codeB === val && codeA !== val) return 1;
+      if (codeA.startsWith(val) && !codeB.startsWith(val)) return -1;
+      if (codeB.startsWith(val) && !codeA.startsWith(val)) return 1;
+      return codeA.localeCompare(codeB);
+    });
+  }
+
+  return {
+    isTargetQuery: true,
+    targetQuery,
+    matchedRows
+  };
+}
+
+/**
+ * Xây dựng câu trả lời của Moris cho truy vấn mục tiêu ID / Mã linh kiện
+ */
+export function buildTargetAnswer(candidates, targetQuery) {
+  const isId = targetQuery.type === "id";
+  const val = targetQuery.value;
+  if (!candidates.length) {
+    if (isId) {
+      return `Em đã kiểm tra toàn bộ catalogue nhưng không tìm thấy linh kiện nào có ID “${val}”. Anh kiểm tra lại ID nhé.`;
+    }
+    return `Em đã kiểm tra toàn bộ catalogue nhưng không tìm thấy mã linh kiện nào khớp với “${val}”. Anh kiểm tra lại mã hàng nhé.`;
+  }
+
+  const head = isId
+    ? `Em tìm thấy ${candidates.length} linh kiện khớp chính xác với ID “${val}”:`
+    : `Em tìm thấy ${candidates.length} mã linh kiện khớp với “${val}”:`;
+
+  const list = candidates.map((c, i) => {
+    const code = c.code || "---";
+    const partId = c.part_id ? ` (ID: ${c.part_id})` : "";
+    const feats = String(c.identifying_features || "").trim();
+    return `${i + 1}. ${code}${partId}${feats ? ` — ${feats}` : ""}`;
+  });
+
+  return [head, "", ...list, "", "Anh chọn mã cần xem để em gửi ảnh nhé."].join("\n");
+}

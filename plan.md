@@ -47,7 +47,25 @@ Nâng cấp toàn diện **Moris 3-Layer Computer Vision Harness** sang TypeScri
   - [x] **Step 5 — Đồng bộ dist/ & Verification:** Đồng bộ `.ts` sang `.js`, build `dist/` 42 files sạch sẽ, bổ sung unit tests cho AST order independence, strict numbers, big/small clustering, cross-modal recovery; pass 100% 210/210 unit tests, `tsc --noEmit` sạch 0 lỗi.
 - [x] **Bước 9 (Hotfix Filter Bar, Strict AST Feature Matching & Khớp Badge theo MORIS_HOTFIX_FILTER.md):**
   - [x] **BUG 1:** Sửa `src/app.js` `loadParts()`: khi `isFeatureSearch` gửi `p_search: ''` và `p_limit: 2000`, `p_offset: 0` để fetch toàn bộ catalogue từ Supabase rồi áp dụng AST matcher trên toàn bộ SKU.
-  - [x] **BUG 2:** Sửa triệt để false positive trong `parseIdentifyingFeaturesAST` và `matchFeatureQueryFlexible`: phân biệt rõ mệnh đề phụ breakdown vs các phân đoạn hình dạng độc lập; trích xuất `shapeCounts`, `generalShapeCounts`; loại bỏ auto-subtract sai; kiểm tra nghiêm ngặt `bigHoles`/`smallHoles` (không trả về `partial_match` khi DB thiếu subset); mặc định `allowPerceptualTolerance = false`; loại bỏ loose fallback trong `matchRowWithFeatures` cho hole-count queries. Đồng bộ 3 file: `functions/_lib/moris/v5/retrieval/featureMatcher.js`, `src/moris/retrieval/featureMatcher.js`, `src/app.js`.
-  - [x] **BUG 3:** Đổi nhãn `100%` thành `Khớp` khi tìm kiếm theo đặc điểm nhận dạng: gắn cờ `is_feature_match: true` và `badge_label: 'Khớp'` tại `functions/api/moris/chat.js` và `functions/_lib/moris/v5/presentation/publicResult.js`; cập nhật `morisCandidatePercent` trả về `null` cho feature match và `index.html` render pill badge `Khớp`.
-  - [x] **Verification:** Bổ sung unit test toàn diện cho các ca thực tế (query `3 lỗ nhỏ + 1 lỗ to`, `1 lỗ to + 3 lỗ nhỏ`, `4 lỗ tròn 3 lỗ nhỏ + 1 lỗ to` khớp `3687110001`/`3885600001`, chặn đứng `3883310001`, `3889630101`, `3889510001`, `3960230001`); chạy `npm run build` và `npx vitest run` pass 100% (214/214 tests).
+- [x] **Bước 10 (Thanh Filter mục tiêu ID & Mã linh kiện tại Main Catalogue và Moris Search):**
+  - [x] **10.1 (Parser & Matcher mục tiêu):** Xây dựng `parseTargetQuery`, `matchRowWithTarget`, `filterCatalogueByTargetQuery`, `buildTargetAnswer` trong `src/moris/retrieval/featureMatcher.js` và `functions/_lib/moris/v5/retrieval/featureMatcher.js`:
+    - ID key ("tìm id", "id", "tim id", "id:") -> Lọc CHÍNH XÁC (exact match) trên cột `part_id` trong `image_library`.
+    - Mã key ("mã hàng", "tìm mã hàng", "mã", "ma", "ma hang") -> Lọc LINH HOẠT (contains substring) trên cột `code`.
+    - Phân tách rõ ràng với truy vấn đặc điểm nhận dạng (lỗ, hình dáng).
+  - [x] **10.2 (Tích hợp Moris Chat & Search API):** Nâng cấp `functions/api/moris/chat.js` và `functions/_lib/moris/v5/orchestrator.js` hỗ trợ truy vấn mục tiêu ID và Mã linh kiện:
+    - Khi nhận diện lệnh tìm ID/Mã, quét catalogue (`scanCatalogue`), lọc đúng quy tắc, gán `is_feature_match: true`, `badge_label: 'Khớp'`, `score: 1.0`.
+    - Sinh câu trả lời `buildTargetAnswer` tự nhiên, chính xác, không nhồi nhét mã rác top 10.
+  - [x] **10.3 (Giao diện Main Catalogue Linh Kiện):**
+    - Thêm dropdown chọn Mục tiêu lọc `[Tất cả | Mã linh kiện | ID]` ngay cạnh ô tìm kiếm tại `index.html`.
+    - Cập nhật state `filters.target` và phương thức `loadParts` trong `src/app.js`: khi chọn ID thì lọc chính xác `part_id`, khi chọn Mã linh kiện thì lọc linh hoạt `code`.
+  - [x] **10.4 (Unit Tests):** Bổ sung test suites đầy đủ trong `tests/moris-features-filter.test.js` và `tests/frontend.test.js` kiểm tra mọi trường hợp ID, Mã linh kiện, giao diện.
+- [x] **Bước 11 (Đánh giá kiến trúc & Loại bỏ tách vector tự động khi lưu chỉnh sửa linh kiện):**
+  - [x] **11.1 (Đánh giá kiến trúc tổng thể):** Kiểm tra toàn bộ luồng vector trong hệ thống; xác nhận Moris Search, RAG, Supabase pgvector và Trung tâm Vector AI không phụ thuộc vào `savePart()` auto-enqueue.
+  - [x] **11.2 (Loại bỏ auto-vectorize trong src/app.js & index.html):**
+    - Đặt `MORIS_VECTOR_AUTO_ON_SAVE_DESKTOP: false` và `MORIS_VECTOR_AUTO_ON_SAVE_MOBILE: false`.
+    - Loại bỏ `enqueueMorisVectorJob` và `processMorisVectorQueue` khỏi `savePart()`.
+    - Cập nhật text gợi ý trong Part Editor Modal (`index.html`).
+    - Bảo toàn nút bấm thủ công "Tạo vector" (`vectorizeCurrentEditorPart`) và hoạt động độc lập của Trung tâm Vector AI.
+  - [x] **11.3 (Unit Tests):** Bổ sung test kiểm tra `savePart()` không tự động enqueue và `MORIS_VECTOR_AUTO_ON_SAVE_DESKTOP` là `false` trong `tests/frontend.test.js`.
+  - [x] **11.4 (Build & Verification):** Chạy `npm run build` sinh `dist/`, kiểm tra `tsc --noEmit`, chạy toàn bộ `npm test` pass 100% (229/229 unit tests), cập nhật `state.json`.
 

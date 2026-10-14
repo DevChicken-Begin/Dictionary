@@ -2,14 +2,14 @@
   "system": {
     "project": "Catalogue AI (Dictionary)",
     "stack": "Vue 3 CDN + Cloudflare Pages Functions + Supabase (pgvector) + Cloudflare R2",
-    "updated_at": "2026-10-14T07:40:00Z",
-    "memory_version": "2.1.0",
+    "updated_at": "2026-10-14T09:20:00Z",
+    "memory_version": "2.2.0",
     "status": "completed"
   },
   "current_session": {
     "active_task": "all_tasks_completed",
-    "last_checkpoint": "Moris Hotfix Filter (BUG 1, BUG 2, BUG 3) completed and verified (214 passing unit tests, tsc clean, build clean)",
-    "resumption_prompt": "Hệ thống đã hoàn tất sửa triệt để 3 bug theo MORIS_HOTFIX_FILTER.md, pass 100% tsc và 214/214 unit tests."
+    "last_checkpoint": "Đã hoàn thành toàn bộ yêu cầu: Thêm thanh filter mục tiêu ID & Mã cho Main Catalogue & Moris, đánh giá kiến trúc và loại bỏ an toàn tách vector tự động khi lưu chỉnh sửa linh kiện",
+    "resumption_prompt": "Tất cả các task đã hoàn thành, 229/229 unit tests pass 100%, dist/ đồng bộ sạch sẽ."
   },
   "tasks": [
     {
@@ -188,7 +188,7 @@
       "diagnostics": {
         "finding_1": "Bề mặt kim loại dập nổi (convex) bị chụp từ mặt sau (concave) làm sai lệch hướng đổ bóng và cosine similarity trong pgvector Supabase.",
         "finding_2": "72 bản ghi front legacy trong DB bị gán nhầm hole_count = 0 mặc dù identifying_features mô tả rõ số lượng lỗ, gây phạt điểm nhầm trong Layer 3 reranker.",
-        "finding_3": "Tìm kiếm text đặc điểm nhận dạng nhạy cảm với thứ tự chuỗi ('5 lỗ tròn 4 lỗ to + 1 lỗ nhỏ' vs '1 lỗ nhỏ 4 lỗ to 5 lỗ tròn') và ranh giới số chưa chuẩn hoá AST."
+        "finding_3": "Tìm kiếm text đặc điểm nhận dạng nhạy cảm với thứ tự chuỗi ('5 lỗ tròn 4 lỗ to + 1 lỗ nhỏ' vs '1 lỗ nhỏ 4 lỗ to 5 lỗ tròn') và ranh giới số chưa chuẩn hoá AST.",
       },
       "solution": "1) Step 1: Nâng cấp Layer 1 (moris-layer1-optical.ts) Dual-Mode segmentation (R2 cutouts vs Live camera), hạ ngưỡng diện tích lỗ tối thiểu xuống 0.04% (0.0004), phân cụm 1D Log-Area Otsu (classifyHoleSizes1D) tách bigHoleCount & smallHoleCount, chuẩn hoá in-plane 180° rotation (flipH + flipV đồng thời), aspectRatio >= 1.0; 2) Step 2: Nâng cấp Layer 2 (moris-layer2-embedding.ts) sinh vector 384D chuẩn Supabase pgvector qua computeSupabase384HybridEmbedding (0.55 GeM + 0.45 Edge-Detail), tính biến thể đảo ngược phù điêu computeReliefInvertedOptical, handler embed-variants-v2 trong Worker sinh canon_rgb_v2 & canon_gray_v2 cùng rich geometry; 3) Step 3: Nâng cấp featureMatcher.js và src/app.js với parseIdentifyingFeaturesAST và matchFeatureQueryFlexible hỗ trợ giao hoán thứ tự, suy luận tổng số lỗ ngầm định (big + small = total), sai số cảm tính (+/- 1) và ranh giới số nghiêm ngặt; 4) Step 4: Nâng cấp geometricReranker.js Cross-Modal Recovery phục hồi số lượng lỗ cho 72 mã legacy từ text identifying_features, so khớp phân bổ lỗ to/nhỏ, bất biến phản xạ gương tâm lỗ và bất biến xoay tỷ lệ khung hình; làm sạch src/app.js xoá bỏ split-brain IndexedDB; 5) Step 5: Đồng bộ dist/ 42 files, bổ sung unit tests trong tests/moris-features-filter.test.js và tests/moris-reranker.test.js.",
       "evidence": "npx tsc --noEmit sạch 0 lỗi, npm test pass 18/18 test suites (210/210 unit tests pass 100%), npm run build sinh 42 files dist/ sạch sẽ."
@@ -205,12 +205,39 @@
       },
       "solution": "1) Sửa loadParts() khi isFeatureSearch truyền p_search: '' và p_limit: 2000, p_offset: 0 để tải toàn bộ catalogue từ Supabase và cho client-side AST matcher xử lý; 2) Sửa parseIdentifyingFeaturesAST phân tách mệnh đề phụ vs các phân đoạn hình dạng độc lập (shapeCounts), cấm auto-subtract bừa; cập nhật matchFeatureQueryFlexible kiểm tra nghiêm ngặt bigHoles/smallHoles, tắt perceptual tolerance mặc định, loại bỏ fallback lỏng lẻo trong matchRowWithFeatures cho hole queries; 3) Gán cờ is_feature_match: true và badge_label: 'Khớp' trong toCandidate, publicResult.js, cập nhật morisCandidatePercent trả về null và index.html render badge 'Khớp'.",
       "evidence": "npx -p typescript tsc --noEmit sạch 0 lỗi, npm test pass 18/18 test suites (214/214 unit tests pass 100%), npm run build sinh 42 files dist/ sạch sẽ."
+    },
+    {
+      "id": "task_17_target_filter_id_and_code",
+      "title": "Thanh filter mục tiêu ID & Mã linh kiện tại Main Catalogue và Moris Search",
+      "status": "completed",
+      "completed_at": "2026-10-14T09:10:00Z",
+      "diagnostics": {
+        "requirement_1": "Main Catalogue thiếu bộ chọn mục tiêu lọc trực tiếp giữa ID (part_id) và Mã linh kiện (code).",
+        "requirement_2": "Moris Search trước đây chỉ có bộ lọc đặc điểm nhận dạng (lỗ, hình dáng) và metadata score mờ, chưa hỗ trợ trích xuất tiền tố tìm ID ('tìm id', 'id') và tìm Mã linh kiện ('mã hàng', 'tìm mã hàng', 'mã').",
+        "rule_id": "Lọc ID yêu cầu khớp chính xác 100% cột part_id (8363 chỉ lọc đúng 8363, không khớp 83631 hay 836).",
+        "rule_code": "Lọc Mã linh kiện linh hoạt hơn (contains substring trên cột code, 368701 tự động lọc ra các mã 10 ký tự chứa chuỗi này), ưu tiên exact match lên đầu."
+      },
+      "solution": "1) Xây dựng parseTargetQuery, matchRowWithTarget, filterCatalogueByTargetQuery, buildTargetAnswer trong src/moris/retrieval/featureMatcher.js và functions/_lib/moris/v5/retrieval/featureMatcher.js: phân tách rõ ràng với truy vấn đặc điểm nhận dạng, lọc ID chính xác 100% và lọc Mã linh kiện linh hoạt; 2) Tích hợp vào functions/api/moris/chat.js và functions/_lib/moris/v5/orchestrator.js: khi có lệnh tìm ID/Mã thì quét catalogue, lọc đúng quy tắc, gán is_feature_match: true, badge_label: 'Khớp', trả về câu trả lời tự nhiên không pad mã rác top 10; 3) Giao diện Main Catalogue (index.html & src/app.js): tích hợp dropdown Mục tiêu lọc [Tất cả mục tiêu | Mã linh kiện | ID linh kiện] ngay cạnh ô tìm kiếm, tự động đổi placeholder và xử lý loadParts client-side lọc chính xác ID hoặc lọc linh hoạt Mã linh kiện; 4) Bổ sung 14 unit tests mới cho target queries trong tests/moris-features-filter.test.js và tests/frontend.test.js.",
+      "evidence": "echo 'y' | npx -p typescript tsc --noEmit sạch 0 lỗi, npm run build sinh 42 files dist/ sạch sẽ, npm test pass 18/18 test suites (228/228 unit tests pass 100%)."
+    },
+    {
+      "id": "task_18_disable_auto_vector_on_save",
+      "title": "Đánh giá kiến trúc và loại bỏ cơ chế tự động tách vector khi lưu chỉnh sửa linh kiện",
+      "status": "completed",
+      "completed_at": "2026-10-14T09:18:00Z",
+      "diagnostics": {
+        "finding": "Người dùng chủ yếu tách vector ở Trung tâm Vector AI (tools/moris-vector-center.html) qua modal tách hàng loạt hoặc tách thủ công trong bảng danh sách. Cơ chế tự động enqueue job tách vector mỗi khi người dùng bấm Lưu (savePart) trong modal chỉnh sửa thông tin khiến cùng một mã bị tách lại vector nhiều lần, làm phình kho vector và tiêu tốn tài nguyên trình duyệt/máy tính.",
+        "architecture_evaluation": "Kiểm tra toàn bộ luồng: Cơ chế tự động trong savePart chỉ là tiện ích cũ (gọi enqueueMorisVectorJob và processMorisVectorQueue). Khi người dùng chỉ sửa văn bản (tên, thông số, ghi chú) mà không đổi ảnh, việc trích xuất lại DINOv2 là hoàn toàn dư thừa. Kiến trúc tìm kiếm Moris (cả text-only và image 3-layer) truy vấn trực tiếp bảng catalogue_image_vectors trong Supabase pgvector và không hề phụ thuộc vào việc savePart có auto-enqueue hay không. Trung tâm Vector AI và nút bấm 'Tạo vector' thủ công trong modal editor vẫn hoạt động độc lập và đầy đủ."
+      },
+      "solution": "1) Chuyển hằng số cấu hình MORIS_VECTOR_AUTO_ON_SAVE_DESKTOP: false và MORIS_VECTOR_AUTO_ON_SAVE_MOBILE: false trong src/app.js; 2) Loại bỏ lệnh gọi enqueueMorisVectorJob và this.processMorisVectorQueue() khỏi hàm savePart() trong src/app.js; 3) Cập nhật dòng chú thích trạng thái vector trong index.html: 'Tách vector trong Trung tâm Vector AI hoặc bấm nút Tạo vector bên cạnh.' để định hướng người dùng rõ ràng; 4) Giữ nguyên vẹn chức năng nút bấm thủ công vectorizeCurrentEditorPart() để người dùng chủ động tạo vector khi cần mà không bị ép tự động; 5) Viết unit test tự động trong tests/frontend.test.js xác nhận cờ cấu hình và đảm bảo savePart() không còn tự kích hoạt tách vector.",
+      "evidence": "Unit test frontend.test.js pass 100%, npx tsc --noEmit sạch 0 lỗi, npm run build sinh 42 files dist/ sạch sẽ, toàn bộ 229/229 unit tests pass 100%."
     }
   ],
   "verification": {
-    "total_unit_tests": 214,
-    "passing_tests": 214,
+    "total_unit_tests": 229,
+    "passing_tests": 229,
     "failing_tests": 0
   }
 }
+
 

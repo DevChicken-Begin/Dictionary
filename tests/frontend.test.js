@@ -303,5 +303,37 @@ describe('yêu cầu mới — icon, tab Quy đổi, Vector AI, quản lý user'
     expect(js).toContain('cleanFeatureText');
     expect(js).toContain('extractShapeKeyword');
   });
+
+  it('main Catalogue tích hợp thanh filter mục tiêu: lọc ID và Mã linh kiện', () => {
+    // Dropdown filters.target trong index.html
+    expect(html).toContain('v-model="filters.target"');
+    expect(html).toContain('Tất cả mục tiêu');
+    expect(html).toContain('Mã linh kiện');
+    expect(html).toContain('ID linh kiện');
+    expect(html).toContain(':placeholder="searchPlaceholder"');
+
+    // filters.target và searchPlaceholder trong src/app.js
+    expect(js).toContain("target:'all'");
+    expect(js).toContain('searchPlaceholder()');
+    expect(js).toContain("targetMode === 'part_id'");
+    expect(js).toContain("targetMode === 'code'");
+  });
+
+  it('đã loại bỏ tự động tách vector khi lưu thông tin linh kiện (savePart)', () => {
+    // Flag cấu hình auto-on-save desktop & mobile đều tắt
+    expect(js).toContain('MORIS_VECTOR_AUTO_ON_SAVE_DESKTOP: false');
+    expect(js).toContain('MORIS_VECTOR_AUTO_ON_SAVE_MOBILE: false');
+
+    // savePart() không còn gọi enqueueMorisVectorJob
+    const savePartMatch = js.match(/async savePart\(\)\s*\{([\s\S]*?)\n\s*async deleteCurrentPart/);
+    expect(savePartMatch).toBeTruthy();
+    expect(savePartMatch[1]).not.toContain('enqueueMorisVectorJob');
+    expect(savePartMatch[1]).not.toContain('processMorisVectorQueue');
+
+    // UI hướng dẫn rõ ràng: tách trong Trung tâm Vector AI hoặc bấm nút Tạo vector
+    expect(html).toContain('Tách vector trong Trung tâm Vector AI');
+  });
 });
+
+
 

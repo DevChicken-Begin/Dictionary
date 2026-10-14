@@ -16,7 +16,11 @@
 import { validateSession, searchCatalogue, scanCatalogue } from "../../_lib/moris/v5/connectors/supabase.js";
 import { parseTextConstraints, buildSearchAnchors } from "../../_lib/moris/v5/retrieval/textConstraints.js";
 import { rankMetadata } from "../../_lib/moris/v5/retrieval/metadataFilter.js";
-import { filterCatalogueByQueryFeatures } from "../../_lib/moris/v5/retrieval/featureMatcher.js";
+import {
+  filterCatalogueByQueryFeatures,
+  filterCatalogueByTargetQuery,
+  buildTargetAnswer
+} from "../../_lib/moris/v5/retrieval/featureMatcher.js";
 import { json, readJson } from "../../_lib/shared/http.js";
 
 // Rate limiting bảo vệ tài nguyên DB (tối đa 30 request / phút / client)
@@ -183,7 +187,32 @@ export async function onRequestPost({ request, env }) {
     // ── RETRIEVER: tách từ khóa + search đa anchor ──────────────────
     const { pool } = await retrieveTextPool(env, token, message);
 
-    // ── 1. KIỂM TRA BỘ LỌC ĐẶC ĐIỂM NHẬN DẠNG (Số + Chữ, ngăn cách bởi dấu phẩy) ──
+    // ── 1. KIỂM TRA BỘ LỌC MỤC TIÊU (ID hoặc Mã linh kiện) ─────────────
+    const targetCheck = filterCatalogueByTargetQuery(pool, message);
+    if (targetCheck.isTargetQuery) {
+      // Quét toàn bộ catalogue để tìm kiếm chính xác, không bỏ sót mã nào
+      const scanned = await scanCatalogue(env, token, { maxRows: 1500 }).catch(() => []);
+      const fullPool = dedupeRows([...pool, ...scanned]);
+      const matched = filterCatalogueByTargetQuery(fullPool, message).matchedRows;
+
+      // QUAN TRỌNG: CHỈ LỌC NHỮNG GÌ ĐÃ "TRUE", TUYỆT ĐỐI KHÔNG LỌC TOP 10 RÁC HAY NHỒI NHÉT POOL
+      const candidates = matched.map((row, i) => toCandidate(row, i + 1, true));
+      const answer = buildTargetAnswer(candidates, targetCheck.targetQuery);
+
+      return json({
+        ok: true,
+        engine: "moris-target-filter",
+        answer,
+        candidates,
+        user_message: answer,
+        sources_count: candidates.length,
+        model_used: null,
+        provider_used: null,
+        protocol: null
+      });
+    }
+
+    // ── 2. KIỂM TRA BỘ LỌC ĐẶC ĐIỂM NHẬN DẠNG (Số + Chữ, ngăn cách bởi dấu phẩy) ──
     const featureCheck = filterCatalogueByQueryFeatures(pool, message);
     if (featureCheck.isFeatureQuery) {
       // Để đảm bảo không bỏ sót mã nào trong kho, quét toàn bộ catalogue

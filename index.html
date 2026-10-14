@@ -576,10 +576,15 @@
 
     <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
       <div class="glass rounded-[2rem] p-4 sm:p-6 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-[1fr_180px_180px_60px] gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-[160px_1fr_160px_160px_52px] gap-3">
+          <select v-model="filters.target" @change="loadParts(true)" class="input h-12 cursor-pointer font-bold text-slate-700 bg-white" title="Mục tiêu lọc">
+            <option value="all">Tất cả mục tiêu</option>
+            <option value="code">Mã linh kiện</option>
+            <option value="part_id">ID linh kiện</option>
+          </select>
           <label class="relative block">
             <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600"></i>
-            <input v-model.trim="filters.search" @keyup.enter="loadParts(true)" class="input pl-12 h-12 shadow-inner" placeholder="Tìm mã hàng, ID, đặc điểm..." />
+            <input v-model.trim="filters.search" @keyup.enter="loadParts(true)" class="input pl-12 h-12 shadow-inner" :placeholder="searchPlaceholder" />
           </label>
           <select v-model="filters.usage" @change="loadParts(true)" class="input h-12 cursor-pointer">
             <option value="all">Tất cả vị trí</option><option value="left">Bên trái</option><option value="right">Bên phải</option><option value="both">Cả hai bên</option><option value="unknown">Chưa xác định</option>
@@ -587,7 +592,7 @@
           <select v-model="filters.viewMode" @change="loadParts(true)" class="input h-12 cursor-pointer">
             <option value="all">Tất cả kiểu ảnh</option><option value="single_face">1 mặt</option><option value="dual_face">2 mặt</option><option value="detail_set">Chi tiết</option>
           </select>
-          <button @click="loadParts(true)" class="btn h-12 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100">
+          <button @click="loadParts(true)" class="btn h-12 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100" title="Tải lại">
             <i data-lucide="refresh-cw" class="w-5 h-5"></i>
           </button>
         </div>
@@ -900,7 +905,7 @@
               <div>
                 <p class="text-sm font-black text-violet-900">Vector hình ảnh</p>
                 <p class="text-xs font-semibold text-violet-700 mt-1">
-                  {{ editor.vectorStatus || 'Ảnh mới sẽ được đưa vào hàng đợi tạo vector sau khi lưu.' }}
+                  {{ editor.vectorStatus || 'Tách vector trong Trung tâm Vector AI hoặc bấm nút Tạo vector bên cạnh.' }}
                 </p>
               </div>
               <button

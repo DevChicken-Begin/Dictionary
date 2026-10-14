@@ -23,7 +23,10 @@ import { finalizeCandidatePool } from "./retrieval/candidatePool.js";
 import { collapseBestVectorHitPerRecord } from "./retrieval/vectorHitCollapse.js";
 import { orientationWarnings } from "./guards/orientation.js";
 import { publicCandidate } from "./schemas/candidate.js";
-import { filterCatalogueByQueryFeatures } from "./retrieval/featureMatcher.js";
+import {
+  filterCatalogueByQueryFeatures,
+  filterCatalogueByTargetQuery
+} from "./retrieval/featureMatcher.js";
 import { trace } from "./runtime/trace.js";
 
 function dedupeRows(rows) {
@@ -133,6 +136,33 @@ export async function runMorisSearch(env, config, {
 
   // TEXT-ONLY: deterministic first, no AI.
   if (!query.image_data_url && !query.query_embedding) {
+    const targetCheck = filterCatalogueByTargetQuery(
+      textRetrieval.pool,
+      query.message
+    );
+    if (targetCheck.isTargetQuery) {
+      let targetPool = textRetrieval.pool;
+      if (targetPool.length < 500) {
+        const scanned = await scanCatalogue(env, token, { maxRows: 1500 }).catch(() => []);
+        targetPool = dedupeRows([...targetPool, ...scanned]);
+      }
+      const targetMatched = filterCatalogueByTargetQuery(targetPool, query.message).matchedRows;
+      return {
+        mode: targetMatched.length ? "MORIS_TARGET_MATCH" : "MORIS_TARGET_NO_MATCH",
+        summary: targetMatched.length
+          ? (targetCheck.targetQuery.type === "id" ? "Đã lọc theo ID chính xác." : "Đã lọc theo mã linh kiện.")
+          : "Không tìm thấy linh kiện phù hợp.",
+        candidates: targetMatched.slice(0, 10).map(c => {
+          const pub = publicCandidate(c);
+          pub.is_feature_match = true;
+          pub.badge_label = "Khớp";
+          return pub;
+        }),
+        warnings: [],
+        ai_calls: null
+      };
+    }
+
     const featCheck = filterCatalogueByQueryFeatures(
       textRetrieval.pool,
       query.message

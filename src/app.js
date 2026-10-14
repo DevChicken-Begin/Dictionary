@@ -49,7 +49,7 @@ const CONFIG = {
   // Moris V5.5 — Browser DINOv2
   MORIS_BROWSER_VECTOR_ENABLED: true,
   MORIS_BROWSER_VECTOR_MODULE_URL: PC.PUBLIC_MORIS_BROWSER_VECTOR_MODULE_URL || '/src/moris/vector/browserDinov2.js',
-  MORIS_VECTOR_AUTO_ON_SAVE_DESKTOP: true,
+  MORIS_VECTOR_AUTO_ON_SAVE_DESKTOP: false,
   MORIS_VECTOR_AUTO_ON_SAVE_MOBILE: false,
 
   // V5.8 Query Vector Bridge + durable queue
@@ -120,7 +120,7 @@ createApp({
               createdInfo:null, totpModal:{ open:false, user:null, secret:'' } },
       pwChange:{ open:false, saving:false, new:'', confirm:'', error:'' },
       loginForm:{ username:'', password:'' },
-      filters:{ search:'', usage:'all', viewMode:'all' },
+      filters:{ search:'', target:'all', usage:'all', viewMode:'all' },
       parts:[], page:0, hasMore:false,
       detail:{ open:false, item:null, assets:[], tab:'front', activeAsset:null, flipped:false, zoom:1, panX:0, panY:0, rotX:-8, rotY:18, dragging:false, pointerId:null, startX:0, startY:0, startPanX:0, startPanY:0, startRotX:-8, startRotY:18, pinchStartDistance:0, pinchStartZoom:1 },
       editor:{ open:false, form:this.emptyForm(), assets:[], files:{}, previews:{}, vectorStatus:'', vectorBusy:false },
@@ -223,6 +223,12 @@ createApp({
     canConvert() { return this.role === 'admin' || this.role === 'converter'; },
     isAdmin() { return this.role === 'admin'; },
     role() { return String(this.session.user?.role_name || '').toLowerCase(); },
+
+    searchPlaceholder() {
+      if (this.filters.target === 'part_id') return 'Nhập ID linh kiện chính xác (ví dụ: 8363)...';
+      if (this.filters.target === 'code') return 'Nhập mã linh kiện (ví dụ: 368701)...';
+      return 'Tìm mã hàng, ID, đặc điểm...';
+    },
 
     isAllCurrentPageSelected() {
       const parts = this.displayedParts || [];
@@ -1493,6 +1499,62 @@ createApp({
       this.loadingImages = true;
 
       try {
+        const targetMode = this.filters.target || 'all';
+        const rawSearch = String(this.filters.search || '').trim();
+
+        // 1. CHẾ ĐỘ LỌC MỤC TIÊU: ID linh kiện (part_id - EXACT MATCH 100%)
+        if (targetMode === 'part_id' && rawSearch) {
+          const rows = await this.rpcRows('app_search_catalogue', {
+            p_session_token: this.session.token,
+            p_search: '',
+            p_usage_side: this.filters.usage,
+            p_view_mode: this.filters.viewMode,
+            p_limit: 2000,
+            p_offset: 0
+          });
+          if (requestSeq !== this.catalogueRequestSeq) return;
+
+          const searchVal = rawSearch.toLowerCase();
+          const matched = rows.filter(r => r.part_id && String(r.part_id).trim().toLowerCase() === searchVal);
+          const start = this.page * CONFIG.PAGE_LIMIT;
+          this.hasMore = matched.length > (this.page + 1) * CONFIG.PAGE_LIMIT;
+          this.parts = matched.slice(start, start + CONFIG.PAGE_LIMIT);
+          return;
+        }
+
+        // 2. CHẾ ĐỘ LỌC MỤC TIÊU: Mã linh kiện (code - FLEXIBLE MATCH SUBSTRING)
+        if (targetMode === 'code' && rawSearch) {
+          const rows = await this.rpcRows('app_search_catalogue', {
+            p_session_token: this.session.token,
+            p_search: '',
+            p_usage_side: this.filters.usage,
+            p_view_mode: this.filters.viewMode,
+            p_limit: 2000,
+            p_offset: 0
+          });
+          if (requestSeq !== this.catalogueRequestSeq) return;
+
+          const searchVal = rawSearch.toLowerCase();
+          const matched = rows.filter(r => r.code && String(r.code).trim().toLowerCase().includes(searchVal));
+
+          // Sắp xếp ưu tiên: khớp chính xác 100% lên đầu, tiếp đến startsWith, sau đó theo alphabet
+          matched.sort((a, b) => {
+            const codeA = String(a.code || '').toLowerCase();
+            const codeB = String(b.code || '').toLowerCase();
+            if (codeA === searchVal && codeB !== searchVal) return -1;
+            if (codeB === searchVal && codeA !== searchVal) return 1;
+            if (codeA.startsWith(searchVal) && !codeB.startsWith(searchVal)) return -1;
+            if (codeB.startsWith(searchVal) && !codeA.startsWith(searchVal)) return 1;
+            return codeA.localeCompare(codeB);
+          });
+
+          const start = this.page * CONFIG.PAGE_LIMIT;
+          this.hasMore = matched.length > (this.page + 1) * CONFIG.PAGE_LIMIT;
+          this.parts = matched.slice(start, start + CONFIG.PAGE_LIMIT);
+          return;
+        }
+
+        // 3. CHẾ ĐỘ LỌC MẶC ĐỊNH (Tất cả mục tiêu: Đặc điểm nhận dạng / Text search)
         const qFeatures = this.extractQueryFeatures(this.filters.search);
         const qAST = this.parseIdentifyingFeaturesAST(this.filters.search);
         const isFeatureSearch = qFeatures.length > 0 || qAST.totalHoles != null || qAST.bigHoles != null || qAST.smallHoles != null || qAST.holeShapes.length > 0;
@@ -1882,17 +1944,6 @@ createApp({
         if(!rep?.ok) throw new Error(rep?.message || 'Không liên kết được hình ảnh.');
 
         this.toast('success','Lưu dữ liệu thành công!');
-
-        // Ghi vào hàng đợi persisted để không mất job khi reload/tab đóng.
-        this.enqueueMorisVectorJob(saved.id, assets, code);
-
-        this.toast(
-          'success',
-          'Lưu thành công. Vector hình ảnh đã được đưa vào hàng đợi xử lý.'
-        );
-
-        this.processMorisVectorQueue()
-          .catch(error => console.warn('Moris vector queue failed', error));
 
         this.closeEditor(); this.closeDetail(); await this.loadParts(false);
       } catch(e) { this.toast('error', this.readError(e)); } finally { this.saving=false; }

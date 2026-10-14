@@ -6,7 +6,11 @@ import {
   matchRowWithFeatures,
   filterCatalogueByQueryFeatures,
   parseIdentifyingFeaturesAST,
-  matchFeatureQueryFlexible
+  matchFeatureQueryFlexible,
+  parseTargetQuery,
+  matchRowWithTarget,
+  filterCatalogueByTargetQuery,
+  buildTargetAnswer
 } from "../functions/_lib/moris/v5/retrieval/featureMatcher.js";
 
 describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", () => {
@@ -549,6 +553,204 @@ describe("Moris Identifying Features Matcher (Đặc điểm nhận dạng)", ()
           expect(cand.badge_label).toBe("Khớp");
         }
         expect(data.answer).not.toContain("100%");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
+});
+
+describe("Moris Target Filter (Lọc mục tiêu ID & Mã linh kiện)", () => {
+  describe("parseTargetQuery — Trích xuất lệnh tìm kiếm ID & Mã linh kiện", () => {
+    it("trích xuất chính xác ID từ các dạng câu lệnh khác nhau", () => {
+      const q1 = parseTargetQuery("tìm id 8363");
+      expect(q1).toMatchObject({ isTargetQuery: true, type: "id", value: "8363" });
+
+      const q2 = parseTargetQuery("id 8363");
+      expect(q2).toMatchObject({ isTargetQuery: true, type: "id", value: "8363" });
+
+      const q3 = parseTargetQuery("id: 8363");
+      expect(q3).toMatchObject({ isTargetQuery: true, type: "id", value: "8363" });
+
+      const q4 = parseTargetQuery("tim id 8363");
+      expect(q4).toMatchObject({ isTargetQuery: true, type: "id", value: "8363" });
+
+      const q5 = parseTargetQuery("tìm kiếm id 8363");
+      expect(q5).toMatchObject({ isTargetQuery: true, type: "id", value: "8363" });
+
+      const q6 = parseTargetQuery("tra id 8363");
+      expect(q6).toMatchObject({ isTargetQuery: true, type: "id", value: "8363" });
+
+      const q7 = parseTargetQuery("tìm giúp anh id 8363");
+      expect(q7).toMatchObject({ isTargetQuery: true, type: "id", value: "8363" });
+
+      const q8 = parseTargetQuery("id '8363'");
+      expect(q8).toMatchObject({ isTargetQuery: true, type: "id", value: "8363" });
+    });
+
+    it("trích xuất chính xác Mã linh kiện từ các dạng câu lệnh khác nhau", () => {
+      const q1 = parseTargetQuery("mã hàng 368701");
+      expect(q1).toMatchObject({ isTargetQuery: true, type: "code", value: "368701" });
+
+      const q2 = parseTargetQuery("mã hàng: 368701");
+      expect(q2).toMatchObject({ isTargetQuery: true, type: "code", value: "368701" });
+
+      const q3 = parseTargetQuery("tìm mã hàng 368701");
+      expect(q3).toMatchObject({ isTargetQuery: true, type: "code", value: "368701" });
+
+      const q4 = parseTargetQuery("mã 368701");
+      expect(q4).toMatchObject({ isTargetQuery: true, type: "code", value: "368701" });
+
+      const q5 = parseTargetQuery("mã: 368701");
+      expect(q5).toMatchObject({ isTargetQuery: true, type: "code", value: "368701" });
+
+      const q6 = parseTargetQuery("tim ma hang 368701");
+      expect(q6).toMatchObject({ isTargetQuery: true, type: "code", value: "368701" });
+
+      const q7 = parseTargetQuery("ma 368701");
+      expect(q7).toMatchObject({ isTargetQuery: true, type: "code", value: "368701" });
+
+      const q8 = parseTargetQuery("tìm mã linh kiện 368701");
+      expect(q8).toMatchObject({ isTargetQuery: true, type: "code", value: "368701" });
+    });
+
+    it("phân biệt rõ ràng: KHÔNG nhận nhầm câu hỏi đặc điểm nhận dạng thành tìm mã", () => {
+      expect(parseTargetQuery("tìm mã 6 lỗ tròn").isTargetQuery).toBe(false);
+      expect(parseTargetQuery("mã 2 lỗ vuông").isTargetQuery).toBe(false);
+      expect(parseTargetQuery("mã có 4 lỗ oval").isTargetQuery).toBe(false);
+      expect(parseTargetQuery("6 lỗ tròn").isTargetQuery).toBe(false);
+      expect(parseTargetQuery("linh kiện xe hơi").isTargetQuery).toBe(false);
+    });
+  });
+
+  describe("matchRowWithTarget & filterCatalogueByTargetQuery — Quy tắc lọc", () => {
+    const mockDb = [
+      { id: "1", code: "3687010001", part_id: "8363", identifying_features: "6 lỗ tròn" },
+      { id: "2", code: "368701",     part_id: "83631", identifying_features: "4 lỗ oval" },
+      { id: "3", code: "3411160201", part_id: "836",   identifying_features: "2 lỗ tròn" },
+      { id: "4", code: "3411160202", part_id: null,    identifying_features: "16 lỗ tròn" },
+      { id: "5", code: "9936870199", part_id: "5633",  identifying_features: "8 lỗ vuông" }
+    ];
+
+    it("lọc ID chính xác 100%: '8363' chỉ khớp đúng mã có part_id = '8363', TUYỆT ĐỐI không khớp 83631 hay 836", () => {
+      const res = filterCatalogueByTargetQuery(mockDb, "tìm id 8363");
+      expect(res.isTargetQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(1);
+      expect(res.matchedRows[0].code).toBe("3687010001");
+      expect(res.matchedRows[0].part_id).toBe("8363");
+    });
+
+    it("lọc ID không tồn tại: trả về mảng rỗng [], KHÔNG nhồi nhét mã rác top 10", () => {
+      const res = filterCatalogueByTargetQuery(mockDb, "id 99999");
+      expect(res.isTargetQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(0);
+    });
+
+    it("lọc Mã linh kiện linh hoạt (contains): '368701' khớp các mã chứa chuỗi 368701", () => {
+      const res = filterCatalogueByTargetQuery(mockDb, "mã 368701");
+      expect(res.isTargetQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(3);
+      // Mã khớp chính xác 100% (368701) phải được ưu tiên đứng đầu
+      expect(res.matchedRows[0].code).toBe("368701");
+      expect(res.matchedRows.map(r => r.code)).toEqual(["368701", "3687010001", "9936870199"]);
+    });
+
+    it("lọc Mã linh kiện không tồn tại: trả về mảng rỗng [], KHÔNG nhồi nhét mã rác", () => {
+      const res = filterCatalogueByTargetQuery(mockDb, "mã hàng KHONG_CO");
+      expect(res.isTargetQuery).toBe(true);
+      expect(res.matchedRows).toHaveLength(0);
+    });
+  });
+
+  describe("buildTargetAnswer — Sinh câu trả lời xác thực dữ liệu", () => {
+    it("sinh câu trả lời khi tìm thấy ID", () => {
+      const ans = buildTargetAnswer([{ code: "3687010001", part_id: "8363", identifying_features: "6 lỗ tròn" }], { type: "id", value: "8363" });
+      expect(ans).toContain("khớp chính xác với ID “8363”");
+      expect(ans).toContain("3687010001 (ID: 8363)");
+    });
+
+    it("sinh câu trả lời khi không tìm thấy ID", () => {
+      const ans = buildTargetAnswer([], { type: "id", value: "9999" });
+      expect(ans).toContain("không tìm thấy linh kiện nào có ID “9999”");
+    });
+
+    it("sinh câu trả lời khi tìm thấy Mã linh kiện", () => {
+      const ans = buildTargetAnswer([{ code: "368701", part_id: null, identifying_features: "4 lỗ" }], { type: "code", value: "368701" });
+      expect(ans).toContain("mã linh kiện khớp với “368701”");
+      expect(ans).toContain("368701");
+    });
+
+    it("sinh câu trả lời khi không tìm thấy Mã linh kiện", () => {
+      const ans = buildTargetAnswer([], { type: "code", value: "9999" });
+      expect(ans).toContain("không tìm thấy mã linh kiện nào khớp với “9999”");
+    });
+  });
+
+  describe("API Integration: /api/moris/chat cho Target Query", () => {
+    const mockDbParts = [
+      { id: "uuid-1", code: "3687010001", part_id: "8363", identifying_features: "6 lỗ tròn" },
+      { id: "uuid-2", code: "368701",     part_id: "83631", identifying_features: "4 lỗ oval" },
+      { id: "uuid-3", code: "3411160201", part_id: "5633",  identifying_features: "6 lỗ tròn" }
+    ];
+
+    it("gửi 'tìm id 8363' -> trả về đúng mã có part_id = '8363', gắn nhãn 'Khớp'", async () => {
+      const { onRequestPost } = await import("../functions/api/moris/chat.js");
+      const fakeJwt = "header.payload.signature";
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes("app_me")) return new Response(JSON.stringify([{ ok: true, id: "test-user-id" }]), { status: 200 });
+        if (u.includes("app_search_catalogue")) return new Response(JSON.stringify(mockDbParts), { status: 200 });
+        return new Response("Not found", { status: 404 });
+      };
+
+      try {
+        const request = new Request("https://example.com/api/moris/chat", {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-session-token": fakeJwt },
+          body: JSON.stringify({ message: "tìm id 8363", session_token: fakeJwt })
+        });
+
+        const res = await onRequestPost({ request, env: { SUPABASE_URL: "https://test.supabase.co", SUPABASE_ANON_KEY: "anon", SUPABASE_SERVICE_ROLE_KEY: "srv" } });
+        const data = await res.json();
+        expect(data.ok).toBe(true);
+        expect(data.engine).toBe("moris-target-filter");
+        expect(data.candidates).toHaveLength(1);
+        expect(data.candidates[0].part_id).toBe("8363");
+        expect(data.candidates[0].code).toBe("3687010001");
+        expect(data.candidates[0].badge_label).toBe("Khớp");
+        expect(data.candidates[0].is_feature_match).toBe(true);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("gửi 'mã 368701' -> trả về các mã khớp flexible, ưu tiên exact match", async () => {
+      const { onRequestPost } = await import("../functions/api/moris/chat.js");
+      const fakeJwt = "header.payload.signature";
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes("app_me")) return new Response(JSON.stringify([{ ok: true, id: "test-user-id" }]), { status: 200 });
+        if (u.includes("app_search_catalogue")) return new Response(JSON.stringify(mockDbParts), { status: 200 });
+        return new Response("Not found", { status: 404 });
+      };
+
+      try {
+        const request = new Request("https://example.com/api/moris/chat", {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-session-token": fakeJwt },
+          body: JSON.stringify({ message: "mã 368701", session_token: fakeJwt })
+        });
+
+        const res = await onRequestPost({ request, env: { SUPABASE_URL: "https://test.supabase.co", SUPABASE_ANON_KEY: "anon", SUPABASE_SERVICE_ROLE_KEY: "srv" } });
+        const data = await res.json();
+        expect(data.ok).toBe(true);
+        expect(data.engine).toBe("moris-target-filter");
+        expect(data.candidates).toHaveLength(2);
+        expect(data.candidates[0].code).toBe("368701");
+        expect(data.candidates[1].code).toBe("3687010001");
+        expect(data.candidates[0].badge_label).toBe("Khớp");
       } finally {
         globalThis.fetch = originalFetch;
       }
