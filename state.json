@@ -8,8 +8,8 @@
   },
   "current_session": {
     "active_task": "resolve_image_copy_error_and_production_vector_pipeline",
-    "last_checkpoint": "Diagnosed and resolved image copy.png error ('Xin lỗi anh, em chưa thể xử lý yêu cầu này lúc này.'). Root causes: 1) Profile mismatch between client (hybrid_gem3_edge_55_45_pseudorgb_u8_v1) and server env in wrangler.toml/env (cls_l2_v1); 2) searchVectorIndex called unmigrated RPC match_catalogue_image_vectors_v6 returning 404; 3) publicErrorMessage masked all exceptions as generic temporaryError. Fixed searchVectorIndex with fallback to match_catalogue_image_vectors and legacy profile fallback; aligned wrangler.toml and .env with active profile; improved publicErrorMessage. Verified: 405/405 tests pass 100%, tsc exit 0, npm run build (49 files), check-moris-e2e 12/12 pass.",
-    "resumption_prompt": "Image search pipeline fully verified locally and against production Supabase. Ready for owner review and git commit/push."
+    "last_checkpoint": "Diagnosed and resolved image copy.png and image.png issues: 1) Image search profile mismatch and unmigrated RPC fallback fixed; 2) Vector Center RPC fallback from unmigrated kim_write_catalogue_vector_v6_provenance to existing production kim_upsert_catalogue_image_vector added. Verified 406/406 unit tests pass, TypeScript exit 0, npm run build (49 files), check-moris-e2e 12/12 pass.",
+    "resumption_prompt": "Vector Center upsert and Moris Chat search pipelines fully verified locally and against production Supabase. Ready for push and user confirmation."
   },
   "tasks": [
     {

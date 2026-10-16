@@ -60,4 +60,27 @@ describe('M04 manual write contract (mock transport; SQL separately tested)',()=
   const result=await upsertVectorsChunked({vectors:Array.from({length:21},()=>vector()),confirmed:true,fetchImpl});
   expect(result).toMatchObject({written:0,skipped:21,chunks:2});
  });
+ it('falls back to kim_upsert_catalogue_image_vector when v6 provenance RPC is missing in schema cache',async()=>{
+  let fallbackCalled=false;
+  vi.stubGlobal('fetch',vi.fn(async(url,options)=>{
+   if(url.endsWith('app_me')) return Response.json({ok:true,role_name:'editor'});
+   if(url.includes('/rpc/kim_write_catalogue_vector_v6_provenance')) {
+    return Response.json({
+     code:'PGRST202',
+     message:'Could not find the function public.kim_write_catalogue_vector_v6_provenance(p_mode, p_vector) in the schema cache'
+    },{status:404});
+   }
+   if(url.includes('/rpc/kim_upsert_catalogue_image_vector')) {
+    fallbackCalled=true;
+    const body=JSON.parse(options.body);
+    expect(body.p_record_id).toBe('part');
+    return Response.json(999);
+   }
+   return Response.json({message:'not found'},{status:404});
+  }));
+  const res=await send([vector()]);
+  const data=await res.json();
+  expect(fallbackCalled).toBe(true);
+  expect(data).toMatchObject({ok:true,written:1,failed:0});
+ });
 });

@@ -181,3 +181,17 @@ Before continuing, read [docs/moris-v6/HANDOFF.md](docs/moris-v6/HANDOFF.md). It
   - `node tools/check-moris-e2e.mjs`: 12/12 pass.
   - Test trực tiếp `runMorisSearch` trên ảnh thực tế mã `3405370001`: trả về Top 1 chính xác mã `3405370001` với similarity = 1.0 và gợi ý đối chiếu chuẩn xác.
 
+## Hotfix: Vector Center RPC fallback (`kim_write_catalogue_vector_v6_provenance` -> `kim_upsert_catalogue_image_vector`) - 2026-10-16
+
+- **Triệu chứng:** Khi người dùng bấm tạo/cập nhật vector trong Trung tâm Vector AI (`tools/moris-vector-center.html`), toàn bộ ảnh báo lỗi:
+  `failed — Could not find the function public.kim_write_catalogue_vector_v6_provenance(p_mode, p_vector) in the schema cache`.
+- **Nguyên nhân gốc:** Migration M23 (`20261016040525_moris_v6_nullable_provenance.sql`) chứa hàm `kim_write_catalogue_vector_v6_provenance` chỉ mới chạy trên môi trường test local Docker, chưa chạy trên Supabase Production theo nguyên tắc Gatekeeper Hiến pháp. Supabase Production hiện tại chỉ có RPC `kim_upsert_catalogue_image_vector`.
+- **Giải pháp:**
+  1. Thêm cơ chế fallback trong `functions/api/moris/vector-upsert.js`: khi RPC `kim_write_catalogue_vector_v6_provenance` trả về lỗi không tìm thấy hàm (`schema cache` / `PGRST202`), tự động chuyển sang gọi RPC `kim_upsert_catalogue_image_vector` sẵn có trên Production với đầy đủ metadata hình học (`hole_count`, `aspect_ratio`, `hole_centroids`, `quality_score`, `embedding_profile`).
+  2. Bổ sung unit test trong `tests/moris-manual-upsert.test.js` xác nhận luồng fallback hoạt động trơn tru.
+- **Bằng chứng kiểm thử:**
+  - `npm test`: 44 files / 406 tests pass 100%.
+  - `npx tsc --noEmit`: exit 0.
+  - `npm run build`: 49 files static sinh ra sạch sẽ.
+  - `node tools/check-moris-e2e.mjs`: 12/12 pass.
+
