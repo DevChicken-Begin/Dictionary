@@ -2,7 +2,7 @@
   {
     "id": "specified-17-vs-5",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "approved",
     "tags": [
       "different-hole-count"
     ],
@@ -15,7 +15,7 @@
       5
     ],
     "review_source": "MORIS_V6_MASTER_PLAN.md M21",
-    "expected_outcome": null,
+    "expected_outcome": "Phân biệt 17 lỗ vs 5 lỗ; giữ kết quả đúng trong Top 10, thu hẹp phạm vi tìm kiếm mà không bị loại oan vì dung sai kích thước lỗ nhỏ.",
     "review_assets": [
       {
         "sku": "3405030101",
@@ -60,12 +60,26 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "pairwise candidate visibility, not a curated hard-negative label",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "images": [
+      {
+        "sku": "3405030101",
+        "sha256": "e82567e83835b4bd390d4397486ebda0f5162b70b575de5051711963abae83c6"
+      },
+      {
+        "sku": "3427740001",
+        "sha256": "1dc3dbad6488140ccfc728d5cf0258ca930dfeb3968f41edd37a066c99f04999"
+      }
+    ],
+    "before_snapshot_sha256": "bf66d3e3c47e7de31176a4aecf938e19832514a5a818150d266cf96097663347",
+    "after_snapshot_sha256": "b7cc293552ac7917265e98a9a79a139fea25f7eab43dc06cb0d4cee4143add64"
   },
   {
     "id": "specified-3-vs-3",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "approved",
     "tags": [
       "same-count-different-geometry"
     ],
@@ -78,7 +92,7 @@
       3
     ],
     "review_source": "MORIS_V6_MASTER_PLAN.md M21",
-    "expected_outcome": null,
+    "expected_outcome": "Phân biệt vế Trái / Phải theo quy tắc cơ khí số thứ 6 từ trái sang: số lẻ = Trái (3424990001), số chẵn = Phải (3425000001).",
     "review_assets": [
       {
         "sku": "3425000001",
@@ -123,12 +137,26 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "pairwise candidate visibility, not a curated hard-negative label",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "images": [
+      {
+        "sku": "3425000001",
+        "sha256": "d1496c05847a3bea774645063465dab156d7ff8dda4c0d5e3750bc501082790a"
+      },
+      {
+        "sku": "3424990001",
+        "sha256": "946505e54336da00b68441215520119fb105299b147a98fcbf4b0139d989f4e8"
+      }
+    ],
+    "before_snapshot_sha256": "bf66d3e3c47e7de31176a4aecf938e19832514a5a818150d266cf96097663347",
+    "after_snapshot_sha256": "b7cc293552ac7917265e98a9a79a139fea25f7eab43dc06cb0d4cee4143add64"
   },
   {
     "id": "audit-af96de8636016e57942c8b54eb778bda",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -164,12 +192,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-4d3271f73ae30e8d1c1a78ec4739bcec",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -205,12 +236,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-008e5befec1a5e1640c0231188260e2b",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -246,12 +280,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-fe6318079cc610b19b81496205a86fc7",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -287,12 +324,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-0c4afbaf772d794cabbb913847a0dfac",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -337,12 +377,15 @@
           "expected_retrieval_rank": 1
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-8bafc82cc4c4c3ad2694fbd57f4c0b6d",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -378,12 +421,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-8752f889e657581de567ed13a0ec111d",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -419,12 +465,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-057239d918ebe5e4d09fe09cc21baada",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -460,12 +509,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-57134ad4b2b2fa82ba9fcbf94bbd9903",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -501,12 +553,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-0ea5433cd7b2299bdfc396edc81ef186",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -551,12 +606,15 @@
           "expected_retrieval_rank": 2
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-405c1d35dfd28f5499d1601a8506a83f",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -601,12 +659,15 @@
           "expected_retrieval_rank": 1
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-87734378b96fb082eb54fe8c82249762",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -651,12 +712,15 @@
           "expected_retrieval_rank": 1
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-ed3ebd18652333629ad38fc169626752",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -692,12 +756,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-6c53fa4ee587889bb7f7cb36c89d3584",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -733,12 +800,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-4770874f641a76866d9aeb41e6fa2fa1",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -783,12 +853,15 @@
           "expected_retrieval_rank": 1
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-14b0205540ed110e1b324f4fafdf4ef3",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -824,12 +897,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-3b069a1e55a07862f8f46e80be40f468",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -865,12 +941,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-3e78dcd102429385692b6f6de40cfd09",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -906,12 +985,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-c29c3c14c676d77937163ad73b03da95",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -947,12 +1029,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-6f76130a1e8b571eb0bf3070ed4df04c",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -988,12 +1073,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-84ef1105aa6d8209261b0f2587fb8437",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1029,12 +1117,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-2ea8aec2170f99866dad66576933507b",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1070,12 +1161,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-eff631f91a2160b407a745c7b9a5c0b0",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1111,12 +1205,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-010eb1c97e207b97b7fa4ccbd0939628",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1152,12 +1249,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-25cf1ac6caeb167086a994820ab5d03a",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1193,12 +1293,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-99503e36a2114156e817d8520cca5937",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1234,12 +1337,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-0e96df84c7d98f3d56cb079895172c4b",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1275,12 +1381,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-0148a031ab304f95cf9eff3813e1ec32",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1325,12 +1434,15 @@
           "expected_retrieval_rank": 43
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-3412a06477787ed707517e97ac35a840",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1366,12 +1478,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-b38e1007d82ea00029e6aad6d2770cec",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1407,12 +1522,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-f4f98ae541d199d8129121c16c89499a",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1448,12 +1566,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-2494d91bfe9f180beb3a2867fad6af85",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1498,12 +1619,15 @@
           "expected_retrieval_rank": 1
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-917f123b5a778db1470bc8f6816990d7",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1548,12 +1672,15 @@
           "expected_retrieval_rank": 1
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-2a709e6bc8dd9051c10608b819c5383a",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1589,12 +1716,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-88004be83ce35ed63f42eb71bda64779",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1639,12 +1769,15 @@
           "expected_retrieval_rank": 3
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-1d808cd8234acea22a98c88042c48bbf",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1680,12 +1813,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-9c978942a4d3476037db30b5e73925ef",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1721,12 +1857,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-003c4aa2dae02a6fc5ed9d798e130c68",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1762,12 +1901,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-99ac2223fcce1a563f357f50ebf9fd6a",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1803,12 +1945,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-2501879fd08b6a0a6b08ef6f4314ac8b",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1844,12 +1989,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-2681182bd91343f5a42b22c459f8af3f",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1885,12 +2033,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-6197f52f8b8d63fbcbbf5812f7948f19",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1926,12 +2077,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-2c2293128932a082e68596a0320f0394",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -1976,12 +2130,15 @@
           "expected_retrieval_rank": 1
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-cabda416c4f027049db848e9f2278a8d",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2017,12 +2174,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-56355596ace1f75290db2d6b20cd38f1",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2058,12 +2218,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-fed420504eb31803c627aaa56670c66e",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2099,12 +2262,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-2f199f39b15206d72a5e7312ac07141a",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2140,12 +2306,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-004b68112dd1da9d11ae39bfdbeb5424",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2181,12 +2350,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-1cd33f6b4aab4a394170e28d65ece77f",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2231,12 +2403,15 @@
           "expected_retrieval_rank": 1
         }
       ]
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-28e819b4506ce2060c6ba48945d34549",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2272,12 +2447,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-ad6af938853066c94bca856e8f707282",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2313,12 +2491,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-52cd42a16c958d9fa69560552aae30fb",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2354,12 +2535,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-1329642ebdc433db2cfe4efb674a12f5",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2395,12 +2579,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-6dfc5f6d71f67104914d2a9ceb4fa2e3",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2436,12 +2623,15 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   },
   {
     "id": "audit-b17777356fb21625acbcfdbf792d2cb0",
     "source_kind": "catalogue",
-    "status": "pending",
+    "status": "rejected",
     "tags": [
       "thumb-front-count-mismatch"
     ],
@@ -2477,6 +2667,9 @@
       "source": "frozen development split; exact local global ablation",
       "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
       "queries": []
-    }
+    },
+    "curator": "Vinh",
+    "reviewed_at": "2026-10-16T06:57:26.570Z",
+    "rejection_reason": "Tạm thời chấp nhận ghi nhận do catalogue hiện tại chỉ có 1 ảnh mặt trước (front), chưa có ảnh mặt sau nên chênh lệch số lỗ quan sát giữa thumb và front là bình thường; sẽ bổ sung ảnh 2 mặt trong tương lai."
   }
 ]

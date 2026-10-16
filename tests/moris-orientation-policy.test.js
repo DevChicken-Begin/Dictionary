@@ -28,4 +28,11 @@ describe('M13 chirality policy',()=>{
   expect(computeOrientationPCA(mask,64,64)).toEqual(computeOrientationPCA(mask.map(v=>v*255),64,64));
   expect(computeOrientationPCA(mask,64,64).valid).toBe(true);
  });
+ it('infers mechanical chirality from 6th digit: odd = left, even = right (3424990001 vs 3425000001)',()=>{
+  const leftPart={code:'3424990001'};
+  const rightPart={code:'3425000001'};
+  expect(orientationPolicy(leftPart,rightPart).compatible).toBe(false);
+  expect(orientationPolicy(leftPart,rightPart).reason).toBe('usage_side_conflict');
+  expect(orientationPolicy(leftPart,{code:'3419830001'}).compatible).toBe(true);
+ });
 });

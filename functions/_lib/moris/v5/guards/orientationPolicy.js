@@ -1,6 +1,20 @@
+// Infer mechanical chirality from 10-digit SKU: 6th digit (1-indexed) odd = left, even = right.
+export function inferSideFromSkuCode(code) {
+  if (typeof code === 'string' && code.length === 10 && /^\d{10}$/.test(code)) {
+    const digit6 = parseInt(code[5], 10);
+    return digit6 % 2 === 1 ? 'left' : 'right';
+  }
+  return null;
+}
+
 // Rotation preserves handedness. Reflection needs explicit, trusted view evidence.
 export function orientationPolicy(query={},candidate={}){
- const qSide=query.usage_side,cSide=candidate.usage_side;
+ const resolveSide = (obj) => {
+   const s = obj?.usage_side;
+   if (s && s !== 'unknown') return s;
+   return inferSideFromSkuCode(obj?.code || obj?.sku) || s;
+ };
+ const qSide=resolveSide(query),cSide=resolveSide(candidate);
  const sided=v=>['left','right'].includes(v);
  const conflict=sided(qSide)&&sided(cSide)&&qSide!==cSide;
  const qView=query.view||query.asset_type,cView=candidate.view||candidate.vector_asset_type||candidate.asset_type;

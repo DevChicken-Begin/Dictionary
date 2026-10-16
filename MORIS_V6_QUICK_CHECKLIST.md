@@ -35,7 +35,7 @@
 - [ ] M18 (P1) Multi-view candidate fusion và tập kết quả cấp SKU — sau M09, M12, M17
 - [x] M19 (P0) Dataset manifest và chính sách ground truth — sau M00
 - [x] M20 (P0) Evaluation CLI với top1/recall@10,@50/MRR/abstain/p95 — sau M19
-- [ ] M21 (P1) Bộ hard-negative regression cơ khí — sau M08, M19, M20
+- [x] M21 (P1) Bộ hard-negative regression cơ khí — sau M08, M19, M20
 - [ ] M22 (P0) Ablation, tuning và quyết định go/no-go bằng số liệu — sau M12, M14, M15, M17, M18, M20, M21; M16 tùy chọn
 
 ## Phase D: Migration, Trung tâm Vector AI, rollout

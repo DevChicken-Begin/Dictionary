@@ -170,6 +170,15 @@ async function getExtractor() {
   } catch (error) {
     extractorPromise = null;
     runtimeInfo = null;
+    const msg = String(error?.message || error);
+    if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("Load failed")) {
+      const fetchError = new Error(
+        "Không thể tải mô hình DINOv2 từ Hugging Face CDN (Failed to fetch). Vui lòng kiểm tra kết nối mạng."
+      );
+      fetchError.name = "Dinov2FetchError";
+      fetchError.code = "DINOV2_FETCH_FAILED";
+      throw fetchError;
+    }
     throw error;
   }
 }

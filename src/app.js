@@ -3134,6 +3134,10 @@ createApp({
         const rt = result?.probes?.[0]?.runtime || {};
         this.morisAi.runtime = rt;
         this.morisAi.statusText = `Sẵn sàng (${rt.device || 'wasm'}/${rt.dtype || 'q8'})`;
+      } catch (err) {
+        this.morisAi.ready = false;
+        this.morisAi.statusText = 'Lỗi nạp';
+        throw err;
       } finally {
         try { unsubscribe(); } catch {}
         this.morisAi.loading = false;
@@ -3192,6 +3196,19 @@ createApp({
       }
 
       const msg = error?.message ? String(error.message) : '';
+
+      if (
+        code === 'DINOV2_FETCH_FAILED' ||
+        msg.includes('Failed to fetch') ||
+        msg.includes('NetworkError') ||
+        msg.includes('Hugging Face CDN')
+      ) {
+        return (
+          'Xin lỗi anh, chưa thể tải mô hình nhận dạng DINOv2 từ CDN (Failed to fetch). ' +
+          'Anh vui lòng kiểm tra kết nối mạng rồi bấm nút [⚡ Test AI] phía trên để thử lại nhé.'
+        );
+      }
+
       if (msg && !msg.includes('[object') && msg.length < 100) {
         return `Xin lỗi anh, em chưa thể xử lý tìm kiếm hình ảnh: ${msg}. Anh thử lại giúp em nhé.`;
       }

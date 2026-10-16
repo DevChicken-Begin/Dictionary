@@ -83,9 +83,10 @@ async function exportHtml(cases, outPath = 'evaluation/moris-v6/hard-negative-re
     const skus = c.sku_pair ? c.sku_pair.join(' vs ') : (c.review_assets?.[0]?.sku || 'unknown');
     const counts = c.proposed_counts ? `Proposed: ${c.proposed_counts.join(' vs ')}` : (c.observed_metadata ? `Observed: thumb=${c.observed_metadata.thumb}, front=${c.observed_metadata.front}` : 'N/A');
     const images = (c.review_assets || []).map(a => {
-      const front = a.downloaded_front ? `<div><code>${a.downloaded_front.path}</code> (${(a.downloaded_front.bytes/1024).toFixed(1)} KB)</div>` : '<div>No local front</div>';
-      return `<strong>${a.sku}</strong>: ${front}`;
-    }).join('<br>');
+      const relPath = a.downloaded_front ? a.downloaded_front.path.replace('evaluation/moris-v6/', '') : null;
+      const front = relPath ? `<div style="margin-top:4px"><img src="${relPath}" alt="${a.sku}" style="max-height:90px;max-width:140px;border-radius:4px;border:1px solid #cbd5e1;object-fit:contain;background:#fff;display:block;" onerror="this.style.display='none'"><span style="font-size:10px;color:#64748b">${(a.downloaded_front.bytes/1024).toFixed(1)} KB</span></div>` : '<div>No local front</div>';
+      return `<div style="display:inline-block;margin-right:12px;vertical-align:top;"><strong>SKU ${a.sku}</strong>: ${front}</div>`;
+    }).join('');
     const devQueries = (c.development_evidence?.queries || []).map(q => `Query ${q.query_id} (Rank: ${q.expected_rank || 'N/A'}, Top1: ${q.top1})`).join(', ') || 'None';
     return `
     <tr class="status-${c.status}">

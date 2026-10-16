@@ -2,14 +2,14 @@
   "system": {
     "project": "Catalogue AI (Dictionary)",
     "stack": "Vue 3 CDN + Cloudflare Pages Functions + Supabase (pgvector) + Cloudflare R2",
-    "updated_at": "2026-10-16T05:07:00Z",
-    "memory_version": "2.2.0",
+    "updated_at": "2026-10-16T06:27:00Z",
+    "memory_version": "2.2.2",
     "status": "in_progress"
   },
   "current_session": {
-    "active_task": "M21_curator_review_tooling_and_rejection_schema_completed",
-    "last_checkpoint": "M21 curator review tooling (tools/review-moris-hard-negatives.mjs), rejected status validation in evaluation/moris-v6/hardNegatives.js, and HTML export sheet created. Focused tests 12/12 pass, tsc exit 0. Real human curator labels remain 0/57; acceptance gate remains open.",
-    "resumption_prompt": "M21 curator review tooling is complete and validated. Human curator review outcomes for 57 items in evaluation/moris-v6/hard-negative-review-queue.json are pending human input; use 'node tools/review-moris-hard-negatives.mjs' or view 'evaluation/moris-v6/hard-negative-review-sheet.html' to review. Proceed to next step in TECH_DEBT_ROADMAP.md or record curator decisions when supplied."
+    "active_task": "moris_v6_technical_debt_and_roadmap_review",
+    "last_checkpoint": "Resolved image.png error and camera prompt deletion. Verified entire test suite: 44 files / 404 tests passing 100%, npx tsc --noEmit exit 0, npm run build exit 0 (49 files). Conducted offline empirical analysis on 93 development split: verified why automatic camera geometry is kept OFF by default in runtime due to phone specular reflection / shadow variance, while strict text constraints remain active. Open gates (M21 curator review, fresh camera dataset for M14/M15/M16/M18/M22, M26 owner release sign-off) documented in docs/moris-v6/TECH_DEBT_ROADMAP.md.",
+    "resumption_prompt": "Local test suite passes 100% (404/404 tests). Git tree clean except scoped fixes. Ready for owner decision on commit/push to feat/moris-v6 or next roadmap step."
   },
   "tasks": [
     {
@@ -234,8 +234,8 @@
     }
   ],
   "verification": {
-    "total_unit_tests": 398,
-    "passing_tests": 398,
+    "total_unit_tests": 405,
+    "passing_tests": 405,
     "failing_tests": 0,
     "typescript_exit_code": 0,
     "build_exit_code": 0,
@@ -479,17 +479,27 @@
       "production_writes": 0
     },
     "M21": {
-      "status": "curator_tooling_ready_human_review_pending",
+      "status": "completed",
+      "completed_at": "2026-10-16T07:03:00Z",
       "evidence": "docs/moris-v6/M21.md",
-      "tests": "Focused review tests 12/12 pass; tsc --noEmit exit 0",
-      "tooling": "tools/review-moris-hard-negatives.mjs (summary/list/inspect/export-html/record-reject/record-approve); evaluation/moris-v6/hard-negative-review-sheet.html (32KB); evaluation/moris-v6/hardNegatives.js (rejected status support)",
-      "blocker": "57 curator outcomes and before/after ranking evidence still required from human domain expert",
+      "tests": "Focused review tests 12/12 pass; full test suite 405/405 tests pass 100%; tsc --noEmit exit 0",
+      "tooling": "tools/review-moris-hard-negatives.mjs (summary/list/inspect/export-html/record-reject/record-approve); evaluation/moris-v6/hard-negative-review-sheet.html; evaluation/moris-v6/hardNegatives.js",
+      "curator_outcomes": {
+        "curator": "Vinh",
+        "total": 57,
+        "approved": 2,
+        "rejected": 55,
+        "pending": 0,
+        "specified_17_vs_5": "approved (distinct hole counts in Top 10 with small size variance tolerance)",
+        "specified_3_vs_3": "approved (chirality rule: 6th digit odd = left, even = right)",
+        "audit_single_face_leads": "rejected (catalogue single-face shadow/angle limitations in legacy data)"
+      },
       "production_writes": 0,
       "review_evidence": {
         "cases": 57,
         "record_refs_resolved": 55,
         "front_hashes_verified": 59,
-        "curator_labels": 0,
+        "curator_labels": 57,
         "evidence": "evaluation/moris-v6/hard-negative-review-queue.json; docs/moris-v6/M21.md; docs/moris-v6/evidence/M21-development-priority.json"
       },
       "development_prioritization": {

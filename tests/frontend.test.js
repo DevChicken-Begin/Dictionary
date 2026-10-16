@@ -333,6 +333,20 @@ describe('yêu cầu mới — icon, tab Quy đổi, Vector AI, quản lý user'
     // M02: UI chỉ hướng dẫn mở Trung tâm Vector AI.
     expect(html).toContain('Lưu ảnh xong, mở Trung tâm Vector AI để tạo/cập nhật vector thủ công');
   });
+
+  it('CSP trong _headers cho phép đa cấp Hugging Face CDN và XetHub storage', () => {
+    const headers = read('_headers');
+    expect(headers).toContain('https://*.huggingface.co');
+    expect(headers).toContain('https://*.aws.cdn.hf.co');
+    expect(headers).toContain('https://*.cdn.hf.co');
+    expect(headers).toContain('https://*.xethub.com');
+  });
+
+  it('xử lý lỗi tải DINOv2 và cập nhật trạng thái UI rõ ràng thay vì treo', () => {
+    expect(js).toContain("this.morisAi.statusText = 'Lỗi nạp'");
+    expect(js).toContain('DINOV2_FETCH_FAILED');
+    expect(js).toContain('chưa thể tải mô hình nhận dạng DINOv2 từ CDN (Failed to fetch)');
+  });
 });
 
 
