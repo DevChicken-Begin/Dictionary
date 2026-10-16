@@ -40,11 +40,13 @@ function shapeMatched(shape, text) {
     u_shape:/\b(?:chu u|u shape|u-shaped)\b/i
   };
 
-  return !!map[shape]?.test(text);
+  return Object.values(map).some(re=>re.test(text)) ? !!map[shape]?.test(text) : null;
 }
 
 function sideMatched(side, text) {
   if (!side) return null;
+
+  if (!/\b(?:trai|left|lhf|phai|right|rhf|ca hai|hai ben|both)\b/i.test(text)) return null;
 
   if (side === "left") return /\b(?:trai|left|lhf)\b/i.test(text);
   if (side === "right") return /\b(?:phai|right|rhf)\b/i.test(text);
@@ -66,7 +68,7 @@ function colorMatched(color, text) {
     yellow:/\b(?:vang|yellow)\b/i
   };
 
-  return !!map[color]?.test(text);
+  return Object.values(map).some(re=>re.test(text)) ? !!map[color]?.test(text) : null;
 }
 
 export function evaluateConstraints(row, messageOrConstraints) {
@@ -114,7 +116,7 @@ export function evaluateConstraints(row, messageOrConstraints) {
 }
 
 export function scoreMetadata(row, message) {
-  const c = parseTextConstraints(message);
+  const c = typeof message === "object" ? message : parseTextConstraints(message);
   const ev = evaluateConstraints(row, c);
 
   let score = 0;
@@ -148,7 +150,7 @@ export function scoreMetadata(row, message) {
 }
 
 export function metadataEvidenceAvailable(message) {
-  const c = parseTextConstraints(message);
+  const c = typeof message === "object" ? message : parseTextConstraints(message);
   return Boolean(
     c.hole_count != null ||
     c.shape || c.side || c.color ||
@@ -156,19 +158,23 @@ export function metadataEvidenceAvailable(message) {
   );
 }
 
-export function rankMetadata(rows, message) {
-  const available = metadataEvidenceAvailable(message);
+export function rankMetadata(rows, message, {excludeHoleEvidence=false}={}) {
+  const parsed=parseTextConstraints(message);
+  const constraints=excludeHoleEvidence?{...parsed,hole_count:null}:parsed;
+  const available = metadataEvidenceAvailable(constraints);
   return (rows || [])
-    .map(row => ({
-      ...row,
-      metadata_score:available ? scoreMetadata(row, message) : null,
-      metadata_available:available
-    }))
+    .map(row => {
+      const ev=evaluateConstraints(row,constraints);
+      const observed=available && (ev.evidence.length>0 || ev.conflicts.length>0);
+      return {...row,metadata_score:observed?scoreMetadata(row,constraints):null,
+        conflicts:ev.conflicts,metadata_available:observed,metadata_reliability:observed?.75:0,
+        conflict_reliability:Object.fromEntries(ev.conflicts.map(name=>[name,.75]))};
+    })
     .sort((a,b) => Number(b.metadata_score || 0) - Number(a.metadata_score || 0));
 }
 
 export function strictConstraintMatches(rows, message) {
-  const c = parseTextConstraints(message);
+  const c = typeof message === "object" ? message : parseTextConstraints(message);
 
   const hasStrongConstraint =
     c.hole_count != null ||

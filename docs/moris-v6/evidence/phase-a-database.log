@@ -1,0 +1,3 @@
+PASS: transactional SQL fixture (retry, replace, variants, ETag, source change, atomic rollback, sibling assets, privileges)
+PASS: 8 concurrent requests -> 1 created, 7 skipped, 1 total row
+PASS: transactional schema rollback rehearsal; source_etag restored after ROLLBACK

@@ -1,0 +1,673 @@
+{
+  "timestamp": "2026-10-16T04:31:41.289Z",
+  "scope": "LOCAL halfvec384 exact versus HNSW, one front/reference perSKU, actual development queries; no production ANN inference",
+  "index_rows": 545,
+  "queries": 93,
+  "profile": {
+    "model": "onnx-community/dinov2-small",
+    "model_version": "ef1fb10",
+    "preprocess_version": "kim_canon_v3_letterbox",
+    "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+    "dimension": 384
+  },
+  "hnsw_ef_search": 100,
+  "pgvector_version": "0.8.7",
+  "mean_recall_vs_exact": 0.999784946236559,
+  "min_recall_vs_exact": 0.98,
+  "all_top50_complete": true,
+  "index_plan_verified": true,
+  "production_writes": 0,
+  "observations": [
+    {
+      "query_id": "camera124_3405720001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3407790001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3410410001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3410550301",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3410590001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3410610101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3410870001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3410890001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3410970001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3410980001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3411040001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3411050001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3411070001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3411150201",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3411210001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3411250001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3411350101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3411360101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3421620401",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3424910001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3424930001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3427350001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3428480201",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3428490101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3430520001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3433260201",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3433350101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3433440001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3433550001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3433780001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3434430001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3436110101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3437140101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3440010001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3440040101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3445300001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3445460101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 49,
+      "recall_vs_exact": 0.98
+    },
+    {
+      "query_id": "camera124_3445580001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3450730001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3451290001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3451550001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3455060101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3456500201",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3458470001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3458880001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3459230001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3459250001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3459260001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3459430001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3459510001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3459520001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3459530001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3462350101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3462690001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3463510101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3464290001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3464330001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3464600001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3464740001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3464790101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3465450001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3465460001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3465890001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3465950101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3469090001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3469150001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3469290001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3469300001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670170001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670180001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670320001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670420001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670470001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670700001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670740001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670770001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3670830001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3671110401",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3671130401",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3684370001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3684410001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3687050001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3687070001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3885540201",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3885550201",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3885570001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3888810101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3888820101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3889640101",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3889680001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3960230001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3960790001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    },
+    {
+      "query_id": "camera124_3960890001",
+      "exact_count": 50,
+      "ann_count": 50,
+      "overlap50": 50,
+      "recall_vs_exact": 1
+    }
+  ]
+}

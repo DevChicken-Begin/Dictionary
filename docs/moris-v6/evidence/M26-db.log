@@ -1,0 +1,9 @@
+NOTICE:  function public.kim_upsert_catalogue_image_vector(text,text,text,text,text,text,text,text,halfvec,text,pg_catalog.float4) does not exist, skipping
+NOTICE:  function public.match_catalogue_image_vectors(halfvec,text,text,text,text,pg_catalog.int4) does not exist, skipping
+ERROR:  Only approved RGB indexing is enabled
+CONTEXT:  PL/pgSQL function kim_write_catalogue_vector_v6_provenance(jsonb,text) line 10 at RAISE
+ERROR:  Invalid geometry contract or storage budget
+CONTEXT:  PL/pgSQL function kim_write_catalogue_vector_v6_provenance(jsonb,text) line 15 at RAISE
+ERROR:  Invalid geometry contract or storage budget
+CONTEXT:  PL/pgSQL function kim_write_catalogue_vector_v6_provenance(jsonb,text) line 15 at RAISE
+{"null_geometry":true,"measured_zero":true,"idempotent":true,"service_invoker":true,"public_rpc_denied":true,"invalid_payloads_rejected":3,"rows":1,"row_bytes":1136,"backup_restore_equal":true,"rollback_equal":true,"production_writes":0}

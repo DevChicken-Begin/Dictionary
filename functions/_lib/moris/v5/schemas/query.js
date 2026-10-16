@@ -1,15 +1,17 @@
+import { normalizeGeometry } from "./geometry.js";
 function assertEmbedding(vector,dimension,label){
   if(!Array.isArray(vector) || vector.length!==dimension){
     const e=new Error(`${label} phải đúng ${dimension} chiều.`);
     e.status=400; throw e;
   }
   for(const value of vector){
-    if(!Number.isFinite(Number(value))){
+    if(typeof value!=="number" || !Number.isFinite(value)){
       const e=new Error(`${label} chứa giá trị không hợp lệ.`);
       e.status=400; throw e;
     }
   }
-  return vector.map(Number);
+  if(Math.hypot(...vector)<1e-8){const e=new Error(`${label} không được là vector zero.`);e.status=400;throw e;}
+  return [...vector];
 }
 
 export function validateMorisQuery(body, config) {
@@ -46,6 +48,12 @@ export function validateMorisQuery(body, config) {
     embedding_profile:probe?.embedding_profile || body?.embedding_profile || null
   }));
 
+  const usageSide=body?.filters?.usage_side || "all";
+  const viewMode=body?.filters?.view_mode || "all";
+  if (!["all","left","right","both","unknown"].includes(usageSide) ||
+      !["all","single_face","dual_face","detail_set"].includes(viewMode)) {
+    const error=new Error("Bộ lọc Moris không hợp lệ.");error.status=400;throw error;
+  }
   return {
     query_id:String(body?.query_id || crypto.randomUUID()),
     message,
@@ -54,10 +62,10 @@ export function validateMorisQuery(body, config) {
     query_embeddings:queryEmbeddings,
     embedding_profile:body?.embedding_profile || null,
     filters:{
-      usage_side:body?.filters?.usage_side || "all",
-      view_mode:body?.filters?.view_mode || "all"
+      usage_side:usageSide,
+      view_mode:viewMode
     },
     hints:body?.hints || {},
-    geometry:body?.geometry || null
+    geometry:body?.geometry ? normalizeGeometry(body.geometry) : null
   };
 }

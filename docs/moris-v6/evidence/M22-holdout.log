@@ -1,0 +1,82 @@
+[
+  {
+    "mode": "global",
+    "n": 31,
+    "metrics": {
+      "top1": 0.6451612903225806,
+      "recall10": 0.9354838709677419,
+      "recall50": 1,
+      "recall50_measured_n": 31,
+      "mrr10": 0.7277777777777779,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 0,
+      "rerank_misses": 11,
+      "latency_p50_ms": 774.6501219999998,
+      "latency_p95_ms": 1593.3274275,
+      "latency_measured_n": 31
+    }
+  },
+  {
+    "mode": "holes",
+    "n": 31,
+    "metrics": {
+      "top1": 0.6451612903225806,
+      "recall10": 0.9354838709677419,
+      "recall50": 1,
+      "recall50_measured_n": 31,
+      "mrr10": 0.7277777777777779,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 0,
+      "rerank_misses": 11,
+      "latency_p50_ms": 770.8174089999998,
+      "latency_p95_ms": 1586.4676194999997,
+      "latency_measured_n": 31
+    }
+  },
+  {
+    "mode": "contour",
+    "n": 31,
+    "metrics": {
+      "top1": 0.6451612903225806,
+      "recall10": 0.9354838709677419,
+      "recall50": 1,
+      "recall50_measured_n": 31,
+      "mrr10": 0.7277777777777779,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 0,
+      "rerank_misses": 11,
+      "latency_p50_ms": 770.525204,
+      "latency_p95_ms": 1581.9562885,
+      "latency_measured_n": 31
+    }
+  },
+  {
+    "mode": "patch",
+    "n": 31,
+    "metrics": {
+      "top1": 0.6451612903225806,
+      "recall10": 0.9354838709677419,
+      "recall50": 1,
+      "recall50_measured_n": 31,
+      "mrr10": 0.7277777777777779,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 0,
+      "rerank_misses": 11,
+      "latency_p50_ms": 769.722483,
+      "latency_p95_ms": 1586.4260765000001,
+      "latency_measured_n": 31
+    }
+  }
+]

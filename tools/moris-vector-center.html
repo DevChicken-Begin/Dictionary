@@ -163,6 +163,13 @@
         <p class="text-xs font-bold text-slate-500">Đồng bộ tự động khi thêm ảnh mới. Tách hàng loạt hoặc chọn từng mã chỉ định.</p>
       </div>
       <div class="flex items-center gap-2">
+        <select id="vectorWriteMode" aria-label="Chế độ tạo vector" class="h-10 px-3 rounded-xl border text-xs font-bold">
+          <option value="skip">Chỉ tạo phần thiếu</option>
+          <option value="stale">Cập nhật phần stale</option>
+          <option value="replace">Rebuild có xác nhận</option>
+        </select>
+        <button id="btnPreviewBatch" class="btn h-10 px-3 border rounded-xl text-xs">Xem trước</button>
+        <button id="btnPauseBatch" disabled class="btn h-10 px-3 border rounded-xl text-xs">Tạm dừng</button>
         <button id="btnBatchVectorize" class="btn h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-sm">
           <i data-lucide="sparkles" class="w-4 h-4"></i>Tách vector hàng loạt
         </button>
@@ -171,6 +178,9 @@
         </button>
       </div>
     </div>
+
+    <p id="batchPreview" role="status" class="text-xs text-slate-600"></p>
+    <pre id="batchAssetResults" aria-live="polite" class="text-xs whitespace-pre-wrap max-h-48 overflow-auto"></pre>
 
     <!-- Thanh tiến trình tách hàng loạt (hiện khi đang chạy) -->
     <div id="batchProgressWrapper" class="hidden space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl">

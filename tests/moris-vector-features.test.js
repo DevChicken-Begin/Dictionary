@@ -130,7 +130,7 @@ describe("Moris Vector Center — Purge, Items, Duplicates & Media", () => {
     globalThis.fetch = originalFetch;
   });
 
-  it("vector-items: gọi RPC tối ưu app_list_catalogue_vector_items và hỗ trợ limit lớn (ví dụ 2000)", async () => {
+  it("vector-items: gọi RPC tối ưu và giới hạn trang 20 để kiểm tra phiên bản ảnh có giới hạn", async () => {
     const token = makeJwt("admin");
     const mockEnv = {
       SUPABASE_URL: "https://test.supabase.co",
@@ -150,7 +150,7 @@ describe("Moris Vector Center — Purge, Items, Duplicates & Media", () => {
         rpcBody = JSON.parse(opts?.body || "{}");
         return Promise.resolve(new Response(JSON.stringify({
           ok: true,
-          items: Array.from({ length: 146 }, (_, i) => ({
+          items: Array.from({ length: 20 }, (_, i) => ({
             id: `p-${i}`,
             code: `CODE-${i}`,
             has_vector: i < 45,
@@ -166,9 +166,9 @@ describe("Moris Vector Center — Purge, Items, Duplicates & Media", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.ok).toBe(true);
-    expect(data.items.length).toBe(146);
+    expect(data.items.length).toBe(20);
     expect(rpcCalled).toBe("app_list_catalogue_vector_items");
-    expect(rpcBody.p_limit).toBe(2000);
+    expect(rpcBody.p_limit).toBe(20);
 
     globalThis.fetch = originalFetch;
   });

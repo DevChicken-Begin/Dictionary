@@ -5,7 +5,7 @@ function vectorLiteral(vector) {
 }
 
 export async function searchVectorIndex(env, config, vector, matchCount) {
-  const data = await rpcService(env, "match_catalogue_image_vectors", {
+  const data = await rpcService(env, "match_catalogue_image_vectors_v6", {
     p_query_embedding:vectorLiteral(vector),
     p_embedding_model:config.vector.model,
     p_embedding_model_version:config.vector.modelVersion,

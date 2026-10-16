@@ -1,0 +1,30 @@
+{
+  "frozen_at": "2026-10-16T04:31:40.230151+00:00",
+  "selected_mode": "global",
+  "reason": "Development top1 58/93 versus54/93 for geometry variants; no benefit demonstrated",
+  "predeclared_diagnostic_modes": [
+    "global",
+    "holes",
+    "contour",
+    "patch"
+  ],
+  "holdout_inference_started": false,
+  "post_holdout_tuning_permitted": false,
+  "algorithm_sha256": "6643aabc88af7bcf0455187a537f02d9a46eb8eacd9cf85d5ca3c6d6a443b2d7",
+  "files": {
+    "tools/ablate-moris-v6.mjs": "3ea85d49a405ea3ec2042b53cf946e9dd525f7226df638ee55bdcbe00ad8aa96",
+    "evaluation/moris-v6/ablation.js": "a8c0196e813bef35317e6b1c34e9afa51b826fb4e2494a04dc82843ef0167790",
+    "functions/_lib/moris/v5/retrieval/scoreFusion.js": "8efc9c87fa5036faeabe0b3e2f38960f254782a2ea01eadecd3fcd8436a1e0f3",
+    "functions/_lib/moris/v5/retrieval/geometricReranker.js": "b4398b4a60fe3436d622d81e6dc615cec2f53281a70440326e1b3abaee5475ae",
+    "functions/_lib/moris/v5/retrieval/holeMatcher.js": "3656e8d461be17ece44a753716fcc4426a7ab4ed2f4194f10474ff90a67dea7a",
+    "functions/_lib/moris/v5/retrieval/contourVerifier.js": "d54849d525903bd02d394e8f174e8ab3bc96db946f56f451b3ace83ad66fe75b",
+    "functions/_lib/moris/v5/retrieval/patchVerifier.js": "ba0dd3da599607145d678b8e29780868091d15cb799c8a9be812c09779f17574",
+    "functions/_lib/moris/v5/presentation/imageDecision.js": "fe1e7dbd5a5ae8626913d0d61e3ae817ea9ad24c8436464efac50d27971d0b7d",
+    "src/moris/vector/dinov2.worker.js": "3e1e3d96053211596a141fab6e42bbde8ee424551bf5694d3217b68e8a0e44eb",
+    "src/moris/vector/imageCanonicalizer.js": "e2524c285d10e41667f511517fe847fb314ae745e52b36a28615d61ca36dcb58",
+    "src/moris/vector/browserDinov2.js": "5872b80fa096fb0713db79d28a9cb6a91ac30eacf4bddb9cf6d70ca44d5337c9",
+    "evaluation/moris-v6/private/camera124-v1-holdout.jsonl": "f9a1add621933569a5732953a8450d48bfea829e00f4841fb30a2185fb0184fd"
+  },
+  "scope": "Offline single front-reference exact retrieval; not a production configuration rollout",
+  "production_writes": 0
+}

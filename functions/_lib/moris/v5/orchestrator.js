@@ -1,3 +1,6 @@
+import { assessImageResult } from "./presentation/imageDecision.js";
+import { comparePatches } from "./retrieval/patchVerifier.js";
+import { compareContour } from "./retrieval/contourVerifier.js";
 import { exactLookup, hydrateVectorHits } from "./connectors/catalogue.js";
 import {
   searchCatalogue,
@@ -18,7 +21,7 @@ import {
 } from "./retrieval/textConstraints.js";
 import { analyzeStructuralEvidence } from "./retrieval/structuralEvidence.js";
 import { fuseCandidateScore } from "./retrieval/scoreFusion.js";
-import { rerankCandidatesByGeometry } from "./retrieval/geometricReranker.js";
+import { collectGeometryEvidence } from "./retrieval/geometricReranker.js";
 import { finalizeCandidatePool } from "./retrieval/candidatePool.js";
 import { collapseBestVectorHitPerRecord } from "./retrieval/vectorHitCollapse.js";
 import { orientationWarnings } from "./guards/orientation.js";
@@ -264,6 +267,8 @@ export async function runMorisSearch(env, config, {
     ? query.query_embeddings
     : [];
 
+  // Bounded oversampling before SKU collapse/filter hydration avoids view crowding.
+  const retrievalLimit=Math.min(100,config.vector.topK*2);
   let hits=[];
   let encodedSource="single";
 
@@ -284,7 +289,7 @@ export async function runMorisSearch(env, config, {
       env,
       config,
       encodedProbes,
-      {topK:config.vector.topK}
+      {topK:retrievalLimit}
     );
     encodedSource="multi_probe";
   }else{
@@ -297,7 +302,7 @@ export async function runMorisSearch(env, config, {
       env,
       config,
       encoded.vector,
-      config.vector.topK
+      retrievalLimit
     );
     encodedSource=encoded.source;
   }
@@ -305,7 +310,7 @@ export async function runMorisSearch(env, config, {
   trace(ctx,"vector_search",{source:encodedSource});
 
   const usefulHits = hits.filter(
-    h => Number(h?.similarity || 0) >=
+    h => Number(h?.raw_vector_similarity ?? h?.similarity ?? 0) >=
       config.vector.minSimilarity
   );
 
@@ -313,7 +318,7 @@ export async function runMorisSearch(env, config, {
   // Chỉ giữ view có similarity tốt nhất trước khi hydrate metadata.
   const collapsedHits = collapseBestVectorHitPerRecord(
     usefulHits,
-    {limit:config.vector.topK}
+    {limit:retrievalLimit}
   );
 
   if (!collapsedHits.length) {
@@ -334,19 +339,23 @@ export async function runMorisSearch(env, config, {
     env,
     token,
     collapsedHits,
-    {maxRows:config.limits.maxScanRows}
+    {maxRows:config.limits.maxScanRows,filters:query.filters}
   );
 
   const metadataRanked = rankMetadata(
     hydrated,
-    query.message
+    query.message,
+    {excludeHoleEvidence:true}
   );
 
   const structural = analyzeStructuralEvidence({
-    query,
+    // Disabled image geometry must not re-enter fusion through count fallback.
+    // Explicit text constraints remain available for operator-directed searches.
+    query:config.features.geometryVerification === true ? query : {...query,geometry:null},
     candidates:metadataRanked
   });
 
+  const patchEligible = new Set([...metadataRanked].sort((a,b)=>(b.retrieval_score||0)-(a.retrieval_score||0)).slice(0,10));
   const fused = metadataRanked
     .map(row => {
       const key = String(
@@ -356,6 +365,13 @@ export async function runMorisSearch(env, config, {
       const structuralRow = structural.byId?.[key] || {};
       return fuseCandidateScore({
         ...row,
+        geometry_evidence:{
+          ...(config.features.geometryVerification === true
+            ? collectGeometryEvidence(row,{...query.geometry,usage_side:query.filters.usage_side,view_mode:query.filters.view_mode})
+            : {}),
+          patch:config.features.spatialVerification && patchEligible.has(row) ? comparePatches({...query.geometry,...query.filters},row) : null,
+          contour:config.features.contourVerification ? compareContour({...query.geometry,...query.filters},row) : null
+        },
         structural_score:structuralRow.score,
         structural_available:structuralRow.available === true,
         conflicts:[
@@ -370,9 +386,7 @@ export async function runMorisSearch(env, config, {
       b.final_score - a.final_score
     );
 
-  const geometricRanked = (query?.geometry && (query.geometry.hole_count != null || query.geometry.aspect_ratio != null))
-    ? rerankCandidatesByGeometry(fused, query.geometry)
-    : fused;
+  const geometricRanked = fused;
 
   const {
     candidates:resolverPool,
@@ -398,8 +412,9 @@ export async function runMorisSearch(env, config, {
   ];
 
   // Moris: chỉ dùng retrieval vector + metadata (không LLM).
-  const sortedCandidates = geometricRanked
-    .map(publicCandidate)
+  const {candidates:skuCandidates} = await finalizeCandidatePool(geometricRanked,{limit:10});
+  const sortedCandidates = skuCandidates
+    .map(row=>publicCandidate({...row,query_quality:query.geometry?.quality}))
     .sort((a, b) => {
       const scoreA = Number(a?.match_score ?? a?.final_score ?? a?.vector_similarity ?? 0);
       const scoreB = Number(b?.match_score ?? b?.final_score ?? b?.vector_similarity ?? 0);
@@ -407,9 +422,12 @@ export async function runMorisSearch(env, config, {
     })
     .slice(0, 10);
 
+  const decision=assessImageResult(sortedCandidates,{quality:query.geometry?.quality,
+    orientationAmbiguous:orientationWarnings(query.message,resolverPool).length>0});
   return {
-    mode:"MORIS_VECTOR_CLEAR",
-    summary:"Vector retrieval đủ rõ.",
+    mode:decision.status==='needs_review'?"MORIS_VECTOR_AMBIGUOUS":"MORIS_VECTOR_SUGGESTIONS",
+    summary:"Ứng viên theo điểm so khớp; cần đối chiếu trước khi xác nhận mã.",
+    decision,
     candidates:sortedCandidates,
     warnings,
     ai_calls:null,

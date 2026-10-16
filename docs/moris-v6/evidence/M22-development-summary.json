@@ -1,0 +1,294 @@
+[
+  {
+    "mode": "global",
+    "n": 93,
+    "metrics": {
+      "top1": 0.6236559139784946,
+      "recall10": 0.8387096774193549,
+      "recall50": 0.946236559139785,
+      "recall50_measured_n": 93,
+      "mrr10": 0.6896057347670254,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 5,
+      "rerank_misses": 30,
+      "latency_p50_ms": 1346.701435,
+      "latency_p95_ms": 2897.570748999999,
+      "latency_measured_n": 93
+    },
+    "review_guidance": {
+      "calibrated": false,
+      "automatic_accepts": 0,
+      "needs_review": 88,
+      "no_match": 0,
+      "suggestions": 5,
+      "scope": "Conservative UI guidance only; suggestions are not accepted identities and unknown false-accept is unmeasured"
+    },
+    "confidence_intervals": {
+      "top1": {
+        "low": 0.5268817204301075,
+        "high": 0.7099462365591396,
+        "method": "percentile_bootstrap",
+        "iterations": 1000,
+        "seed": 6
+      },
+      "recall10": {
+        "low": 0.7634408602150538,
+        "high": 0.9139784946236559,
+        "method": "percentile_bootstrap",
+        "iterations": 1000,
+        "seed": 6
+      }
+    },
+    "provenance": {
+      "algorithm_sha256": "6643aabc88af7bcf0455187a537f02d9a46eb8eacd9cf85d5ca3c6d6a443b2d7",
+      "algorithm": "local_exact_front_reference_global_v1",
+      "profile": {
+        "model": "onnx-community/dinov2-small",
+        "model_version": "ef1fb10",
+        "preprocess_version": "kim_canon_v3_letterbox",
+        "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+        "dimension": 384
+      },
+      "latency_scope": "Observed Chromium WASM inference (includes optional descriptor extraction) plus local Node exact retrieval/rerank; concurrent local jobs, not isolated production p95",
+      "query_sha256": "8534dc28f6ba6a67faa2c679ed87a7a914f8945545f08af35479faa46686ba47",
+      "index_sha256": "91160e40cca63e8564b59434759e7e1904fe81629910deab2f40a620dacaef2c",
+      "index_expected": 545,
+      "index_success": 545,
+      "index_failures": 0,
+      "commit_sha": "02289afa79747722b992938bee7c2d0414f7a9d2",
+      "timestamp": "2026-10-16T04:31:07.776Z",
+      "production_writes": 0
+    },
+    "dataset": {
+      "schema_version": "moris_dataset_v1",
+      "rows": 93,
+      "sha256": "cdc659a65fbc0f0f8b93b51738e0726d5efa442c17921b753c5f99a4a5945fc3",
+      "camera": 93,
+      "holdout": 0,
+      "approved": 93,
+      "provisional": 0
+    }
+  },
+  {
+    "mode": "holes",
+    "n": 93,
+    "metrics": {
+      "top1": 0.5806451612903226,
+      "recall10": 0.8064516129032258,
+      "recall50": 0.946236559139785,
+      "recall50_measured_n": 93,
+      "mrr10": 0.6501792114695342,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 5,
+      "rerank_misses": 34,
+      "latency_p50_ms": 1344.7935230000003,
+      "latency_p95_ms": 2889.9226331999994,
+      "latency_measured_n": 93
+    },
+    "review_guidance": {
+      "calibrated": false,
+      "automatic_accepts": 0,
+      "needs_review": 90,
+      "no_match": 0,
+      "suggestions": 3,
+      "scope": "Conservative UI guidance only; suggestions are not accepted identities and unknown false-accept is unmeasured"
+    },
+    "confidence_intervals": {
+      "top1": {
+        "low": 0.4838709677419355,
+        "high": 0.6774193548387096,
+        "method": "percentile_bootstrap",
+        "iterations": 1000,
+        "seed": 6
+      },
+      "recall10": {
+        "low": 0.7204301075268817,
+        "high": 0.8817204301075269,
+        "method": "percentile_bootstrap",
+        "iterations": 1000,
+        "seed": 6
+      }
+    },
+    "provenance": {
+      "algorithm_sha256": "6643aabc88af7bcf0455187a537f02d9a46eb8eacd9cf85d5ca3c6d6a443b2d7",
+      "algorithm": "local_exact_front_reference_holes_v1",
+      "profile": {
+        "model": "onnx-community/dinov2-small",
+        "model_version": "ef1fb10",
+        "preprocess_version": "kim_canon_v3_letterbox",
+        "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+        "dimension": 384
+      },
+      "latency_scope": "Observed Chromium WASM inference (includes optional descriptor extraction) plus local Node exact retrieval/rerank; concurrent local jobs, not isolated production p95",
+      "query_sha256": "8534dc28f6ba6a67faa2c679ed87a7a914f8945545f08af35479faa46686ba47",
+      "index_sha256": "91160e40cca63e8564b59434759e7e1904fe81629910deab2f40a620dacaef2c",
+      "index_expected": 545,
+      "index_success": 545,
+      "index_failures": 0,
+      "commit_sha": "02289afa79747722b992938bee7c2d0414f7a9d2",
+      "timestamp": "2026-10-16T04:31:09.391Z",
+      "production_writes": 0
+    },
+    "dataset": {
+      "schema_version": "moris_dataset_v1",
+      "rows": 93,
+      "sha256": "cdc659a65fbc0f0f8b93b51738e0726d5efa442c17921b753c5f99a4a5945fc3",
+      "camera": 93,
+      "holdout": 0,
+      "approved": 93,
+      "provisional": 0
+    }
+  },
+  {
+    "mode": "contour",
+    "n": 93,
+    "metrics": {
+      "top1": 0.5806451612903226,
+      "recall10": 0.8064516129032258,
+      "recall50": 0.946236559139785,
+      "recall50_measured_n": 93,
+      "mrr10": 0.6519713261648747,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 5,
+      "rerank_misses": 34,
+      "latency_p50_ms": 1351.8997209999998,
+      "latency_p95_ms": 2890.898028399999,
+      "latency_measured_n": 93
+    },
+    "review_guidance": {
+      "calibrated": false,
+      "automatic_accepts": 0,
+      "needs_review": 90,
+      "no_match": 0,
+      "suggestions": 3,
+      "scope": "Conservative UI guidance only; suggestions are not accepted identities and unknown false-accept is unmeasured"
+    },
+    "confidence_intervals": {
+      "top1": {
+        "low": 0.4838709677419355,
+        "high": 0.6774193548387096,
+        "method": "percentile_bootstrap",
+        "iterations": 1000,
+        "seed": 6
+      },
+      "recall10": {
+        "low": 0.7204301075268817,
+        "high": 0.8817204301075269,
+        "method": "percentile_bootstrap",
+        "iterations": 1000,
+        "seed": 6
+      }
+    },
+    "provenance": {
+      "algorithm_sha256": "6643aabc88af7bcf0455187a537f02d9a46eb8eacd9cf85d5ca3c6d6a443b2d7",
+      "algorithm": "local_exact_front_reference_contour_v1",
+      "profile": {
+        "model": "onnx-community/dinov2-small",
+        "model_version": "ef1fb10",
+        "preprocess_version": "kim_canon_v3_letterbox",
+        "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+        "dimension": 384
+      },
+      "latency_scope": "Observed Chromium WASM inference (includes optional descriptor extraction) plus local Node exact retrieval/rerank; concurrent local jobs, not isolated production p95",
+      "query_sha256": "8534dc28f6ba6a67faa2c679ed87a7a914f8945545f08af35479faa46686ba47",
+      "index_sha256": "91160e40cca63e8564b59434759e7e1904fe81629910deab2f40a620dacaef2c",
+      "index_expected": 545,
+      "index_success": 545,
+      "index_failures": 0,
+      "commit_sha": "02289afa79747722b992938bee7c2d0414f7a9d2",
+      "timestamp": "2026-10-16T04:31:11.781Z",
+      "production_writes": 0
+    },
+    "dataset": {
+      "schema_version": "moris_dataset_v1",
+      "rows": 93,
+      "sha256": "cdc659a65fbc0f0f8b93b51738e0726d5efa442c17921b753c5f99a4a5945fc3",
+      "camera": 93,
+      "holdout": 0,
+      "approved": 93,
+      "provisional": 0
+    }
+  },
+  {
+    "mode": "patch",
+    "n": 93,
+    "metrics": {
+      "top1": 0.5806451612903226,
+      "recall10": 0.8064516129032258,
+      "recall50": 0.946236559139785,
+      "recall50_measured_n": 93,
+      "mrr10": 0.6519713261648747,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 5,
+      "rerank_misses": 34,
+      "latency_p50_ms": 1344.0790379999999,
+      "latency_p95_ms": 2891.8467263999987,
+      "latency_measured_n": 93
+    },
+    "review_guidance": {
+      "calibrated": false,
+      "automatic_accepts": 0,
+      "needs_review": 90,
+      "no_match": 0,
+      "suggestions": 3,
+      "scope": "Conservative UI guidance only; suggestions are not accepted identities and unknown false-accept is unmeasured"
+    },
+    "confidence_intervals": {
+      "top1": {
+        "low": 0.4838709677419355,
+        "high": 0.6774193548387096,
+        "method": "percentile_bootstrap",
+        "iterations": 1000,
+        "seed": 6
+      },
+      "recall10": {
+        "low": 0.7204301075268817,
+        "high": 0.8817204301075269,
+        "method": "percentile_bootstrap",
+        "iterations": 1000,
+        "seed": 6
+      }
+    },
+    "provenance": {
+      "algorithm_sha256": "6643aabc88af7bcf0455187a537f02d9a46eb8eacd9cf85d5ca3c6d6a443b2d7",
+      "algorithm": "local_exact_front_reference_patch_v1",
+      "profile": {
+        "model": "onnx-community/dinov2-small",
+        "model_version": "ef1fb10",
+        "preprocess_version": "kim_canon_v3_letterbox",
+        "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+        "dimension": 384
+      },
+      "latency_scope": "Observed Chromium WASM inference (includes optional descriptor extraction) plus local Node exact retrieval/rerank; concurrent local jobs, not isolated production p95",
+      "query_sha256": "8534dc28f6ba6a67faa2c679ed87a7a914f8945545f08af35479faa46686ba47",
+      "index_sha256": "91160e40cca63e8564b59434759e7e1904fe81629910deab2f40a620dacaef2c",
+      "index_expected": 545,
+      "index_success": 545,
+      "index_failures": 0,
+      "commit_sha": "02289afa79747722b992938bee7c2d0414f7a9d2",
+      "timestamp": "2026-10-16T04:31:14.707Z",
+      "production_writes": 0
+    },
+    "dataset": {
+      "schema_version": "moris_dataset_v1",
+      "rows": 93,
+      "sha256": "cdc659a65fbc0f0f8b93b51738e0726d5efa442c17921b753c5f99a4a5945fc3",
+      "camera": 93,
+      "holdout": 0,
+      "approved": 93,
+      "provisional": 0
+    }
+  }
+]

@@ -1,0 +1,35 @@
+import {orientationPolicy,transformPoint} from '../guards/orientationPolicy.js';
+export const CONTOUR_VERSION='contour64_efd16_v1';
+// Bounded equal-arclength outline; uniform scale + PCA rotation, never reflection.
+export function makeContourSignature(contour,efd,quality){
+ if(quality?.reliable!==true||!Array.isArray(contour)||contour.length<4||contour.length>4096 ||
+    contour.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))return null;
+ const lengths=contour.map((p,i)=>Math.hypot(p.x-contour[(i+1)%contour.length].x,p.y-contour[(i+1)%contour.length].y));
+ const perimeter=lengths.reduce((a,b)=>a+b,0);if(perimeter<1e-6)return null;
+ const points=[];let edge=0,walked=0;
+ for(let n=0;n<64;n++){
+  const target=n*perimeter/64;while(edge<lengths.length-1&&walked+lengths[edge]<target){walked+=lengths[edge++];}
+  const a=contour[edge],b=contour[(edge+1)%contour.length],t=lengths[edge]?(target-walked)/lengths[edge]:0;
+  points.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
+ }
+ const cx=points.reduce((s,p)=>s+p.x,0)/64,cy=points.reduce((s,p)=>s+p.y,0)/64;
+ let xx=0,yy=0,xy=0;for(const p of points){const x=p.x-cx,y=p.y-cy;xx+=x*x;yy+=y*y;xy+=x*y;}
+ const angle=.5*Math.atan2(2*xy,xx-yy),cos=Math.cos(angle),sin=Math.sin(angle);
+ const rotated=points.map(p=>({x:(p.x-cx)*cos+(p.y-cy)*sin,y:-(p.x-cx)*sin+(p.y-cy)*cos}));
+ const minX=Math.min(...rotated.map(p=>p.x)),maxX=Math.max(...rotated.map(p=>p.x)),minY=Math.min(...rotated.map(p=>p.y)),maxY=Math.max(...rotated.map(p=>p.y));
+ const scale=Math.max(maxX-minX,maxY-minY);if(scale<1e-6)return null;
+ const coefficients=Array.from(efd||[]);
+ if(coefficients.length!==16||coefficients.some(v=>!Number.isFinite(v)||v<0||v>100))return null;
+ return {version:CONTOUR_VERSION,quality:'reliable',points:rotated.map(p=>({x:(p.x-(minX+maxX)/2)/scale+.5,y:(p.y-(minY+maxY)/2)/scale+.5})),efd:coefficients};
+}
+const valid=s=>s?.version===CONTOUR_VERSION&&s.quality==='reliable'&&Array.isArray(s.points)&&s.points.length===64&&s.points.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.x<=1&&p.y>=0&&p.y<=1)&&Array.isArray(s.efd)&&s.efd.length===16&&s.efd.every(v=>Number.isFinite(v)&&v>=0&&v<=100);
+const directed=(a,b)=>a.reduce((sum,p)=>sum+Math.min(...b.map(q=>Math.hypot(p.x-q.x,p.y-q.y))),0)/a.length;
+export function compareContour(query,candidate){
+ const a=query?.contour_signature,b=candidate?.contour_signature,policy=orientationPolicy(query,candidate);
+ const unavailable={available:false,similarity:null,reliability:0,version:CONTOUR_VERSION};
+ if(query?.quality?.reliable===false||candidate?.quality?.reliable===false||!policy.compatible||!valid(a)||!valid(b))return unavailable;
+ let distance=Infinity,transform='identity';
+ for(const t of policy.transforms){const p=a.points.map(v=>transformPoint(v,t));const d=(directed(p,b.points)+directed(b.points,p))/2;if(d<distance){distance=d;transform=t;}}
+ const efdDistance=Math.hypot(...a.efd.map((v,i)=>v-b.efd[i]));
+ return {available:true,similarity:.85*Math.exp(-8*distance)+.15*Math.exp(-efdDistance),reliability:1,chamfer:distance,efd_distance:efdDistance,transform,version:CONTOUR_VERSION};
+}

@@ -1,3 +1,4 @@
+import { normalizeGeometry } from "../schemas/geometry.js";
 function norm(v) {
   return String(v ?? "").toLowerCase();
 }
@@ -8,8 +9,9 @@ function holeCount(text) {
 }
 
 export function analyzeStructuralEvidence({query,candidates}) {
-  const requestedHoles = (query?.geometry?.hole_count != null && Number(query.geometry.hole_count) >= 0)
-    ? Number(query.geometry.hole_count)
+  const geometry = normalizeGeometry(query?.geometry);
+  const requestedHoles = (geometry.hole_count != null)
+    ? geometry.hole_count
     : holeCount(query?.message || "");
   const byId = {};
   let conflicts = 0;
@@ -22,8 +24,9 @@ export function analyzeStructuralEvidence({query,candidates}) {
       row?.part_id
     ].filter(Boolean).join(" ");
 
-    const candidateHoles = (row?.hole_count != null && Number(row.hole_count) >= 0)
-      ? Number(row.hole_count)
+    const candidateGeometry = normalizeGeometry(row);
+    const candidateHoles = (candidateGeometry.hole_count != null)
+      ? candidateGeometry.hole_count
       : holeCount(text);
     const available = requestedHoles != null && candidateHoles != null;
     let score = null;

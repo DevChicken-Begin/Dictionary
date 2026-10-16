@@ -1,0 +1,5 @@
+PASS: 1,000 tied timestamps -> ordered 1,000 unique IDs; last-page feature/usage filter and auth guard pass (auth function fixture).
+Function Scan on app_search_catalogue  (cost=0.25..10.25 rows=1000 width=477) (actual time=3.922..3.927 rows=100 loops=1)
+  Buffers: shared hit=563
+Planning Time: 0.062 ms
+Execution Time: 3.982 ms

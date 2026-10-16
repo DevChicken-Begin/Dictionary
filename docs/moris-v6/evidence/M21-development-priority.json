@@ -1,0 +1,12 @@
+{
+  "cases": 57,
+  "record_refs_resolved": 55,
+  "pair_cases": 2,
+  "front_hashes_verified": 59,
+  "unlabelled_pending": 57,
+  "development_query_linked": 11,
+  "no_development_query": 46,
+  "network_calls": 0,
+  "production_writes": 0,
+  "updated": false
+}

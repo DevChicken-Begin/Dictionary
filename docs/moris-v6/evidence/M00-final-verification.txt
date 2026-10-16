@@ -1,0 +1,1 @@
+PASS: state.json parses; historical tasks/verification preserved; original dist paths and SHA-256 unchanged; AGENTS.md, prompt, package and lockfile unchanged; master plan differs only at M00 checkbox; git diff --check exit 0.

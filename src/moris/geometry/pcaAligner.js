@@ -21,7 +21,7 @@ export function computeOrientationPCA(mask, width, height) {
   for (let y = 0; y < height; y++) {
     const rowOffset = y * width;
     for (let x = 0; x < width; x++) {
-      if (mask[rowOffset + x] >= 128) {
+      if (mask[rowOffset + x] === 1 || mask[rowOffset + x] >= 128) {
         sumX += x;
         sumY += y;
         count++;
@@ -50,7 +50,7 @@ export function computeOrientationPCA(mask, width, height) {
     const rowOffset = y * width;
     const dy = y - cy;
     for (let x = 0; x < width; x++) {
-      if (mask[rowOffset + x] >= 128) {
+      if (mask[rowOffset + x] === 1 || mask[rowOffset + x] >= 128) {
         const dx = x - cx;
         mu20 += dx * dx;
         mu02 += dy * dy;

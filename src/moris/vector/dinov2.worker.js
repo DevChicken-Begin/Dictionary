@@ -1,3 +1,6 @@
+import { makePatchSignature } from "../geometry/patchVerifier.js";
+import { makeContourSignature } from "../geometry/contourVerifier.js";
+import { normalizeGeometry } from "../retrieval/geometryEvidence.js";
 import {
   enrollSkuSignature,
   searchPartTop10,
@@ -261,11 +264,8 @@ function computeReliefInvertedOptical(opt) {
 }
 
 async function extractFeaturesWithFallback(extractor, canvas) {
-  try {
-    return await extractor(canvas, { pooling: "none" });
-  } catch {
-    return await extractor(canvas);
-  }
+  // A pooled CLS tensor must never be relabeled as spatial/hybrid evidence.
+  return await extractor(canvas, { pooling: "none" });
 }
 
 self.onmessage = async event => {
@@ -273,6 +273,10 @@ self.onmessage = async event => {
   const requestId = String(message.requestId || "");
 
   try {
+    if (["enroll-signature-v2", "reindex-batch-v2"].includes(message.type) &&
+        (message.source !== "vector_center" || message.confirmed !== true)) {
+      throw new Error("Local enrollment requires explicit Vector Center confirmation.");
+    }
     // -----------------------------------------------------------------------
     // Message Type: init (v1 & v2 compatible)
     // -----------------------------------------------------------------------
@@ -336,8 +340,8 @@ self.onmessage = async event => {
           profile: {
             model: MODEL_ID,
             model_version: MODEL_REVISION,
-            preprocess_version: "kim_canon_v2",
-            profile: "cls_l2_v1",
+            preprocess_version: "kim_canon_v3_letterbox",
+            profile: "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
             dimension: DIMENSION
           },
           runtime: runtimeInfo,
@@ -346,7 +350,7 @@ self.onmessage = async event => {
       ];
 
       // Probe 2: canon_gray_v2 (Relief-inverted convex<->concave flip)
-      if (message.includeGray !== false) {
+      if (message.includeGray !== false && message.allowMirror === true) {
         const relInv = computeReliefInvertedOptical(opt);
         const canvas2 = pseudoRgbTensorToCanvas(relInv);
         const output2 = await extractFeaturesWithFallback(extractor, canvas2);
@@ -361,8 +365,8 @@ self.onmessage = async event => {
           profile: {
             model: MODEL_ID,
             model_version: MODEL_REVISION,
-            preprocess_version: "kim_canon_v2",
-            profile: "cls_l2_v1",
+            preprocess_version: "kim_canon_v3_letterbox",
+            profile: "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
             dimension: DIMENSION
           },
           runtime: runtimeInfo,
@@ -372,7 +376,12 @@ self.onmessage = async event => {
 
       const efdCoefficients = Array.from(computeEllipticFourierDescriptors(opt.outerContour, 16));
 
-      const geometry = {
+      const geometry = normalizeGeometry({
+        geometry_version: "geometry_v1",
+        provenance: "optical_kim_canon_v3_letterbox",
+        quality: opt.diagnostics.maskQuality,
+        coordinate_space: "canonical_bbox_0_1",
+        scale: { unit: "normalized", raster: 224 },
         hole_count: opt.holeCount,
         big_hole_count: opt.bigHoleCount,
         small_hole_count: opt.smallHoleCount,
@@ -385,8 +394,10 @@ self.onmessage = async event => {
           area: h.area,
           is_big: h.isBig
         })),
-        efd_coefficients: efdCoefficients
-      };
+        efd_coefficients: opt.diagnostics.maskQuality.reliable ? efdCoefficients : null,
+        patch_signature: opt.diagnostics.maskQuality.reliable ? makePatchSignature(tokens1,grid1.mask16x16,grid1.edge16x16,message.includeSpatial === true) : null,
+        contour_signature: makeContourSignature(opt.outerContour,efdCoefficients,opt.diagnostics.maskQuality)
+      });
 
       post("result", {
         requestId,
@@ -394,7 +405,7 @@ self.onmessage = async event => {
           probes,
           geometry,
           diagnostics: opt.diagnostics,
-          preprocess_version: "kim_canon_v2"
+          preprocess_version: "kim_canon_v3_letterbox"
         }
       });
       return;

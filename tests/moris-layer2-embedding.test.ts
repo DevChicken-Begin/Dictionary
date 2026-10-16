@@ -11,7 +11,7 @@ import {
 } from '../src/moris/moris-layer2-embedding.js';
 
 describe('moris-layer2-embedding: Layer 2 Coarse Gate & Hybrid Masked-GeM', () => {
-  it('Trích xuất DINOv2 ONNX token: [1, 257, 384] bỏ CLS lấy 256 patch, fallback an toàn với [1, 384]', () => {
+  it('Trích xuất DINOv2 ONNX token: [1, 257, 384] bỏ CLS lấy 256 patch, từ chối CLS [1, 384] theo M06', () => {
     // 1. Trường hợp chuẩn: 257 tokens (1 CLS + 256 patches)
     const raw257 = new Float32Array(257 * 384);
     raw257.fill(0.1);
@@ -27,12 +27,7 @@ describe('moris-layer2-embedding: Layer 2 Coarse Gate & Hybrid Masked-GeM', () =
     // 2. Trường hợp fallback: chỉ có 1 token [1, 384]
     const raw384 = new Float32Array(384);
     raw384.fill(0.5);
-    const resFallback = extractDinov2Tokens({ data: raw384, dims: [1, 384] });
-    expect(resFallback.isSpatial).toBe(false);
-    expect(resFallback.clsToken.length).toBe(384);
-    expect(resFallback.patchTokens.length).toBe(256 * 384);
-    // Token được nhân bản an toàn across 256 patches
-    expect(resFallback.patchTokens[0]).toBeCloseTo(resFallback.clsToken[0]);
+    expect(() => extractDinov2Tokens({ data: raw384, dims: [1, 384] })).toThrow(/spatial tokens required/);
   });
 
   it('Downsampling 224x224 mask và gradient về 16x16 grid chính xác', () => {

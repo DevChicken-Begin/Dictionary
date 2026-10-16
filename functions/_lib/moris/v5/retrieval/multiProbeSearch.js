@@ -1,75 +1,44 @@
 import { searchVectorIndex } from "../vector/search.js";
+import { collapseBestVectorHitPerRecord } from "./vectorHitCollapse.js";
 
-function clamp01(v){ return Math.max(0,Math.min(1,Number(v||0))); }
+const clamp01=v=>Math.max(0,Math.min(1,Number(v)||0));
 
-export async function searchMultiProbeVectorIndex(
-  env,
-  config,
-  probes,
-  {topK,rrfK=20}={}
-){
-  const rows = Array.isArray(probes) ? probes.slice(0,3) : [];
-  if(!rows.length) return [];
-
-  const perProbe=[];
-  for(const probe of rows){
-    const hits=await searchVectorIndex(
-      env,
-      config,
-      probe.vector,
-      topK || config.vector.topK
-    );
-    perProbe.push({probe_id:probe.probe_id || 'probe',hits});
-  }
-
+// RRF consensus is retrieval evidence, never a replacement for raw cosine.
+export function fuseProbeHits(perProbe,{topK=60,rrfK=20}={}) {
+  const unique=[...new Map(perProbe.map(p=>[p.probe_id,p])).values()];
   const byRecord=new Map();
-  const maxRrfPerProbe=1/(rrfK+1);
-
-  for(const {probe_id,hits} of perProbe){
-    for(let i=0;i<hits.length;i++){
-      const hit=hits[i];
-      const id=String(hit?.record_id || '');
-      if(!id) continue;
-      const sim=clamp01(hit?.similarity);
-      const rrf=1/(rrfK+i+1);
-      const cur=byRecord.get(id) || {
-        ...hit,
-        record_id:id,
-        best_similarity:0,
-        rrf_sum:0,
-        probe_ids:new Set(),
-        best_hit:hit
-      };
-      cur.rrf_sum += rrf;
-      cur.probe_ids.add(probe_id);
-      if(sim > cur.best_similarity){
-        cur.best_similarity=sim;
-        cur.best_hit=hit;
-      }
+  for(const {probe_id,hits} of unique){
+    const perSku=collapseBestVectorHitPerRecord(hits,{limit:100});
+    for(let i=0;i<perSku.length;i++){
+      const hit=perSku[i],id=hit.record_id;
+      const cur=byRecord.get(id)||{best_hit:hit,rrf_sum:0,probe_ids:[],evidence:[]};
+      cur.rrf_sum+=1/(rrfK+i+1);cur.probe_ids.push(probe_id);
+      cur.evidence.push(...hit.view_evidence.map(e=>({...e,probe_id})));
+      if(hit.similarity>cur.best_hit.similarity)cur.best_hit=hit;
       byRecord.set(id,cur);
     }
   }
-
-  const probeCount=perProbe.length;
   return [...byRecord.values()].map(row=>{
-    const consensus=row.probe_ids.size/probeCount;
-    const rrfNorm=clamp01(
-      row.rrf_sum / Math.max(1e-9, probeCount*maxRrfPerProbe)
-    );
-    const similarity=clamp01(
-      0.82*row.best_similarity +
-      0.12*rrfNorm +
-      0.06*consensus
-    );
-    return {
-      ...row.best_hit,
-      record_id:row.record_id,
-      similarity,
-      raw_vector_similarity:row.best_similarity,
-      probe_consensus:consensus,
-      probe_rrf:rrfNorm,
-      probe_count:row.probe_ids.size
-    };
-  }).sort((a,b)=>b.similarity-a.similarity)
-    .slice(0,Math.max(1,Number(topK || config.vector.topK)));
+    const consensus=row.probe_ids.length/Math.max(1,unique.length);
+    const rrf=clamp01(row.rrf_sum/(Math.max(1,unique.length)/(rrfK+1)));
+    return {...row.best_hit,similarity:row.best_hit.similarity,
+      raw_vector_similarity:row.best_hit.similarity,
+      retrieval_score:clamp01(.82*row.best_hit.similarity+.12*rrf+.06*consensus),
+      probe_consensus:consensus,probe_rrf:rrf,probe_count:row.probe_ids.length,
+      probe_ids:row.probe_ids,view_evidence:row.evidence};
+  }).sort((a,b)=>b.retrieval_score-a.retrieval_score || a.record_id.localeCompare(b.record_id))
+    .slice(0,Math.max(1,Math.min(100,topK)));
+}
+
+export async function searchMultiProbeVectorIndex(env,config,probes,{topK,rrfK=20}={}){
+  const perProbe=[];
+  const seen=new Set();
+  for(const probe of (Array.isArray(probes)?probes:[]).slice(0,3)){
+    const fingerprint=JSON.stringify(probe.vector);
+    if(seen.has(fingerprint))continue;
+    seen.add(fingerprint);
+    const hits=await searchVectorIndex(env,config,probe.vector,topK||config.vector.topK);
+    perProbe.push({probe_id:probe.probe_id||`probe_${perProbe.length}`,hits});
+  }
+  return fuseProbeHits(perProbe,{topK:topK||config.vector.topK,rrfK});
 }

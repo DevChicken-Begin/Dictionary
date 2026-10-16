@@ -1,3 +1,4 @@
+import { inspectVectorItems } from "../../_lib/moris/v5/vector/assetStatus.js";
 import {
   rpc,
   searchCatalogue,
@@ -15,7 +16,7 @@ export async function onRequestGet({ request, env }) {
     const authHeader = request.headers.get("authorization") || "";
     const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
     const token = String(url.searchParams.get("session_token") || bearer || "").trim();
-    const limit = Math.max(1, Math.min(Number(url.searchParams.get("limit") || 2000), 5000));
+    const limit = Math.max(1, Math.min(Number(url.searchParams.get("limit") || 20), 20));
     const offset = Math.max(0, Number(url.searchParams.get("offset") || 0));
     const search = String(url.searchParams.get("search") || "").trim();
 
@@ -32,7 +33,7 @@ export async function onRequestGet({ request, env }) {
       if (fastResult && Array.isArray(fastResult.items)) {
         return json({
           ok: true,
-          items: fastResult.items,
+          items: await inspectVectorItems(env, fastResult.items),
           count: fastResult.items.length,
           offset,
           has_more: fastResult.items.length === limit
@@ -90,19 +91,21 @@ export async function onRequestGet({ request, env }) {
     const items = [];
     for (const row of rows) {
       let assets = [];
+      let assetsUnavailable = false;
       try {
         const rawAssets = await rpc(env, "app_get_part_assets", {
           p_session_token: token,
           p_image_id: row.id
         });
         assets = Array.isArray(rawAssets) ? rawAssets : [];
-      } catch (_) {}
+      } catch (_) { assetsUnavailable = true; }
 
       const hasVector = existingVectorKeys.has(String(row.id)) ||
         assets.some(a => a.image_path && existingVectorKeys.has(String(a.image_path).replace(/^\/+/, "")));
 
       items.push({
         id: String(row.id),
+        assets_unavailable: assetsUnavailable,
         code: row.code || "UNKNOWN",
         part_id: row.part_id || "",
         usage_side: row.usage_side || "unknown",
@@ -119,7 +122,7 @@ export async function onRequestGet({ request, env }) {
 
     return json({
       ok: true,
-      items,
+      items: await inspectVectorItems(env, items),
       count: items.length,
       offset,
       has_more: rows.length === limit

@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-10-16T04:29:10.932172+00:00",
+  "scope": "local files, no secret values",
+  "files": {
+    "AGENTS.md": "9775852592335398d5d899736e9da3ad1478d69a2c8eee265cf68e26acc220f8",
+    "functions/_lib/moris/v5/schemas/query.js": "1862ec219569a73f414b8ee5cc597714e881216dae63eb6155b33f519f5364ff",
+    "tests/moris-query-boundary.test.js": "5a9f095d62088f43b0d243109a69413f9fd31ea7e51bb67846ab2f3cd6b8b847",
+    "tools/ablate-moris-v6.mjs": "3ea85d49a405ea3ec2042b53cf946e9dd525f7226df638ee55bdcbe00ad8aa96",
+    "tools/check-moris-camera.mjs": "f2da96cf05623430989c5b1e986c20a106a3881976ee12a9a1c0bf186794c02c",
+    "tools/check-moris-ann.mjs": "76fd10f39ea1a33fff2ff9b9288957e4b62f823120473a12ce1979d9db101ed3"
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "dataset": {
+    "schema_version": "moris_dataset_v1",
+    "rows": 6,
+    "sha256": "eded8ebfcf6197cce09a78aff42a60bf5686316359467c152acade55ca58feb8",
+    "camera": 6,
+    "holdout": 0,
+    "approved": 0,
+    "provisional": 6
+  },
+  "n": 6,
+  "known_n": 6,
+  "unknown_n": 0,
+  "parameters": {
+    "seed": 6,
+    "bootstrap_iterations": 1000,
+    "allow_provisional": true
+  },
+  "metrics": {
+    "top1": 0,
+    "recall10": 0.6666666666666666,
+    "recall50": null,
+    "recall50_measured_n": 0,
+    "mrr10": 0.18353174603174602,
+    "unknown_false_accept": null,
+    "abstain_rate": null,
+    "decision_measured_n": 0,
+    "known_abstain_rate": null,
+    "retrieval_misses": null,
+    "rerank_misses": null,
+    "latency_p50_ms": 126,
+    "latency_p95_ms": 171.25,
+    "latency_measured_n": 6
+  },
+  "confidence_intervals": {
+    "top1": null,
+    "recall10": null
+  },
+  "strata": {
+    "camera": {
+      "n": 6,
+      "known_n": 6,
+      "top1": 0,
+      "recall10": 0.6666666666666666
+    }
+  },
+  "observations": [
+    {
+      "query_id": "3450730001",
+      "known": true,
+      "source_kind": "camera",
+      "split": "development",
+      "rank": 3,
+      "top1": 0,
+      "recall10": 1,
+      "recall50": null,
+      "mrr10": 0.3333333333333333,
+      "abstained": null,
+      "false_accept": null,
+      "retrieval_miss": null,
+      "rerank_miss": null,
+      "latency_ms": 160
+    },
+    {
+      "query_id": "3451550001",
+      "known": true,
+      "source_kind": "camera",
+      "split": "development",
+      "rank": 8,
+      "top1": 0,
+      "recall10": 1,
+      "recall50": null,
+      "mrr10": 0.125,
+      "abstained": null,
+      "false_accept": null,
+      "retrieval_miss": null,
+      "rerank_miss": null,
+      "latency_ms": 90
+    },
+    {
+      "query_id": "3460370001",
+      "known": true,
+      "source_kind": "camera",
+      "split": "development",
+      "rank": null,
+      "top1": 0,
+      "recall10": 0,
+      "recall50": null,
+      "mrr10": 0,
+      "abstained": null,
+      "false_accept": null,
+      "retrieval_miss": null,
+      "rerank_miss": null,
+      "latency_ms": 92
+    },
+    {
+      "query_id": "3465950101",
+      "known": true,
+      "source_kind": "camera",
+      "split": "development",
+      "rank": 2,
+      "top1": 0,
+      "recall10": 1,
+      "recall50": null,
+      "mrr10": 0.5,
+      "abstained": null,
+      "false_accept": null,
+      "retrieval_miss": null,
+      "rerank_miss": null,
+      "latency_ms": 121
+    },
+    {
+      "query_id": "3671110401",
+      "known": true,
+      "source_kind": "camera",
+      "split": "development",
+      "rank": 7,
+      "top1": 0,
+      "recall10": 1,
+      "recall50": null,
+      "mrr10": 0.14285714285714285,
+      "abstained": null,
+      "false_accept": null,
+      "retrieval_miss": null,
+      "rerank_miss": null,
+      "latency_ms": 175
+    },
+    {
+      "query_id": "3960230001",
+      "known": true,
+      "source_kind": "camera",
+      "split": "development",
+      "rank": null,
+      "top1": 0,
+      "recall10": 0,
+      "recall50": null,
+      "mrr10": 0,
+      "abstained": null,
+      "false_accept": null,
+      "retrieval_miss": null,
+      "rerank_miss": null,
+      "latency_ms": 131
+    }
+  ],
+  "timestamp": "2026-10-16T03:38:21.033Z",
+  "commit_sha": "02289afa79747722b992938bee7c2d0414f7a9d2",
+  "working_tree_dirty": true,
+  "snapshot_sha256": "b7cc293552ac7917265e98a9a79a139fea25f7eab43dc06cb0d4cee4143add64",
+  "source_tree_diff_sha256": "85c5049cfaed6daf6ce1f05ca68ee668d3a495c6194d18e5806038578acf3155",
+  "provenance": {
+    "profile": {
+      "model": "onnx-community/dinov2-small",
+      "modelVersion": "ef1fb10",
+      "preprocessVersion": "kim_canon_v2",
+      "profile": "cls_l2_v1",
+      "dimension": 384,
+      "topK": 60,
+      "resolverK": 10,
+      "minSimilarity": 0.55
+    },
+    "algorithm": "Phase A historical V5 orchestrator, unchanged snapshot; not current V6",
+    "latency_scope": "orchestrator search only; excludes inference; read-only RPC plus snapshot hydration",
+    "original_timestamp": "2026-10-16T03:01:41.988Z"
+  },
+  "evaluator_sha256": "54628ea70b739d34c22a23dbaa104f7f9d2df84e2122ea719297bff89a351d99",
+  "production_writes": 0
+}

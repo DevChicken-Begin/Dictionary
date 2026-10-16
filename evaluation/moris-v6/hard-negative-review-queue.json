@@ -1,0 +1,2482 @@
+[
+  {
+    "id": "specified-17-vs-5",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "different-hole-count"
+    ],
+    "sku_pair": [
+      "3405030101",
+      "3427740001"
+    ],
+    "proposed_counts": [
+      17,
+      5
+    ],
+    "review_source": "MORIS_V6_MASTER_PLAN.md M21",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3405030101",
+        "record_id": "488f08b1-78ed-4cb0-993b-77797e1d6789",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3405030101/3fc31eb5-580c-4270-b9f4-a085c8bbce05.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3405030101/68fdf88c-6c7a-4998-8787-c14c70e2f0be.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/488f08b1-78ed-4cb0-993b-77797e1d6789.webp",
+          "sha256": "e82567e83835b4bd390d4397486ebda0f5162b70b575de5051711963abae83c6",
+          "bytes": 51352
+        }
+      },
+      {
+        "sku": "3427740001",
+        "record_id": "60709994-7ad8-465f-82cf-93194d57c63a",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3427740001/5411da91-8a47-445b-ae28-2f1809946d61.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3427740001/1dd3eae7-3aee-44b2-b942-801d9abcad10.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/60709994-7ad8-465f-82cf-93194d57c63a.webp",
+          "sha256": "1dc3dbad6488140ccfc728d5cf0258ca930dfeb3968f41edd37a066c99f04999",
+          "bytes": 66908
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "pairwise candidate visibility, not a curated hard-negative label",
+      "queries": []
+    }
+  },
+  {
+    "id": "specified-3-vs-3",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "same-count-different-geometry"
+    ],
+    "sku_pair": [
+      "3425000001",
+      "3424990001"
+    ],
+    "proposed_counts": [
+      3,
+      3
+    ],
+    "review_source": "MORIS_V6_MASTER_PLAN.md M21",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3425000001",
+        "record_id": "24f5b62b-ac52-41e8-a0d1-3d350bd88af1",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3425000001/cc76040f-6c4f-4e56-b22d-180743ecdbcc.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3425000001/deb95e2d-0ccc-4dbe-8b63-c87eb12bdfc3.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/24f5b62b-ac52-41e8-a0d1-3d350bd88af1.webp",
+          "sha256": "d1496c05847a3bea774645063465dab156d7ff8dda4c0d5e3750bc501082790a",
+          "bytes": 24222
+        }
+      },
+      {
+        "sku": "3424990001",
+        "record_id": "896b8628-dd27-40eb-92ab-4443a14089cc",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3424990001/1512cc55-2ce1-4d62-ac13-5d4647190242.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3424990001/01780561-5ff4-4caf-a4b5-510969e54208.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/896b8628-dd27-40eb-92ab-4443a14089cc.webp",
+          "sha256": "946505e54336da00b68441215520119fb105299b147a98fcbf4b0139d989f4e8",
+          "bytes": 10862
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "pairwise candidate visibility, not a curated hard-negative label",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-af96de8636016e57942c8b54eb778bda",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "af96de8636016e57942c8b54eb778bda",
+    "observed_metadata": {
+      "thumb": 4,
+      "front": 10
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3464250001",
+        "record_id": "8e39a89c-2a3f-4d9d-b402-af92d03335bc",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3464250001/802f0f33-3d17-4f3b-81b3-7143c9e0fc91.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3464250001/06cd39ac-0922-400e-a033-25136e470e88.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/8e39a89c-2a3f-4d9d-b402-af92d03335bc.webp",
+          "sha256": "cbc416a97a9e14157abbbad83f07ed333610ac7426afb5f25bb0197831fcd484",
+          "bytes": 39160
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-4d3271f73ae30e8d1c1a78ec4739bcec",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "4d3271f73ae30e8d1c1a78ec4739bcec",
+    "observed_metadata": {
+      "thumb": 23,
+      "front": 24
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3888130001",
+        "record_id": "7ed5d905-ccdc-4a41-83a7-f5a6da281600",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3888130001/f805b1ee-73f7-456e-826a-44cdd9f946cf.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3888130001/bafb5371-bcf8-4037-ac5c-369bf64f94bf.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/7ed5d905-ccdc-4a41-83a7-f5a6da281600.webp",
+          "sha256": "05ec09c7d72402250749e0b79373728fef3a24672480f0f866576d4d17ed7a10",
+          "bytes": 94046
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-008e5befec1a5e1640c0231188260e2b",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "008e5befec1a5e1640c0231188260e2b",
+    "observed_metadata": {
+      "thumb": 10,
+      "front": 16
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3405500301",
+        "record_id": "5d390def-177d-404b-bb20-77476526f3a6",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3405500301/6d940b94-f036-4f37-9aa0-123ac03ac385.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3405500301/178dd9fd-5307-44bc-9370-640c92f28bd3.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/5d390def-177d-404b-bb20-77476526f3a6.webp",
+          "sha256": "fda158f828480667bc7a5021207cd3248c0f993428c01c00473a149ee4880fb3",
+          "bytes": 87286
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-fe6318079cc610b19b81496205a86fc7",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "fe6318079cc610b19b81496205a86fc7",
+    "observed_metadata": {
+      "thumb": 16,
+      "front": 21
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3408360301",
+        "record_id": "a68ed112-bdad-46c8-8ad5-7d375105a348",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3408360301/fabf62c1-7415-4b1c-b6c2-f8b6907d7a5d.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3408360301/ab5af4f1-fb06-4137-8d1f-e4f0e1c81e95.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/a68ed112-bdad-46c8-8ad5-7d375105a348.webp",
+          "sha256": "d85ecae1c9fc9afe8c2db7dea7b28e9ef2ebd6eade7b3e583b082f55f6477c3c",
+          "bytes": 51120
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-0c4afbaf772d794cabbb913847a0dfac",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "0c4afbaf772d794cabbb913847a0dfac",
+    "observed_metadata": {
+      "thumb": 20,
+      "front": 22
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3671130401",
+        "record_id": "1c40cfa6-a4ae-4efd-bce0-112debec6315",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3671130401/57d049ac-a48a-4356-88a5-824407d1776e.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3671130401/cbf0ff2b-6f3e-468e-8f38-638d22656b0b.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/1c40cfa6-a4ae-4efd-bce0-112debec6315.webp",
+          "sha256": "4179658937d6fcbaad4a93b58bf3c6717e5a91d3a27d25ce904cde681597f3a4",
+          "bytes": 97392
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3671130401",
+          "expected_sku": "3671130401",
+          "query_sha256": "33c2931efd2c1f9bfe409ab801f44ce16bd4b868800b9c23ca2f2afaf7f21583",
+          "top1": true,
+          "expected_rank": 1,
+          "expected_retrieval_rank": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-8bafc82cc4c4c3ad2694fbd57f4c0b6d",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "8bafc82cc4c4c3ad2694fbd57f4c0b6d",
+    "observed_metadata": {
+      "thumb": 17,
+      "front": 20
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3445310001",
+        "record_id": "f31ecfa8-d897-4123-be92-f491f92ce424",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3445310001/a60cea8d-52e8-41f9-9ab2-5fa7a300534f.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3445310001/b10155bf-224b-42ec-8439-4b4cdfcfd206.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/f31ecfa8-d897-4123-be92-f491f92ce424.webp",
+          "sha256": "72bd5435b72ea4d46a4e11d1becec79a0fe24aa9f3bfc95e5f2a57444e4b90ef",
+          "bytes": 59928
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-8752f889e657581de567ed13a0ec111d",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "8752f889e657581de567ed13a0ec111d",
+    "observed_metadata": {
+      "thumb": 19,
+      "front": 25
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3408350301",
+        "record_id": "18ab4b4d-0dd1-45fc-aab0-5e5d34691cfc",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3408350301/62785967-f4f2-4a62-ac1e-ab0ca51576a0.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3408350301/0688eef2-1b61-457b-ae41-ec362ed1b652.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/18ab4b4d-0dd1-45fc-aab0-5e5d34691cfc.webp",
+          "sha256": "e4982727a987804dfb178c1b20ddf770cf7f363bdebd43eb68a4fbcc3c70709e",
+          "bytes": 42846
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-057239d918ebe5e4d09fe09cc21baada",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "057239d918ebe5e4d09fe09cc21baada",
+    "observed_metadata": {
+      "thumb": 8,
+      "front": 12
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3464260001",
+        "record_id": "bdcbc72c-35ab-42f6-b691-86546e90bf1b",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3464260001/4b9ff83a-0fd0-4ad2-8b23-92e2963f25af.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3464260001/e6e48bb1-7f45-4ec9-9c5a-be75aba70217.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/bdcbc72c-35ab-42f6-b691-86546e90bf1b.webp",
+          "sha256": "2a5baac29bff2044c5f25c04d6db447ff3a879a3dfc77bc4710cc5dec8e27284",
+          "bytes": 24990
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-57134ad4b2b2fa82ba9fcbf94bbd9903",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "57134ad4b2b2fa82ba9fcbf94bbd9903",
+    "observed_metadata": {
+      "thumb": 21,
+      "front": 22
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3443610101",
+        "record_id": "7903e4ec-7fec-442d-906a-38207284caf8",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3443610101/5eee8d9a-28e3-4dbd-bc61-341db04c5526.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3443610101/2e9a79ce-1b8e-4f99-ab65-22b7f5085f2d.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/7903e4ec-7fec-442d-906a-38207284caf8.webp",
+          "sha256": "acffcbcee05c5748eff55734a945b0e4c8cb309e989044aeac7ff6701e22c5d6",
+          "bytes": 51582
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-0ea5433cd7b2299bdfc396edc81ef186",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "0ea5433cd7b2299bdfc396edc81ef186",
+    "observed_metadata": {
+      "thumb": 16,
+      "front": 18
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3427350001",
+        "record_id": "87e10a8b-3386-4511-9b19-f5aeda6f4603",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3427350001/d29e1ce9-ab9c-450c-b712-03baa4015970.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3427350001/efcea5f1-155a-4361-95b8-a38322413855.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/87e10a8b-3386-4511-9b19-f5aeda6f4603.webp",
+          "sha256": "5008dfb5bb36eba1c02f28d0fcdafb24676a932f51918221bf90fcd582dc8bd7",
+          "bytes": 87006
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3427350001",
+          "expected_sku": "3427350001",
+          "query_sha256": "83f551ed02e4d35daf11f5c809bb6a319726302f3afc5d1fe651021c1ee9a4c4",
+          "top1": false,
+          "expected_rank": 2,
+          "expected_retrieval_rank": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-405c1d35dfd28f5499d1601a8506a83f",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "405c1d35dfd28f5499d1601a8506a83f",
+    "observed_metadata": {
+      "thumb": 18,
+      "front": 19
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3670420001",
+        "record_id": "31893280-1794-49b6-8471-d87bbed2fbd5",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3670420001/9ba8c2d1-72fa-4b38-b58b-1fcca431c32e.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3670420001/a33f3816-05d3-41a7-8f1f-62f54a6b066c.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/31893280-1794-49b6-8471-d87bbed2fbd5.webp",
+          "sha256": "d30b6aa9b818b27e1760f904e2b12dfabb108b7c2fcafef4464013afc2dcf56b",
+          "bytes": 66842
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3670420001",
+          "expected_sku": "3670420001",
+          "query_sha256": "b9429adf60029193e11bffb83ddef89e9f1b303983bb309a0acf69d328a4063d",
+          "top1": true,
+          "expected_rank": 1,
+          "expected_retrieval_rank": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-87734378b96fb082eb54fe8c82249762",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "87734378b96fb082eb54fe8c82249762",
+    "observed_metadata": {
+      "thumb": 10,
+      "front": 11
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3463510101",
+        "record_id": "48213047-0937-430d-bf7f-459d48d57324",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3463510101/373ac0d2-81d7-43fc-b29c-0b84d9bf50eb.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3463510101/57c821e7-52ce-46aa-b8ba-dfe4f0fe02c5.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/48213047-0937-430d-bf7f-459d48d57324.webp",
+          "sha256": "952d32e89729e5e792bbb549c850fbe0ed25207cf7b128ea5624c1c5ecd6a92b",
+          "bytes": 115448
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3463510101",
+          "expected_sku": "3463510101",
+          "query_sha256": "b21470fc181297eeca71730a78989de761d49aabc4687a9259c9e3788393cd8f",
+          "top1": true,
+          "expected_rank": 1,
+          "expected_retrieval_rank": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-ed3ebd18652333629ad38fc169626752",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "ed3ebd18652333629ad38fc169626752",
+    "observed_metadata": {
+      "thumb": 13,
+      "front": 25
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3410990101",
+        "record_id": "fdb701f7-addc-44b7-8433-34fb34d7046a",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3410990101/b8082b98-5672-4f90-b481-d22536cda4a1.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3410990101/742017f7-fbcd-46cb-894a-dffe3cf141dc.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/fdb701f7-addc-44b7-8433-34fb34d7046a.webp",
+          "sha256": "862f7cabd8772a916ac7d9820173f24d64e1cf272916af89f7bc25a34b654faf",
+          "bytes": 49192
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-6c53fa4ee587889bb7f7cb36c89d3584",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "6c53fa4ee587889bb7f7cb36c89d3584",
+    "observed_metadata": {
+      "thumb": 3,
+      "front": 4
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3448000001",
+        "record_id": "a8ca76fd-7dca-4e45-b4ca-f72888fde7a7",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3448000001/fa639df8-5217-4397-a04e-6794e55b7fb1.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3448000001/ee99e3cc-5523-4996-aa9c-d55fbb108714.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/a8ca76fd-7dca-4e45-b4ca-f72888fde7a7.webp",
+          "sha256": "18640f77b5313965dc57ca26a9611a1ef52c564d66010757b9036d61ebe30189",
+          "bytes": 19018
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-4770874f641a76866d9aeb41e6fa2fa1",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "4770874f641a76866d9aeb41e6fa2fa1",
+    "observed_metadata": {
+      "thumb": 19,
+      "front": 21
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3433350101",
+        "record_id": "98c58401-34df-4bb9-9d4e-c3edd1916e44",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3433350101/1d201d0c-5946-437e-845d-4692e834cc69.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3433350101/f130e0e3-fa62-4078-8363-51bd13b64e3d.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/98c58401-34df-4bb9-9d4e-c3edd1916e44.webp",
+          "sha256": "57e3e538fe5f7f86b1d9c8486cf29f6808b289cf558bf38a6f641e27ee710250",
+          "bytes": 73714
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3433350101",
+          "expected_sku": "3433350101",
+          "query_sha256": "59cc52a6a568c95658302dfb955ab23503df7bab89ed934cca29a547b12cac81",
+          "top1": true,
+          "expected_rank": 1,
+          "expected_retrieval_rank": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-14b0205540ed110e1b324f4fafdf4ef3",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "14b0205540ed110e1b324f4fafdf4ef3",
+    "observed_metadata": {
+      "thumb": 19,
+      "front": 25
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3426950201",
+        "record_id": "51655d43-7481-498c-ad4f-2701ffb09363",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3426950201/005a12c7-d0d7-4650-904f-3d7186c3ef77.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3426950201/f2d30430-f7dc-4226-851d-b3b23474ce57.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/51655d43-7481-498c-ad4f-2701ffb09363.webp",
+          "sha256": "8fd947274a562b051d548eb3fdad245f8022c5f0401f747492c416b7368ea787",
+          "bytes": 70444
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-3b069a1e55a07862f8f46e80be40f468",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "3b069a1e55a07862f8f46e80be40f468",
+    "observed_metadata": {
+      "thumb": 11,
+      "front": 16
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3405490301",
+        "record_id": "05b87024-4fe7-4d2c-97c4-1bcae1e19daf",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3405490301/e9ec1689-01ab-4782-9915-f180da61f435.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3405490301/5608d393-c1a1-4bff-8a1c-523a72aaf53c.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/05b87024-4fe7-4d2c-97c4-1bcae1e19daf.webp",
+          "sha256": "dd73a7ef43c8cf89226a0dd1ace9eb23f7e540896383c0cbb01740b75366225f",
+          "bytes": 87116
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-3e78dcd102429385692b6f6de40cfd09",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "3e78dcd102429385692b6f6de40cfd09",
+    "observed_metadata": {
+      "thumb": 9,
+      "front": 5
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3438550001",
+        "record_id": "6b1e9a09-995b-46af-98c2-1748b1da4d69",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3438550001/6213ddb2-daac-4299-8c76-9ce710152210.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3438550001/774af135-ca49-4ba0-a97a-292e6c810bde.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/6b1e9a09-995b-46af-98c2-1748b1da4d69.webp",
+          "sha256": "ad6ae184c1403aead8282dedcbe63cba2c84154d058badba6b264f7c26d3e67f",
+          "bytes": 16626
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-c29c3c14c676d77937163ad73b03da95",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "c29c3c14c676d77937163ad73b03da95",
+    "observed_metadata": {
+      "thumb": 20,
+      "front": 21
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3446350101",
+        "record_id": "4b951ac9-2db7-47b4-a4df-16c94e2a13fa",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3446350101/7c44643b-5f23-439a-9ce9-ed5795086cdd.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3446350101/9db58612-cc8d-4c96-ac01-4836434afddb.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/4b951ac9-2db7-47b4-a4df-16c94e2a13fa.webp",
+          "sha256": "0c92fcf9480f76f131880917f613545c9aee8609c10267aa97971e376f2d11f0",
+          "bytes": 89974
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-6f76130a1e8b571eb0bf3070ed4df04c",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "6f76130a1e8b571eb0bf3070ed4df04c",
+    "observed_metadata": {
+      "thumb": 22,
+      "front": 24
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3445370101",
+        "record_id": "62abcfdf-2827-4ad3-9ecb-5445f21c717d",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3445370101/3b461740-ef48-4ad0-8ec3-d5e7e0009717.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3445370101/b1791065-7074-4ab8-8dd4-7eabade41cd4.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/62abcfdf-2827-4ad3-9ecb-5445f21c717d.webp",
+          "sha256": "fad5db7fe0aa96a72df7ef75d3f48164e2fc618f0f52b652daa859f6d2a6990b",
+          "bytes": 42274
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-84ef1105aa6d8209261b0f2587fb8437",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "84ef1105aa6d8209261b0f2587fb8437",
+    "observed_metadata": {
+      "thumb": 16,
+      "front": 18
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3433360101",
+        "record_id": "e8086db2-6678-40ed-a0cc-e1904e3958c4",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3433360101/4c241b53-6c63-4e08-84cf-42052d5f599b.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3433360101/985814b5-5065-4fb7-9bf5-204a8a208b5b.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/e8086db2-6678-40ed-a0cc-e1904e3958c4.webp",
+          "sha256": "3e391315ffc879ad5d47bd5758acd66d846ff688c47dead2e18ca292eb6db50f",
+          "bytes": 57136
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-2ea8aec2170f99866dad66576933507b",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "2ea8aec2170f99866dad66576933507b",
+    "observed_metadata": {
+      "thumb": 6,
+      "front": 7
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3460420001",
+        "record_id": "5e59cac3-5af0-4139-b2a7-2c1ace344c72",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3460420001/5f3aa9f3-02a1-412f-8df5-02c755110f16.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3460420001/f14b342f-639f-4e1f-a017-f0439648bd38.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/5e59cac3-5af0-4139-b2a7-2c1ace344c72.webp",
+          "sha256": "66e78e3b0278268935c9a772808e92ed8bfa87b02ef62182fb2f9d835ee9cfd8",
+          "bytes": 76030
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-eff631f91a2160b407a745c7b9a5c0b0",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "eff631f91a2160b407a745c7b9a5c0b0",
+    "observed_metadata": {
+      "thumb": 13,
+      "front": 14
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3459210101",
+        "record_id": "ec27ce95-d29b-4f66-86f6-81249085de79",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3459210101/d7807999-053a-4bea-9410-e5e07d7e99db.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3459210101/b7b2435b-39a3-40ed-8ab1-c2a2786df8c9.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/ec27ce95-d29b-4f66-86f6-81249085de79.webp",
+          "sha256": "ed9ec1ca8eb9ef2dfd328ec9123f658f1cdee7620daa8130cf32ff41bd583cee",
+          "bytes": 70782
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-010eb1c97e207b97b7fa4ccbd0939628",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "010eb1c97e207b97b7fa4ccbd0939628",
+    "observed_metadata": {
+      "thumb": 7,
+      "front": 11
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3469110101",
+        "record_id": "fff1d1b6-8e09-4af9-819f-8e8c27cfdc8f",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3469110101/58e657b8-e360-4b8d-9c0a-1c954d736fb5.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3469110101/16a96ac1-47b4-4705-a448-f345b6f1619f.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/fff1d1b6-8e09-4af9-819f-8e8c27cfdc8f.webp",
+          "sha256": "1d9bf8e5d44c074d1dc5224079b160ebb12310d69466be6d35dc737ed256dd95",
+          "bytes": 38598
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-25cf1ac6caeb167086a994820ab5d03a",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "25cf1ac6caeb167086a994820ab5d03a",
+    "observed_metadata": {
+      "thumb": 6,
+      "front": 7
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3233050001",
+        "record_id": "d72afe07-2aff-41aa-bccb-c3d1f1c8c0b7",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3233050001/08555a32-8620-4dd1-a876-9ceaab9cfd94.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3233050001/cf6aa1ad-f2ad-4e38-aa53-bf84f9c3f39a.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/d72afe07-2aff-41aa-bccb-c3d1f1c8c0b7.webp",
+          "sha256": "4aa2ad580dd9a2b24a8b63b6dc67eda0e1a0bd43b2f89217685a45315322d938",
+          "bytes": 52552
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-99503e36a2114156e817d8520cca5937",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "99503e36a2114156e817d8520cca5937",
+    "observed_metadata": {
+      "thumb": 25,
+      "front": 26
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3442130301",
+        "record_id": "c3025e36-52e0-4a74-b813-8f7bd028598a",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3442130301/961da755-8115-4687-b3af-8bf5056ce080.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3442130301/49cc00d4-eebd-4ab5-a6f8-cb1522713d23.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/c3025e36-52e0-4a74-b813-8f7bd028598a.webp",
+          "sha256": "dac5fce6a4921f29a1fec72f68475eae3d549b9be8489c904b3e83bddda6a6a5",
+          "bytes": 40380
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-0e96df84c7d98f3d56cb079895172c4b",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "0e96df84c7d98f3d56cb079895172c4b",
+    "observed_metadata": {
+      "thumb": 4,
+      "front": 16
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3459190001",
+        "record_id": "3f5e4a5e-a3d4-488a-b649-4767fa5b3c68",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3459190001/95991e64-8d1f-4588-bd3c-2ba2f2fe1aae.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3459190001/dc4c2d7c-3c89-439f-bca2-de7302aa3010.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/3f5e4a5e-a3d4-488a-b649-4767fa5b3c68.webp",
+          "sha256": "0ab032b73504ebea3479f51141dfb98533eec7b28cf7a5667a6838091cb7959a",
+          "bytes": 67214
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-0148a031ab304f95cf9eff3813e1ec32",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "0148a031ab304f95cf9eff3813e1ec32",
+    "observed_metadata": {
+      "thumb": 3,
+      "front": 5
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3458880001",
+        "record_id": "37d22d3c-43a3-4480-b11d-7ad93e12dc0b",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3458880001/cb6bda74-4960-4ff7-948f-2f857d75e30c.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3458880001/0c165ce0-5399-4513-9b7a-a24c098abc46.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/37d22d3c-43a3-4480-b11d-7ad93e12dc0b.webp",
+          "sha256": "5caf0efbc202021c7178a1f6cb96defbe8338ea8869e5786d137d6e4fe6afbc8",
+          "bytes": 73570
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3458880001",
+          "expected_sku": "3458880001",
+          "query_sha256": "ed34651137e960c0210297dbf82ffcc5d13536c4458bf07730e7268083153885",
+          "top1": false,
+          "expected_rank": null,
+          "expected_retrieval_rank": 43
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-3412a06477787ed707517e97ac35a840",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "3412a06477787ed707517e97ac35a840",
+    "observed_metadata": {
+      "thumb": 4,
+      "front": 0
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3687010001",
+        "record_id": "4fd1f525-02d8-4477-b362-7e064247e0e0",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3687010001/97048a93-84ad-4b21-a320-9e20858f7796.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3687010001/01c30a2f-834d-4f49-ad7b-87777a243ca3.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/4fd1f525-02d8-4477-b362-7e064247e0e0.webp",
+          "sha256": "744b04d23c905d559037d1afdec0cfbbd3dd29fdf3030aa6f5214ea13ec8d2c3",
+          "bytes": 31926
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-b38e1007d82ea00029e6aad6d2770cec",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "b38e1007d82ea00029e6aad6d2770cec",
+    "observed_metadata": {
+      "thumb": 18,
+      "front": 21
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3407370201",
+        "record_id": "dfcb3b91-75f5-4fe7-b676-9d3123b4405e",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3407370201/fb509f22-f6fd-4dd7-9f45-a3e914949187.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3407370201/315c297b-db2b-4020-9f4c-47068f48dee7.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/dfcb3b91-75f5-4fe7-b676-9d3123b4405e.webp",
+          "sha256": "50885ef629949f913c7a03d82c5063b9cb160387c612422e609deac30ea8bb61",
+          "bytes": 60528
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-f4f98ae541d199d8129121c16c89499a",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "f4f98ae541d199d8129121c16c89499a",
+    "observed_metadata": {
+      "thumb": 24,
+      "front": 25
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3888140001",
+        "record_id": "0ecc19da-6990-4dea-8537-2630ec0db560",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3888140001/48f2c335-840e-43e7-b04f-eb43ab6a7109.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3888140001/dd7c9fd4-b4ec-40b0-8509-b221ac66bb94.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/0ecc19da-6990-4dea-8537-2630ec0db560.webp",
+          "sha256": "5c981209f1c91850721f9b18639f7d2bb276ed39949b02f21f8f54fd9ff829e0",
+          "bytes": 101752
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-2494d91bfe9f180beb3a2867fad6af85",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "2494d91bfe9f180beb3a2867fad6af85",
+    "observed_metadata": {
+      "thumb": 9,
+      "front": 11
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3465950101",
+        "record_id": "2f3a7c8a-f174-442a-b83e-6d39980b89b3",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3465950101/34bf6062-017c-475b-82a3-b7e01f1dc295.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3465950101/55c0fd6f-cec1-4178-b555-2ba256337b7e.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/2f3a7c8a-f174-442a-b83e-6d39980b89b3.webp",
+          "sha256": "aaf20ba5dcf7d0bdb14c58488e97e7ee3ffe6ef3d8b69bc08634003ce6f5f212",
+          "bytes": 48066
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3465950101",
+          "expected_sku": "3465950101",
+          "query_sha256": "e7545b40cf00cadd31b275a3d6db80b359bf95baf3f21d4e191b9e74d9b8bfad",
+          "top1": true,
+          "expected_rank": 1,
+          "expected_retrieval_rank": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-917f123b5a778db1470bc8f6816990d7",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "917f123b5a778db1470bc8f6816990d7",
+    "observed_metadata": {
+      "thumb": 8,
+      "front": 9
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3410970001",
+        "record_id": "12b405d0-62ab-4ee6-8dd1-963d8b7435dc",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3410970001/86a231ae-83b4-4888-afb4-44771faa6182.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3410970001/6f06171d-5cfb-40a6-99d7-5c9071b17303.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/12b405d0-62ab-4ee6-8dd1-963d8b7435dc.webp",
+          "sha256": "ae12c9f537e9ec745edd96f059fe3a05c5680d67b5bf4d6ec39838e2037e3dbe",
+          "bytes": 46466
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3410970001",
+          "expected_sku": "3410970001",
+          "query_sha256": "e68e35796e2815c6a038ff4fa39fc8f9cfcaef2ae3d3d63276b86c4058f4e4a5",
+          "top1": true,
+          "expected_rank": 1,
+          "expected_retrieval_rank": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-2a709e6bc8dd9051c10608b819c5383a",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "2a709e6bc8dd9051c10608b819c5383a",
+    "observed_metadata": {
+      "thumb": 11,
+      "front": 17
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3960470101",
+        "record_id": "132b59e0-545c-482a-9f7e-7e74be76f776",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3960470101/97c6ae71-d7cb-42a1-a3a5-33e0f4522be8.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3960470101/fa9c1615-39f3-4e2b-8753-9ededba405d5.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/132b59e0-545c-482a-9f7e-7e74be76f776.webp",
+          "sha256": "fe7790dcec4927a3148637dcff1b42f1ad9081c4012db8fbd5113e5f1c533bed",
+          "bytes": 31454
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-88004be83ce35ed63f42eb71bda64779",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "88004be83ce35ed63f42eb71bda64779",
+    "observed_metadata": {
+      "thumb": 11,
+      "front": 16
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3456500201",
+        "record_id": "640b924d-7dc1-4453-a81a-ecfe7dd96622",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3456500201/e6482665-e04b-4fda-80ed-2fe8143b035e.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3456500201/2ad3efaf-6fbc-4123-b3ce-f5c1ac581c1e.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/640b924d-7dc1-4453-a81a-ecfe7dd96622.webp",
+          "sha256": "6b27a0836f75b4cb8627d57a07b0e8f24a74b43fd391a47bfab391bbc9594008",
+          "bytes": 44768
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3456500201",
+          "expected_sku": "3456500201",
+          "query_sha256": "452e8bf05da27bdadb7a53c48172566195f0e92f51299bc1174a0ac91ca6a431",
+          "top1": false,
+          "expected_rank": 3,
+          "expected_retrieval_rank": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-1d808cd8234acea22a98c88042c48bbf",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "1d808cd8234acea22a98c88042c48bbf",
+    "observed_metadata": {
+      "thumb": 15,
+      "front": 14
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3233330001",
+        "record_id": "53759dc7-0b10-4143-a0b9-05c6352ff73e",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3233330001/8a32cecb-34df-41c8-b2eb-9ff7a0f81039.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3233330001/cdb472bf-c331-4213-82a9-2acfe6c9f339.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/53759dc7-0b10-4143-a0b9-05c6352ff73e.webp",
+          "sha256": "95f3bc543952e8d27ba7ca461c401f213ab0df0c559aee41e3da2e708955152d",
+          "bytes": 28848
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-9c978942a4d3476037db30b5e73925ef",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "9c978942a4d3476037db30b5e73925ef",
+    "observed_metadata": {
+      "thumb": 10,
+      "front": 11
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3464040001",
+        "record_id": "5662fc38-dbc9-4035-856f-1800eaa6a348",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3464040001/ba52dbaa-dacf-4961-b0fc-db2e39307c41.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3464040001/ebb6fa80-93be-4789-a416-2bbf066b3488.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/5662fc38-dbc9-4035-856f-1800eaa6a348.webp",
+          "sha256": "40380cbeaf6399b27887214a5410408644f088f2507f64d20821b61918acea9e",
+          "bytes": 39492
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-003c4aa2dae02a6fc5ed9d798e130c68",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "003c4aa2dae02a6fc5ed9d798e130c68",
+    "observed_metadata": {
+      "thumb": 23,
+      "front": 25
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3445340001",
+        "record_id": "45e8c4a8-754f-4fe2-a6ed-be9f98e00bb7",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3445340001/c20b1a1e-0955-47ba-955f-717164287bdf.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3445340001/c8fa8ef0-1e8c-4838-8dc5-219cff54d15b.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/45e8c4a8-754f-4fe2-a6ed-be9f98e00bb7.webp",
+          "sha256": "7fdc6bdf34602fd6d743f8aa2f185468bc6ca0578ac2013800c5ec6d4f9ab650",
+          "bytes": 35492
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-99ac2223fcce1a563f357f50ebf9fd6a",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "99ac2223fcce1a563f357f50ebf9fd6a",
+    "observed_metadata": {
+      "thumb": 17,
+      "front": 20
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3464230001",
+        "record_id": "1d20aa25-9e48-43be-bcba-c6f58bbefef9",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3464230001/acf43827-0f2c-4f5e-9f9b-0c4b2a710b2f.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3464230001/86bf6425-52c1-4946-a1c4-ce11f69f7631.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/1d20aa25-9e48-43be-bcba-c6f58bbefef9.webp",
+          "sha256": "899f1c4a1d1a374cddc0b80202d7e534b5a0c18c0e2ef03c9911e38ad26093f2",
+          "bytes": 27612
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-2501879fd08b6a0a6b08ef6f4314ac8b",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "2501879fd08b6a0a6b08ef6f4314ac8b",
+    "observed_metadata": {
+      "thumb": 21,
+      "front": 24
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3421670401",
+        "record_id": "b2882fb1-f8c0-4b6c-8ce4-de4fc4c1b5d9",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3421670401/8c44bd59-21fc-4fcc-bf45-4d603b9ce7ed.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3421670401/d7b1eb56-ffe6-470c-bb8e-8da3a771ec6b.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/b2882fb1-f8c0-4b6c-8ce4-de4fc4c1b5d9.webp",
+          "sha256": "85c3030a18e7033de50de2578c17f9648dcfd1c4ecef24567fabaa61e2d80941",
+          "bytes": 28906
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-2681182bd91343f5a42b22c459f8af3f",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "2681182bd91343f5a42b22c459f8af3f",
+    "observed_metadata": {
+      "thumb": 3,
+      "front": 4
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3438610001",
+        "record_id": "60480360-b480-4aa8-8303-a1dd4497b380",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3438610001/19084144-f09c-4554-a290-62c94b6b64df.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3438610001/c2406d3a-fe24-4b2b-8e04-42836a67b28b.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/60480360-b480-4aa8-8303-a1dd4497b380.webp",
+          "sha256": "93c42c4dda8f360087b9382f444b85a0322115cf3ccbc040bb43de45206bdeca",
+          "bytes": 76188
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-6197f52f8b8d63fbcbbf5812f7948f19",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "6197f52f8b8d63fbcbbf5812f7948f19",
+    "observed_metadata": {
+      "thumb": 17,
+      "front": 22
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3407380201",
+        "record_id": "8d36d86e-28c1-4063-b77f-1330bfa12138",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3407380201/a5b63f81-1e95-4999-b595-ef39401f5fe4.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3407380201/009dcff3-43ec-49a4-9201-21121fb58d67.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/8d36d86e-28c1-4063-b77f-1330bfa12138.webp",
+          "sha256": "32c1195cde065fc780ab628e07c96289e1b2bfc77586c173375a462d000eab82",
+          "bytes": 41446
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-2c2293128932a082e68596a0320f0394",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "2c2293128932a082e68596a0320f0394",
+    "observed_metadata": {
+      "thumb": 25,
+      "front": 31
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3421620401",
+        "record_id": "93123b3c-4de3-4703-a793-f9f1fe264829",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3421620401/d20b5817-4d7a-473e-ac5b-03dfa661099f.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3421620401/f3ab22ff-1f7a-403c-a66a-6bd1540b075c.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/93123b3c-4de3-4703-a793-f9f1fe264829.webp",
+          "sha256": "c24ebd09a7e91f2075f5fee5fe2fcf51948366b78c2c8c222fe36f3423f5cee7",
+          "bytes": 68100
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3421620401",
+          "expected_sku": "3421620401",
+          "query_sha256": "b87ecc295bf0642251e6b901b83f57cc6c45088884adce609f6a0251d3fdbe95",
+          "top1": true,
+          "expected_rank": 1,
+          "expected_retrieval_rank": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-cabda416c4f027049db848e9f2278a8d",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "cabda416c4f027049db848e9f2278a8d",
+    "observed_metadata": {
+      "thumb": 10,
+      "front": 11
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3464030001",
+        "record_id": "d81396ff-b9b8-4c03-a316-70f975f57aa1",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3464030001/e6c59dc2-529c-46cc-bc2d-d2410be87167.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3464030001/ef0d913b-c0bb-46e4-9af3-c71e1a64536f.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/d81396ff-b9b8-4c03-a316-70f975f57aa1.webp",
+          "sha256": "2bd29e9e23db0ef3bf3c09fff9f607f0e0e835d62ff7691ac33aa3e92ecd43e6",
+          "bytes": 25998
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-56355596ace1f75290db2d6b20cd38f1",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "56355596ace1f75290db2d6b20cd38f1",
+    "observed_metadata": {
+      "thumb": 11,
+      "front": 12
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3456490201",
+        "record_id": "69a2a16b-21da-4227-8a7c-b99184a6f8c6",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3456490201/aed3f58b-fd34-4f76-93ba-9864b5bfd7a2.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3456490201/4d6ca293-a005-4001-a7cb-af13ad53969c.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/69a2a16b-21da-4227-8a7c-b99184a6f8c6.webp",
+          "sha256": "eeefe371033fba22c454d0b3ccf3cc922be7513f2b8064af1d14ae6718db25eb",
+          "bytes": 49378
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-fed420504eb31803c627aaa56670c66e",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "fed420504eb31803c627aaa56670c66e",
+    "observed_metadata": {
+      "thumb": 17,
+      "front": 18
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3405010201",
+        "record_id": "b2ec4c6a-dcfc-48b9-87c9-f2ebf90ddaf2",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3405010201/f7d0956f-5b3d-41cd-8c9e-9161369e145f.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3405010201/79f26d65-17ea-40f1-a2dd-350e4c9a4c2f.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/b2ec4c6a-dcfc-48b9-87c9-f2ebf90ddaf2.webp",
+          "sha256": "a64b4b1e1daac280500a6a8f6cb9405537d931f18142625566f6008c44a2c180",
+          "bytes": 67072
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-2f199f39b15206d72a5e7312ac07141a",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "2f199f39b15206d72a5e7312ac07141a",
+    "observed_metadata": {
+      "thumb": 17,
+      "front": 21
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3405410201",
+        "record_id": "20a6e4ec-09ef-40cd-a8fd-b43c0fc3541e",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3405410201/e6355c84-6978-4c48-9ae7-139caec2595a.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3405410201/392cb1ef-a2cb-4cb0-9cee-4e83e2de80f0.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/20a6e4ec-09ef-40cd-a8fd-b43c0fc3541e.webp",
+          "sha256": "2de35d2994002b9611d73c250116b5cd27a976b2e7fef9b5a05d87982e00e0d6",
+          "bytes": 44454
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-004b68112dd1da9d11ae39bfdbeb5424",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "004b68112dd1da9d11ae39bfdbeb5424",
+    "observed_metadata": {
+      "thumb": 19,
+      "front": 22
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3445330001",
+        "record_id": "399fec75-ed59-428f-b4b0-7529008da3c1",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3445330001/8c2b3da7-428c-4413-bc18-1531bdced891.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3445330001/af4b356a-6187-4ed8-811b-8ab7fce2949e.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/399fec75-ed59-428f-b4b0-7529008da3c1.webp",
+          "sha256": "a00c63bffdbc5b90a9f46597b5735ebd7f82f011087c8aa939362972aa18b5fb",
+          "bytes": 36338
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-1cd33f6b4aab4a394170e28d65ece77f",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "1cd33f6b4aab4a394170e28d65ece77f",
+    "observed_metadata": {
+      "thumb": 16,
+      "front": 25
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3671110401",
+        "record_id": "c6040341-4856-4de3-8751-344563abc91f",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3671110401/067a7657-c81a-4078-9265-4ddd9dfc69d2.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3671110401/d9bf0f2f-a734-4b0b-af1d-ff038dbf3f9b.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/c6040341-4856-4de3-8751-344563abc91f.webp",
+          "sha256": "0864ffbef2cff8a51fe1fbfaeee69f3334c8876ef3dd1e077bdbf84b72fb5132",
+          "bytes": 60348
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": [
+        {
+          "query_id": "camera124_3671110401",
+          "expected_sku": "3671110401",
+          "query_sha256": "b7898cb0eb85d895504e4ebe537f728fc948292f19cd916d09e11101cf5a7b90",
+          "top1": true,
+          "expected_rank": 1,
+          "expected_retrieval_rank": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "audit-28e819b4506ce2060c6ba48945d34549",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "28e819b4506ce2060c6ba48945d34549",
+    "observed_metadata": {
+      "thumb": 22,
+      "front": 24
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3427360001",
+        "record_id": "381d66f6-42cd-418a-85e3-b8a96223fc9a",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3427360001/2ad2f368-d5af-437c-a32c-acd0bf00e79a.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3427360001/ec09e2a3-dcda-417e-a290-74109814f692.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/381d66f6-42cd-418a-85e3-b8a96223fc9a.webp",
+          "sha256": "661e8596b05ea53febd42c0f13ff29929ebb3b1ec47252dd308ffa5979559bb9",
+          "bytes": 57882
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-ad6af938853066c94bca856e8f707282",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "ad6af938853066c94bca856e8f707282",
+    "observed_metadata": {
+      "thumb": 32,
+      "front": 33
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3459200101",
+        "record_id": "7747f652-5901-4f1f-bad2-5c7edf5553af",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3459200101/1ae30b46-a57f-41c5-a7cf-7d24dba248f4.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3459200101/b321ff72-4b3b-46d2-8a33-645d53648e64.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/7747f652-5901-4f1f-bad2-5c7edf5553af.webp",
+          "sha256": "4402857a01e71fd14a7460b04689077a0a06054b44def2fb5bcf3b6a46a0f646",
+          "bytes": 19128
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-52cd42a16c958d9fa69560552aae30fb",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "52cd42a16c958d9fa69560552aae30fb",
+    "observed_metadata": {
+      "thumb": 24,
+      "front": 33
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3411000101",
+        "record_id": "8da517e1-9969-459e-8aed-18eb8b8cc3f6",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3411000101/6ca99dcd-15ec-40b9-97d6-2ab305070d33.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3411000101/8097ea8f-e9d5-493d-aae7-952bdb937e1f.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/8da517e1-9969-459e-8aed-18eb8b8cc3f6.webp",
+          "sha256": "c30fddb7d129ea9b0191305817703be3eb542a694890cdf0bbb2b0442c016078",
+          "bytes": 36852
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-1329642ebdc433db2cfe4efb674a12f5",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "1329642ebdc433db2cfe4efb674a12f5",
+    "observed_metadata": {
+      "thumb": 16,
+      "front": 24
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3960480101",
+        "record_id": "a0102bc5-5bec-4e6f-b92f-c60eedf7af2f",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3960480101/a1861f45-ec32-4e35-94aa-42ac39143722.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3960480101/7db85e48-d347-4639-8531-26bb5bd5fce6.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/a0102bc5-5bec-4e6f-b92f-c60eedf7af2f.webp",
+          "sha256": "bae5f782f1c718befa77e69ff9dc3c7ebc601b682a92f36906c1186c43dd69c1",
+          "bytes": 45642
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-6dfc5f6d71f67104914d2a9ceb4fa2e3",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "6dfc5f6d71f67104914d2a9ceb4fa2e3",
+    "observed_metadata": {
+      "thumb": 18,
+      "front": 21
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3405420201",
+        "record_id": "08259cc3-70bb-46ca-8996-c2cf58d8861a",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3405420201/b8fdb389-9463-4bbe-b860-aab26f2ceb52.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3405420201/778416c7-d3e6-4ac2-b20d-674719bfde57.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/08259cc3-70bb-46ca-8996-c2cf58d8861a.webp",
+          "sha256": "e08aad94cc52e2a8e08dd33a909fd637af542ee8d4787816d779db2ceb0dc1cb",
+          "bytes": 32126
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  },
+  {
+    "id": "audit-b17777356fb21625acbcfdbf792d2cb0",
+    "source_kind": "catalogue",
+    "status": "pending",
+    "tags": [
+      "thumb-front-count-mismatch"
+    ],
+    "record_ref": "b17777356fb21625acbcfdbf792d2cb0",
+    "observed_metadata": {
+      "thumb": 19,
+      "front": 18
+    },
+    "review_source": "docs/moris-v6/evidence/M08-geometry-audit.json",
+    "expected_outcome": null,
+    "review_assets": [
+      {
+        "sku": "3419670101",
+        "record_id": "ccf36cb6-0326-4020-bb9d-aca626acac42",
+        "catalogue_assets": [
+          {
+            "asset_type": "front",
+            "image_path": "front/3419670101/ff2e6c78-fed1-41c4-910f-6571f5d09f16.webp"
+          },
+          {
+            "asset_type": "thumb",
+            "image_path": "thumb/3419670101/3c205e82-50af-4107-9aa5-ca9d93fe2a91.webp"
+          }
+        ],
+        "downloaded_front": {
+          "path": "evaluation/moris-v6/private/catalogue-front/ccf36cb6-0326-4020-bb9d-aca626acac42.webp",
+          "sha256": "e7f83c57a36aa106ac05687f10f29ee8666086e6d804cbe82f4a3145b864f4d9",
+          "bytes": 12050
+        }
+      }
+    ],
+    "development_evidence": {
+      "source": "frozen development split; exact local global ablation",
+      "scope": "same-SKU query ranking only, not a front/thumb geometry verdict",
+      "queries": []
+    }
+  }
+]

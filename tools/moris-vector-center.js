@@ -1,3 +1,4 @@
+import { selectAssets, previewBatch, createPauseControl, runManualBatch } from "/src/moris/vector/manualBatch.js";
 import {
   initDinov2,
   embedImageDinov2,
@@ -17,7 +18,8 @@ const state = {
   filteredItems: [],
   visibleLimit: 20,
   loadingItems: false,
-  batchRunning: false
+  batchRunning: false,
+  batchControl: createPauseControl()
 };
 
 const $ = id => document.getElementById(id);
@@ -95,7 +97,7 @@ function showConfirm(title, message, { danger = false, okText = "Đồng ý", ca
 
     if (!modal) {
       // Fallback
-      resolve(true);
+      resolve(false);
       return;
     }
 
@@ -318,21 +320,10 @@ function renderItemsSlice() {
     };
     const sideLabel = sideMap[item.usage_side] || (item.usage_side || "—");
 
-    const statusBadge = item.has_vector
-      ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-           <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i> Đã có vector
-         </span>`
-      : `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-amber-50 text-amber-700 border border-amber-200">
-           <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i> Chờ tách vector
-         </span>`;
-
-    const actionBtn = item.has_vector
-      ? `<button data-id="${item.id}" class="btn-vectorize-item btn h-8 px-3 text-[11px] font-black rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200" title="Mã này đã có vector">
-           <i data-lucide="check" class="w-3.5 h-3.5"></i> Đã tạo
-         </button>`
-      : `<button data-id="${item.id}" class="btn-vectorize-item btn h-8 px-3 text-[11px] font-black rounded-xl bg-rose-700 hover:bg-rose-800 text-white shadow-sm" title="Tách vector cho mã này">
-           <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Tách vector
-         </button>`;
+    const labels = {ready:"Sẵn sàng",missing:"Chưa có vector",stale:"Cần cập nhật",partial:"Chưa đủ ảnh",failed:"Chưa xác minh được"};
+    const statusBadge = `<span class="text-xs font-bold">${labels[item.vector_status] || "Chưa xác minh được"}</span>` +
+      (item.assets || []).map(a => `<div class="text-[10px]">${escapeHtml(a.asset_type)}: ${labels[a.vector_status] || "Chưa xác minh được"} <button class="btn-vectorize-asset underline" data-id="${escapeHtml(item.id)}" data-key="${escapeHtml(a.image_path)}" data-type="${escapeHtml(a.asset_type)}">Xử lý ảnh này</button></div>`).join("");
+    const actionBtn = `<button data-id="${escapeHtml(item.id)}" class="btn-vectorize-item btn h-8 px-3 text-xs bg-rose-700 text-white">Tạo / cập nhật</button>`;
 
     return `
       <tr class="hover:bg-slate-50/80 transition-colors">
@@ -368,6 +359,14 @@ function renderItemsSlice() {
     };
   });
 
+  tbody.querySelectorAll(".btn-vectorize-asset").forEach(btn => {
+    btn.onclick = () => {
+      const item = state.items.find(i => String(i.id) === btn.getAttribute("data-id"));
+      const asset = item?.assets?.find(a => a.image_path === btn.getAttribute("data-key") && a.asset_type === btn.getAttribute("data-type"));
+      if (asset) vectorizeSingleItem({...item, assets:[asset]}, btn);
+    };
+  });
+
   const hint = $("renderedRowsHint");
   if (hint) {
     if (items.length <= 20) {
@@ -399,22 +398,26 @@ async function loadItems(query = "") {
 
   try {
     const t = token();
-    const data = await readJson(
-      `/api/moris/vector-items?session_token=${encodeURIComponent(t)}&limit=2000&search=${encodeURIComponent(query)}`
-    );
-    const items = Array.isArray(data?.items) ? data.items : [];
+    const items = [];
+    for (let offset=0; ; offset+=20) {
+      const data = await readJson(`/api/moris/vector-items?session_token=${encodeURIComponent(t)}&limit=20&offset=${offset}&search=${encodeURIComponent(query)}`);
+      const page = Array.isArray(data?.items) ? data.items : [];
+      items.push(...page);
+      if (!data.has_more || !page.length) break;
+      if (items.length >= 5000) throw new Error("Danh sách vượt giới hạn; thu hẹp tìm kiếm.");
+    }
     state.items = items;
     state.filteredItems = items;
     state.visibleLimit = 20;
 
-    const withVec = items.filter(i => i.has_vector).length;
+    const withVec = items.filter(i => i.vector_status === "ready").length;
     const pending = items.length - withVec;
 
     if ($("pendingCount")) $("pendingCount").textContent = pending;
     if ($("records")) $("records").textContent = withVec;
 
     if (countBadge) {
-      countBadge.textContent = `${items.length} mã (${withVec} đã có vector, ${pending} chờ tách)`;
+      countBadge.textContent = `${items.length} mã (${withVec} sẵn sàng, ${pending} cần kiểm tra)`;
     }
 
     renderItemsSlice();
@@ -428,196 +431,104 @@ async function loadItems(query = "") {
   }
 }
 
+function writeMode() {
+  const value=$("vectorWriteMode")?.value;
+  return ["replace","stale"].includes(value) ? value : "skip";
+}
+
+function selectedAssets(item, mode) { return selectAssets(item,mode); }
+function previewText(preview) {
+  return `${preview.skus} mã, ${preview.assets} ảnh RGB; ${preview.missing} ảnh thiếu, tối đa ${preview.possibly_replaced} vector cần thay. Dự kiến thêm ${preview.new_rows_min}–${preview.new_rows_max} hàng vật lý tùy phiên bản hiện có. Không xóa lịch sử.`;
+}
+function showBatchPreview(){
+ const preview=previewBatch(state.items,writeMode());
+ if($("batchPreview"))$("batchPreview").textContent=previewText(preview);
+ return preview;
+}
+function showAssetResult(result){
+ if($("batchAssetResults"))$("batchAssetResults").textContent+=`${result.sku} · ${result.asset}: ${result.status}${result.error?' — '+result.error:''}\n`;
+}
+
+async function writeItem(item, assets, mode) {
+  const vectors = [];
+  for (const asset of assets) {
+    const response = await fetch(mediaUrl(asset.image_path), { cache: "no-store" });
+    if (!response.ok) throw new Error(`Không tải được ảnh: HTTP ${response.status}`);
+    const etag = response.headers.get("etag");
+    if (!etag) throw new Error("Ảnh thiếu ETag; chưa thể xác minh phiên bản nguồn.");
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    let result;
+    try { result = await embedImageDinov2Variants(objectUrl, { includeGray: false }); }
+    finally { URL.revokeObjectURL(objectUrl); }
+    const probe = result.probes?.find(p => p.view_variant === "canon_rgb_v2");
+    if (!probe) throw new Error("Không tạo được vector RGB.");
+    vectors.push({ record_id:item.id, asset_type:asset.asset_type, object_key:asset.image_path,
+      source_etag:etag, view_variant:probe.view_variant, embedding:probe.embedding,
+      embedding_profile:probe.profile, geometry:result.geometry, foreground_status:"browser_dinov2_v59_canonical",
+      hole_count:result.geometry?.hole_count ?? null, aspect_ratio:result.geometry?.aspect_ratio ?? null,
+      hole_centroids:result.geometry?.hole_centroids ?? [] });
+  }
+  return upsertVectorsChunked({ sessionToken:token(), vectors, mode:mode==="skip"?"skip":"replace",
+    source:"vector_center", confirmed:true, strict:true });
+}
+
 async function vectorizeSingleItem(item, btn) {
-  if (item.has_vector) {
-    showToast("warning", `Mã [${item.code}] đã có vector trước đó! Bỏ qua để tránh tạo nhiều vector trùng lặp.`);
-    return;
-  }
-
-  const assets = Array.isArray(item.assets) ? item.assets.filter(a => a.image_path) : [];
-  if (!assets.length) {
-    showToast("warning", `Mã [${item.code}] chưa có hình ảnh thật nào trong cơ sở dữ liệu.`);
-    return;
-  }
-
-  const origHtml = btn ? btn.innerHTML : "";
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<span class="inline-block animate-spin mr-1">⌛</span> Đang tạo...`;
-  }
-
+  if (state.batchRunning) return;
+  const mode = writeMode();
+  const assets = selectedAssets(item, mode);
+  if (!assets.length) return showToast("warning", "Không có ảnh phù hợp. Chọn Cập nhật nếu cần thay vector stale.");
+  state.batchRunning = true;
   try {
+    const confirmed = await showConfirm("Tạo/cập nhật vector",
+      `Mã ${item.code}: ${assets.length} ảnh RGB. Chế độ ${mode === "replace" ? "rebuild" : mode === "stale" ? "cập nhật phần stale" : "chỉ tạo phần thiếu"}.`,
+      { okText:"Xác nhận" });
+    if (!confirmed) return;
+    if (btn) btn.disabled = true;
     if (!state.modelReady) await loadModel();
-
-    const vectors = [];
-    for (const asset of assets) {
-      const fullUrl = new URL(mediaUrl(asset.image_path), location.origin).href;
-      const result = await embedImageDinov2Variants(fullUrl, { includeGray: true });
-
-      for (const probe of (result.probes || [])) {
-        vectors.push({
-          record_id: item.id,
-          asset_type: asset.asset_type || "front",
-          object_key: asset.image_path,
-          view_variant: probe.view_variant,
-          embedding: probe.embedding,
-          embedding_profile: probe.profile,
-          foreground_status: "browser_dinov2_v59_canonical",
-          hole_count: result.geometry?.hole_count ?? 0,
-          aspect_ratio: result.geometry?.aspect_ratio ?? 1.0,
-          hole_centroids: result.geometry?.hole_centroids ?? []
-        });
-      }
-    }
-
-    if (!vectors.length) {
-      throw new Error("Không tạo được embedding nào từ các ảnh.");
-    }
-
-    const upsertRes = await postJson("/api/moris/vector-upsert", {
-      session_token: token(),
-      vectors,
-      prevent_duplicate: true
-    });
-
-    if (upsertRes?.already_exists) {
-      showToast("warning", `Mã [${item.code}] đã có vector trước đó! Hệ thống đã bỏ qua để tránh trùng lặp.`);
-      item.has_vector = true;
-    } else {
-      item.has_vector = true;
-      showToast("success", `Tách vector thành công cho mã [${item.code}]!`);
-    }
-
-    await refreshStatus();
-    const withVec = state.items.filter(i => i.has_vector).length;
-    if ($("pendingCount")) $("pendingCount").textContent = state.items.length - withVec;
-    renderItemsSlice();
+    const result = await runManualBatch({jobs:assets.map(asset=>({item,asset})),confirmed:true,
+      writeAsset:({item,asset})=>writeItem(item,[asset],mode),onProgress:({result})=>showAssetResult(result)});
+    showToast(result.failed?"warning":"success", `Đã ghi ${result.written}, bỏ qua ${result.skipped || 0}; ${result.failed} ảnh lỗi.`);
   } catch (err) {
-    if (String(err?.message || "").includes("đã có vector") || err?.status === 409) {
-      showToast("warning", `Mã [${item.code}] đã có vector trước đó! Tránh tạo nhiều vector trùng lặp.`);
-      item.has_vector = true;
-      renderItemsSlice();
-    } else {
-      showToast("error", `Lỗi khi tạo vector cho mã [${item.code}]: ${err?.message || err}`);
-    }
+    showToast("error", `Lỗi mã ${item.code}: ${err?.message || err}`);
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = origHtml;
-      if (window.lucide) window.lucide.createIcons();
-    }
+    state.batchRunning = false;
+    if (btn) btn.disabled = false;
+    // Only the server's fresh per-asset evidence may set ready after partial failure.
+    await loadItems($("itemSearchInput")?.value || "");
+    await refreshStatus().catch(e => showToast("error", e.message));
   }
 }
 
 async function batchVectorizePending() {
   if (state.batchRunning) return;
-
-  const pending = (state.items || []).filter(i => !i.has_vector && i.assets && i.assets.length > 0);
-  if (!pending.length) {
-    showToast("info", "Tất cả các mã hiện tại đều đã có vector!");
-    return;
-  }
-
-  const ok = await showConfirm(
-    "Tách vector hàng loạt",
-    `Tìm thấy ${pending.length} mã đang chờ tách vector. Bạn có muốn bắt đầu xử lý hàng loạt ngay không?`,
-    { okText: "Bắt đầu tách", cancelText: "Hủy bỏ" }
-  );
-  if (!ok) return;
-
-  state.batchRunning = true;
-  const btn = $("btnBatchVectorize");
-  const progWrapper = $("batchProgressWrapper");
-  const progBar = $("batchProgressBar");
-  const progLabel = $("batchProgressLabel");
-  const progPct = $("batchProgressPct");
-
-  if (btn) btn.disabled = true;
-  if (progWrapper) progWrapper.classList.remove("hidden");
-
-  let doneCount = 0;
-  let skippedCount = 0;
-  let failCount = 0;
-
-  try {
-    if (!state.modelReady) await loadModel();
-
-    for (let i = 0; i < pending.length; i++) {
-      const item = pending[i];
-      const pct = Math.round(((i + 1) / pending.length) * 100);
-
-      if (progBar) progBar.style.width = `${pct}%`;
-      if (progPct) progPct.textContent = `${pct}%`;
-      if (progLabel) progLabel.textContent = `Đang xử lý ${i + 1}/${pending.length}: mã ${item.code}...`;
-
-      try {
-        const assets = item.assets.filter(a => a.image_path);
-        const vectors = [];
-
-        for (const asset of assets) {
-          const fullUrl = new URL(mediaUrl(asset.image_path), location.origin).href;
-          const result = await embedImageDinov2Variants(fullUrl, { includeGray: true });
-
-          for (const probe of (result.probes || [])) {
-            vectors.push({
-              record_id: item.id,
-              asset_type: asset.asset_type || "front",
-              object_key: asset.image_path,
-              view_variant: probe.view_variant,
-              embedding: probe.embedding,
-              embedding_profile: probe.profile,
-              foreground_status: "browser_dinov2_v59_canonical",
-              hole_count: result.geometry?.hole_count ?? 0,
-              aspect_ratio: result.geometry?.aspect_ratio ?? 1.0,
-              hole_centroids: result.geometry?.hole_centroids ?? []
-            });
-          }
-        }
-
-        if (vectors.length) {
-          const upsertRes = await postJson("/api/moris/vector-upsert", {
-            session_token: token(),
-            vectors,
-            prevent_duplicate: true
-          });
-
-          if (upsertRes?.already_exists) {
-            skippedCount++;
-            item.has_vector = true;
-          } else {
-            doneCount++;
-            item.has_vector = true;
-          }
-        }
-      } catch (err) {
-        if (String(err?.message || "").includes("đã có vector") || err?.status === 409) {
-          skippedCount++;
-          item.has_vector = true;
-        } else {
-          failCount++;
-        }
-      }
-
-      renderItemsSlice();
-    }
-
-    await refreshStatus();
-    const withVec = state.items.filter(i => i.has_vector).length;
-    if ($("pendingCount")) $("pendingCount").textContent = state.items.length - withVec;
-
-    showToast("success", `Hoàn tất tách hàng loạt: Thành công ${doneCount} mã, Bỏ qua ${skippedCount} mã, Thất bại ${failCount} mã.`);
-  } catch (err) {
-    showToast("error", `Lỗi tiến trình hàng loạt: ${err?.message || err}`);
-  } finally {
-    state.batchRunning = false;
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i>Tách vector hàng loạt`;
-    }
-    if (progWrapper) {
-      setTimeout(() => progWrapper.classList.add("hidden"), 1500);
-    }
-    if (window.lucide) window.lucide.createIcons();
+  const mode=writeMode(),preview=showBatchPreview();
+  if(!preview.assets)return showToast("info","Không có ảnh phù hợp với chế độ đã chọn.");
+  state.batchRunning=true;const btn=$("btnBatchVectorize");
+  try{
+    if(!await showConfirm(mode==='replace'?"Rebuild ảnh đã chọn":"Tạo/cập nhật vector",previewText(preview),{okText:"Bắt đầu",danger:mode==='replace'}))return;
+    if(btn)btn.disabled=true;
+    state.batchControl=createPauseControl();
+    if($("btnPauseBatch")){ $("btnPauseBatch").disabled=false;$("btnPauseBatch").textContent="Tạm dừng"; }
+    if($("batchAssetResults"))$("batchAssetResults").textContent='';
+    $("batchProgressWrapper")?.classList.remove("hidden");
+    if(!state.modelReady)await loadModel();
+    const result=await runManualBatch({jobs:preview.jobs,confirmed:true,control:state.batchControl,
+      writeAsset:({item,asset})=>writeItem(item,[asset],mode),
+      onProgress:({completed,total,result})=>{
+        const pct=Math.round(100*completed/total);
+        if($("batchProgressBar"))$("batchProgressBar").style.width=`${pct}%`;
+        if($("batchProgressPct"))$("batchProgressPct").textContent=`${pct}%`;
+        if($("batchProgressLabel"))$("batchProgressLabel").textContent=`${completed}/${total} ảnh`;
+        showAssetResult(result);
+      }});
+    showToast(result.failed?"warning":"success",`Đã ghi ${result.written}, bỏ qua ${result.skipped}; ${result.failed} ảnh lỗi. Xem kết quả từng ảnh.`);
+  }catch(error){showToast("error",error.message);}
+  finally{
+    state.batchRunning=false;state.batchControl.resume();if(btn)btn.disabled=false;
+    if($("btnPauseBatch"))$("btnPauseBatch").disabled=true;
+    await loadItems($("itemSearchInput")?.value||"");
+    await refreshStatus().catch(e=>showToast("error",e.message));
   }
 }
 
@@ -653,6 +564,12 @@ if (scrollTopBtn && scrollContainer) {
   };
 }
 
+if($("btnPreviewBatch"))$("btnPreviewBatch").onclick=showBatchPreview;
+if($("btnPauseBatch"))$("btnPauseBatch").onclick=()=>{
+  if(!state.batchRunning)return;
+  if(state.batchControl.paused){state.batchControl.resume();$("btnPauseBatch").textContent="Tạm dừng";}
+  else{state.batchControl.pause();$("btnPauseBatch").textContent="Tiếp tục";}
+};
 if ($("btnBatchVectorize")) {
   $("btnBatchVectorize").onclick = batchVectorizePending;
 }

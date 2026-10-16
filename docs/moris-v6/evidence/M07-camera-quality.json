@@ -1,0 +1,204 @@
+{
+  "created_at": "2026-10-16T03:23:14.215Z",
+  "runtime": "Chromium WASM",
+  "include_gray_query_probe": false,
+  "input_directory": "/workspaces/Dictionary/image 2",
+  "label_source": "filename; user identifies unprocessed camera captures; labels require review",
+  "results": [
+    {
+      "query_id": "3450730001",
+      "expected_sku": "3450730001",
+      "sha256": "ab973091eba6c0d115d31f7f1dc1ae8469947fdaf9869405152feadb7af29bcf",
+      "latency_ms": 15443,
+      "ok": true,
+      "diagnostics": {
+        "pcaAngleDeg": -0.9,
+        "flipH": false,
+        "flipV": false,
+        "rawForegroundArea": 11181,
+        "convexHullArea": 19839,
+        "segmentationMode": "live_camera",
+        "maskQuality": {
+          "version": "mask_quality_v1",
+          "reliable": false,
+          "flags": [
+            "background_nonuniform",
+            "subject_touches_edge"
+          ],
+          "foregroundFraction": 0.49684283203615365,
+          "borderSpread": 52.373937596164666
+        }
+      },
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v3_letterbox",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ]
+    },
+    {
+      "query_id": "3451550001",
+      "expected_sku": "3451550001",
+      "sha256": "26262d9410438a810f5111569d5234b489a93e5c9b16875a8e2a19d3e37edab8",
+      "latency_ms": 1814,
+      "ok": true,
+      "diagnostics": {
+        "pcaAngleDeg": 2.56,
+        "flipH": true,
+        "flipV": true,
+        "rawForegroundArea": 4365,
+        "convexHullArea": 11259,
+        "segmentationMode": "live_camera",
+        "maskQuality": {
+          "version": "mask_quality_v1",
+          "reliable": false,
+          "flags": [
+            "subject_touches_edge"
+          ],
+          "foregroundFraction": 0.28640736000178857,
+          "borderSpread": 11.273583362079894
+        }
+      },
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v3_letterbox",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ]
+    },
+    {
+      "query_id": "3460370001",
+      "expected_sku": "3460370001",
+      "sha256": "d0e9ab5f144e3f17e8401d2894624a347f41c85b35b18839064e852010d4642c",
+      "latency_ms": 1885,
+      "ok": true,
+      "diagnostics": {
+        "pcaAngleDeg": 12.42,
+        "flipH": false,
+        "flipV": false,
+        "rawForegroundArea": 10735,
+        "convexHullArea": 20833,
+        "segmentationMode": "live_camera",
+        "maskQuality": {
+          "version": "mask_quality_v1",
+          "reliable": true,
+          "flags": [],
+          "foregroundFraction": 0.3307573882331633,
+          "borderSpread": 9.566431829996555
+        }
+      },
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v3_letterbox",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ]
+    },
+    {
+      "query_id": "3465950101",
+      "expected_sku": "3465950101",
+      "sha256": "e7545b40cf00cadd31b275a3d6db80b359bf95baf3f21d4e191b9e74d9b8bfad",
+      "latency_ms": 1897,
+      "ok": true,
+      "diagnostics": {
+        "pcaAngleDeg": -9.81,
+        "flipH": false,
+        "flipV": false,
+        "rawForegroundArea": 6075,
+        "convexHullArea": 17229,
+        "segmentationMode": "live_camera",
+        "maskQuality": {
+          "version": "mask_quality_v1",
+          "reliable": false,
+          "flags": [
+            "subject_touches_edge"
+          ],
+          "foregroundFraction": 0.2770428618037238,
+          "borderSpread": 26.645700270455464
+        }
+      },
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v3_letterbox",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ]
+    },
+    {
+      "query_id": "3671110401",
+      "expected_sku": "3671110401",
+      "sha256": "b7898cb0eb85d895504e4ebe537f728fc948292f19cd916d09e11101cf5a7b90",
+      "latency_ms": 1515,
+      "ok": true,
+      "diagnostics": {
+        "pcaAngleDeg": 4.44,
+        "flipH": true,
+        "flipV": true,
+        "rawForegroundArea": 6272,
+        "convexHullArea": 8798,
+        "segmentationMode": "live_camera",
+        "maskQuality": {
+          "version": "mask_quality_v1",
+          "reliable": false,
+          "flags": [
+            "subject_touches_edge"
+          ],
+          "foregroundFraction": 0.5730772411660428,
+          "borderSpread": 27.805189155783264
+        }
+      },
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v3_letterbox",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ]
+    },
+    {
+      "query_id": "3960230001",
+      "expected_sku": "3960230001",
+      "sha256": "1420cf9f00ce62f0eb59c4431a0b99925a265bcecdafb86f5f013a1a8f439ebd",
+      "latency_ms": 1137,
+      "ok": true,
+      "diagnostics": {
+        "pcaAngleDeg": 88.41,
+        "flipH": false,
+        "flipV": false,
+        "rawForegroundArea": 25825,
+        "convexHullArea": 28511,
+        "segmentationMode": "live_camera",
+        "maskQuality": {
+          "version": "mask_quality_v1",
+          "reliable": true,
+          "flags": [],
+          "foregroundFraction": 0.7137460837838909,
+          "borderSpread": 24.502638692527082
+        }
+      },
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v3_letterbox",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ]
+    }
+  ]
+}

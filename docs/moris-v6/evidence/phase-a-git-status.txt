@@ -1,0 +1,46 @@
+Branch: feat/moris-v6
+HEAD: 02289afa79747722b992938bee7c2d0414f7a9d2
+No commit created; includes preserved pre-existing user changes.
+
+ M AGENTS.md
+ D MORIS_FILTER_REVIEW.md
+ D agent.md
+ M dist/index.html
+ M dist/src/app.js
+ M dist/src/moris/vector/chunkedUpsert.js
+ M dist/tools/moris-vector-center.html
+ M dist/tools/moris-vector-center.js
+ M dist/tools/moris-vector-reindex.js
+ M dist/version.json
+ M functions/api/moris/vector-items.js
+ M functions/api/moris/vector-upsert.js
+ D hdsd.md
+ M index.html
+ M package-lock.json
+ M package.json
+ M plan.md
+ M src/app.js
+ M src/moris/vector/chunkedUpsert.js
+ M state.json
+ M tests/frontend.test.js
+ M tests/moris-vector-features.test.js
+ M tools/moris-vector-center.html
+ M tools/moris-vector-center.js
+ M tools/moris-vector-reindex.js
+?? CODEX_MORIS_V6_TASK_PROMPTS.md
+?? MORIS_V6_MASTER_PLAN.md
+?? MORIS_V6_QUICK_CHECKLIST.md
+?? docs/
+?? functions/_lib/moris/v5/vector/assetStatus.js
+?? "image 2/"
+?? image/
+?? supabase/migrations/20261016024931_moris_v6_manual_vector_write.sql
+?? tests/fixtures/
+?? tests/moris-asset-status.test.js
+?? tests/moris-center-ownership.test.js
+?? tests/moris-editor-no-index.test.js
+?? tests/moris-manual-upsert.test.js
+?? tools/check-moris-camera-ranking.mjs
+?? tools/check-moris-camera.mjs
+?? tools/check-moris-e2e.mjs
+?? tools/check-moris-vector-db.mjs

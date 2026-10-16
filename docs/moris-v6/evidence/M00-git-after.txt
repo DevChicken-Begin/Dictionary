@@ -1,0 +1,11 @@
+## feat/moris-v6
+ D MORIS_FILTER_REVIEW.md
+ D agent.md
+ M dist/version.json
+ D hdsd.md
+ M plan.md
+ M state.json
+?? CODEX_MORIS_V6_TASK_PROMPTS.md
+?? MORIS_V6_MASTER_PLAN.md
+?? MORIS_V6_QUICK_CHECKLIST.md
+?? docs/

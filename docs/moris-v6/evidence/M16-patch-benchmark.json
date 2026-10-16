@@ -1,0 +1,9 @@
+{
+  "scope": "synthetic Node CPU; 10 candidates each; not WASM/WebGPU inference or real ranking",
+  "runs": 30,
+  "p50_ms": 20.89955299999997,
+  "p95_ms": 38.04856700000002,
+  "descriptor_float_bytes": 49152,
+  "descriptor_json_bytes": 256380,
+  "production_rows_added": 0
+}

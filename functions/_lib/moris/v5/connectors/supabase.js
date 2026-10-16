@@ -91,22 +91,24 @@ export async function searchCatalogue(env, token, {
   return Array.isArray(data) ? data : [];
 }
 
-export async function scanCatalogue(env, token, {maxRows=1500}={}) {
-  const rows = [];
-  const pageSize = 100;
-
-  for (let offset=0; offset<maxRows; offset+=pageSize) {
+export async function scanCatalogue(env, token, {maxRows=1500,usageSide="all",viewMode="all"}={}) {
+  const rows = new Map();
+  const budget=Math.max(1,Math.min(10000,Math.floor(maxRows)||1500));
+  const pageSize = 300;
+  for (let offset=0; offset<budget; offset+=pageSize) {
+    const limit=Math.min(pageSize,budget-offset);
     const page = await searchCatalogue(env, token, {
-      search:"",
-      usageSide:"all",
-      viewMode:"all",
-      limit:pageSize,
-      offset
+      search:"", usageSide, viewMode, limit, offset
     });
-
-    rows.push(...page);
-    if (page.length < pageSize) break;
+    let added=0;
+    for(const row of page) if(row?.id!=null && !rows.has(String(row.id))) {
+      rows.set(String(row.id),row);added++;
+    }
+    if (page.length < limit) return [...rows.values()];
+    if (!added) throw new Error("Catalogue pagination made no progress.");
   }
-
-  return rows.slice(0,maxRows);
+  // A full last page does not prove completeness. One bounded read distinguishes it.
+  const more=await searchCatalogue(env,token,{search:"",usageSide,viewMode,limit:1,offset:budget});
+  if(more.length) throw new Error("Catalogue scan budget exceeded; results would be incomplete.");
+  return [...rows.values()];
 }

@@ -47,3 +47,10 @@
 3. **TƯƠNG THÍCH HOÀN TOÀN VỚI AGY CLI & MÔI TRƯỜNG AGENT:**
    - Cấu hình quy chuẩn trong thư mục `.agents/` và root để mọi phiên agy cli tự động kế thừa và nhận diện quy tắc.
    - Duy trì `state.json` như một bộ nhớ RAM trạng thái để nếu ngắt kết nối hoặc chuyển giao phiên, Agent kế tiếp có thể khôi phục ngữ cảnh ngay lập tức trong 5 giây.
+
+### III. MORIS V6 — QUYỀN GHI VECTOR
+
+- Editor chỉ lưu metadata/ảnh; không embed, enqueue, enroll IndexedDB hoặc upsert/reindex vector, kể cả khi mở trang/khôi phục phiên. Editor không có nút tạo vector.
+- Chỉ Trung tâm Vector AI được lập chỉ mục qua single/batch do người dùng chủ động xác nhận và server kiểm tra quyền. Xem danh sách/status không tạo vector.
+- Moris được tạo query embedding tạm để tìm kiếm, không ghi index. Cùng asset + model/version + preprocess + profile + variant phải idempotent; mặc định chỉ RGB.
+- Hợp đồng và đường gọi: `docs/moris-v6/ARCHITECTURE.md`. Không tự sửa database production hoặc deploy; giữ nguyên auth/2FA/RLS/CSRF/anti-bot.

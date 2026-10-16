@@ -1,0 +1,7 @@
+ D MORIS_FILTER_REVIEW.md
+ D agent.md
+ M dist/version.json
+ D hdsd.md
+?? CODEX_MORIS_V6_TASK_PROMPTS.md
+?? MORIS_V6_MASTER_PLAN.md
+?? MORIS_V6_QUICK_CHECKLIST.md

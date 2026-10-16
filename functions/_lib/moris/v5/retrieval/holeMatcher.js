@@ -1,0 +1,60 @@
+import {orientationPolicy,transformPoint} from '../guards/orientationPolicy.js';
+// Hungarian augmenting-path assignment, bounded square cost matrix, O(n^3).
+export function minimumAssignment(cost){
+ const n=cost.length;
+ if(n>64||cost.some(r=>r.length!==n||r.some(v=>!Number.isFinite(v)||v<0)))throw Error('Invalid/budget-exceeded assignment matrix');
+ const u=new Float64Array(n+1),v=new Float64Array(n+1),p=new Int32Array(n+1),way=new Int32Array(n+1);
+ for(let i=1;i<=n;i++){
+  p[0]=i;let j0=0;const min=new Float64Array(n+1).fill(Infinity),used=new Uint8Array(n+1);
+  do{
+   used[j0]=1;const i0=p[j0];let delta=Infinity,j1=0;
+   for(let j=1;j<=n;j++)if(!used[j]){
+    const cur=cost[i0-1][j-1]-u[i0]-v[j];
+    if(cur<min[j]){min[j]=cur;way[j]=j0;}
+    if(min[j]<delta){delta=min[j];j1=j;}
+   }
+   for(let j=0;j<=n;j++)if(used[j]){u[p[j]]+=delta;v[j]-=delta;}else min[j]-=delta;
+   j0=j1;
+  }while(p[j0]!==0);
+  do{const j1=way[j0];p[j0]=p[j1];j0=j1;}while(j0);
+ }
+ const columns=Array(n);for(let j=1;j<=n;j++)columns[p[j]-1]=j-1;
+ return {columns,cost:columns.reduce((sum,j,i)=>sum+cost[i][j],0)};
+}
+const clamp=v=>Math.max(0,Math.min(1,v));
+const validCount=v=>Number.isInteger(v)&&v>=0&&v<=64;
+const validPoints=(p,n)=>Array.isArray(p)&&p.length===n&&p.every(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)&&x.x>=0&&x.x<=1&&x.y>=0&&x.y<=1);
+function pairCost(a,b){
+ let sum=Math.hypot(a.x-b.x,a.y-b.y)/Math.SQRT2,weight=1;
+ for(const key of ['radius','relArea'])if(Number.isFinite(a[key])&&Number.isFinite(b[key])&&a[key]>0&&b[key]>0){sum+=.2*Math.abs(a[key]-b[key])/Math.max(a[key],b[key]);weight+=.2;}
+ if(typeof a.is_big==='boolean'&&typeof b.is_big==='boolean'){sum+=.15*Number(a.is_big!==b.is_big);weight+=.15;}
+ return sum/weight;
+}
+export function matchHoleTopology(query={},candidate={}){
+ const policy=orientationPolicy(query,candidate),a=query.hole_count,b=candidate.hole_count;
+ const none=reason=>({available:false,similarity:null,matched_pairs:[],unmatched_query:[],unmatched_candidate:[],reliability:0,reason,version:'hole_assignment_v2'});
+ if(!policy.compatible)return none('chirality_conflict');
+ if(!validCount(a)||!validCount(b))return none('unknown_or_budget');
+ if(query.quality?.reliable===false||candidate.quality?.reliable===false)return none('unreliable_mask');
+ const reliability=query.quality?.reliable===true&&candidate.quality?.reliable===true?1:.4;
+ if(!a&&!b)return {...none('measured_zero'),available:true,similarity:1,reliability};
+ const qa=query.hole_centroids,cb=candidate.hole_centroids;
+ if(!validPoints(qa,a)||!validPoints(cb,b)){
+  let similarity=Math.max(0,1-.5*Math.abs(a-b));
+  if(a===b){
+   similarity=.85;
+   if(validCount(query.big_hole_count)&&validCount(candidate.big_hole_count))similarity*=Math.max(.3,1-.15*Math.abs(query.big_hole_count-candidate.big_hole_count));
+  }
+  return {...none('count_only'),available:true,similarity,reliability:reliability*.5};
+ }
+ const n=Math.max(a,b);let best=null;
+ for(const transform of policy.transforms){
+  const points=qa.map(p=>transformPoint(p,transform));
+  const matrix=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i<a&&j<b?pairCost(points[i],cb[j]):i>=a&&j>=b?0:.65));
+  const assignment=minimumAssignment(matrix);
+  if(!best||assignment.cost<best.cost)best={...assignment,transform,matrix};
+ }
+ const matched=[],unmatchedQuery=[],unmatchedCandidate=[];
+ for(let i=0;i<n;i++){const j=best.columns[i];if(i<a&&j<b)matched.push({query:i,candidate:j,cost:best.matrix[i][j]});else if(i<a)unmatchedQuery.push(i);else if(j<b)unmatchedCandidate.push(j);}
+ return {available:true,similarity:clamp((1-best.cost/n)*(1-Math.abs(a-b)/n)),matched_pairs:matched,unmatched_query:unmatchedQuery,unmatched_candidate:unmatchedCandidate,reliability,transform:best.transform,reason:'spatial_assignment',version:'hole_assignment_v2'};
+}

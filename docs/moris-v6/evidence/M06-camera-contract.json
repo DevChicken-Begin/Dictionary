@@ -1,0 +1,153 @@
+{
+  "created_at": "2026-10-16T03:20:17.908Z",
+  "runtime": "Chromium WASM",
+  "include_gray_query_probe": false,
+  "input_directory": "/workspaces/Dictionary/image 2",
+  "label_source": "filename; user identifies unprocessed camera captures; labels require review",
+  "results": [
+    {
+      "query_id": "3450730001",
+      "expected_sku": "3450730001",
+      "sha256": "ab973091eba6c0d115d31f7f1dc1ae8469947fdaf9869405152feadb7af29bcf",
+      "latency_ms": 11695,
+      "ok": true,
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v2",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ],
+      "runtime": [
+        {
+          "device": "wasm",
+          "dtype": "q8",
+          "model": "onnx-community/dinov2-small",
+          "revision": "ef1fb10"
+        }
+      ]
+    },
+    {
+      "query_id": "3451550001",
+      "expected_sku": "3451550001",
+      "sha256": "26262d9410438a810f5111569d5234b489a93e5c9b16875a8e2a19d3e37edab8",
+      "latency_ms": 1351,
+      "ok": true,
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v2",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ],
+      "runtime": [
+        {
+          "device": "wasm",
+          "dtype": "q8",
+          "model": "onnx-community/dinov2-small",
+          "revision": "ef1fb10"
+        }
+      ]
+    },
+    {
+      "query_id": "3460370001",
+      "expected_sku": "3460370001",
+      "sha256": "d0e9ab5f144e3f17e8401d2894624a347f41c85b35b18839064e852010d4642c",
+      "latency_ms": 899,
+      "ok": true,
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v2",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ],
+      "runtime": [
+        {
+          "device": "wasm",
+          "dtype": "q8",
+          "model": "onnx-community/dinov2-small",
+          "revision": "ef1fb10"
+        }
+      ]
+    },
+    {
+      "query_id": "3465950101",
+      "expected_sku": "3465950101",
+      "sha256": "e7545b40cf00cadd31b275a3d6db80b359bf95baf3f21d4e191b9e74d9b8bfad",
+      "latency_ms": 1160,
+      "ok": true,
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v2",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ],
+      "runtime": [
+        {
+          "device": "wasm",
+          "dtype": "q8",
+          "model": "onnx-community/dinov2-small",
+          "revision": "ef1fb10"
+        }
+      ]
+    },
+    {
+      "query_id": "3671110401",
+      "expected_sku": "3671110401",
+      "sha256": "b7898cb0eb85d895504e4ebe537f728fc948292f19cd916d09e11101cf5a7b90",
+      "latency_ms": 1185,
+      "ok": true,
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v2",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ],
+      "runtime": [
+        {
+          "device": "wasm",
+          "dtype": "q8",
+          "model": "onnx-community/dinov2-small",
+          "revision": "ef1fb10"
+        }
+      ]
+    },
+    {
+      "query_id": "3960230001",
+      "expected_sku": "3960230001",
+      "sha256": "1420cf9f00ce62f0eb59c4431a0b99925a265bcecdafb86f5f013a1a8f439ebd",
+      "latency_ms": 1104,
+      "ok": true,
+      "profiles": [
+        {
+          "model": "onnx-community/dinov2-small",
+          "model_version": "ef1fb10",
+          "preprocess_version": "kim_canon_v2",
+          "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1",
+          "dimension": 384
+        }
+      ],
+      "runtime": [
+        {
+          "device": "wasm",
+          "dtype": "q8",
+          "model": "onnx-community/dinov2-small",
+          "revision": "ef1fb10"
+        }
+      ]
+    }
+  ]
+}

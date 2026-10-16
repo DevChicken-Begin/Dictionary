@@ -1,0 +1,9 @@
+
+ RUN  v5.0.3 /workspaces/Dictionary
+
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  04:42:13
+   Duration  676ms (transform 59%, import 24%, tests 13%, worker 4%)
+

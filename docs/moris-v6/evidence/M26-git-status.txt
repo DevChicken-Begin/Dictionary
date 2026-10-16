@@ -1,0 +1,136 @@
+ M .gitignore
+ M AGENTS.md
+ D MORIS_FILTER_REVIEW.md
+ D agent.md
+ M dist/index.html
+ M dist/src/app.js
+ M dist/src/moris/geometry/pcaAligner.js
+ M dist/src/moris/moris-idb.js
+ M dist/src/moris/moris-idb.ts
+ M dist/src/moris/moris-layer1-optical.js
+ M dist/src/moris/moris-layer1-optical.ts
+ M dist/src/moris/moris-layer2-embedding.js
+ M dist/src/moris/moris-layer2-embedding.ts
+ M dist/src/moris/moris-worker-pipeline.js
+ M dist/src/moris/moris-worker-pipeline.ts
+ M dist/src/moris/retrieval/geometricReranker.js
+ M dist/src/moris/vector/browserDinov2.js
+ M dist/src/moris/vector/chunkedUpsert.js
+ M dist/src/moris/vector/dinov2.worker.js
+ M dist/tools/moris-vector-center.html
+ M dist/tools/moris-vector-center.js
+ M dist/tools/moris-vector-reindex.js
+ M dist/version.json
+ M functions/_lib/moris/v5/connectors/catalogue.js
+ M functions/_lib/moris/v5/connectors/supabase.js
+ M functions/_lib/moris/v5/orchestrator.js
+ M functions/_lib/moris/v5/presentation/userMessage.js
+ M functions/_lib/moris/v5/retrieval/candidatePool.js
+ M functions/_lib/moris/v5/retrieval/geometricReranker.js
+ M functions/_lib/moris/v5/retrieval/metadataFilter.js
+ M functions/_lib/moris/v5/retrieval/multiProbeSearch.js
+ M functions/_lib/moris/v5/retrieval/scoreFusion.js
+ M functions/_lib/moris/v5/retrieval/structuralEvidence.js
+ M functions/_lib/moris/v5/retrieval/vectorHitCollapse.js
+ M functions/_lib/moris/v5/runtime/config.js
+ M functions/_lib/moris/v5/schemas/candidate.js
+ M functions/_lib/moris/v5/schemas/query.js
+ M functions/_lib/moris/v5/vector/contracts.js
+ M functions/_lib/moris/v5/vector/encoder.js
+ M functions/_lib/moris/v5/vector/search.js
+ M functions/api/moris/vector-items.js
+ M functions/api/moris/vector-upsert.js
+ D hdsd.md
+ M index.html
+ M package-lock.json
+ M package.json
+ M plan.md
+ M src/app.js
+ M src/moris/geometry/pcaAligner.js
+ M src/moris/moris-idb.js
+ M src/moris/moris-idb.ts
+ M src/moris/moris-layer1-optical.js
+ M src/moris/moris-layer1-optical.ts
+ M src/moris/moris-layer2-embedding.js
+ M src/moris/moris-layer2-embedding.ts
+ M src/moris/moris-worker-pipeline.js
+ M src/moris/moris-worker-pipeline.ts
+ M src/moris/retrieval/geometricReranker.js
+ M src/moris/vector/browserDinov2.js
+ M src/moris/vector/chunkedUpsert.js
+ M src/moris/vector/dinov2.worker.js
+ M src/moris/vector/imageCanonicalizer.js
+ M state.json
+ M tests/frontend.test.js
+ M tests/moris-idb.test.ts
+ M tests/moris-layer2-embedding.test.ts
+ M tests/moris-vector-features.test.js
+ M tools/moris-vector-center.html
+ M tools/moris-vector-center.js
+ M tools/moris-vector-reindex.js
+?? CODEX_MORIS_V6_TASK_PROMPTS.md
+?? MORIS_V6_MASTER_PLAN.md
+?? MORIS_V6_QUICK_CHECKLIST.md
+?? dist/src/moris/geometry/contourVerifier.js
+?? dist/src/moris/geometry/holeMatcher.js
+?? dist/src/moris/geometry/orientationPolicy.js
+?? dist/src/moris/geometry/patchVerifier.js
+?? dist/src/moris/retrieval/geometryEvidence.js
+?? dist/src/moris/retrieval/scoreFusion.js
+?? dist/src/moris/vector/manualBatch.js
+?? docs/
+?? evaluation/
+?? functions/_lib/moris/v5/guards/orientationPolicy.js
+?? functions/_lib/moris/v5/presentation/imageDecision.js
+?? functions/_lib/moris/v5/retrieval/contourVerifier.js
+?? functions/_lib/moris/v5/retrieval/holeMatcher.js
+?? functions/_lib/moris/v5/retrieval/patchVerifier.js
+?? functions/_lib/moris/v5/schemas/geometry.js
+?? functions/_lib/moris/v5/vector/assetStatus.js
+?? "image 2/"
+?? image/
+?? src/moris/geometry/contourVerifier.js
+?? src/moris/geometry/holeMatcher.js
+?? src/moris/geometry/orientationPolicy.js
+?? src/moris/geometry/patchVerifier.js
+?? src/moris/retrieval/geometryEvidence.js
+?? src/moris/retrieval/scoreFusion.js
+?? src/moris/vector/manualBatch.js
+?? supabase/migrations/20261016024931_moris_v6_manual_vector_write.sql
+?? supabase/migrations/20261016033020_moris_v6_catalogue_stable_paging.sql
+?? supabase/migrations/20261016040525_moris_v6_nullable_provenance.sql
+?? tests/fixtures/
+?? tests/moris-ablation.test.js
+?? tests/moris-asset-status.test.js
+?? tests/moris-canonical-quality.test.ts
+?? tests/moris-catalogue-paging.test.js
+?? tests/moris-center-ownership.test.js
+?? tests/moris-contour-verifier.test.js
+?? tests/moris-dataset.test.js
+?? tests/moris-editor-no-index.test.js
+?? tests/moris-evaluation.test.js
+?? tests/moris-geometry-contract.test.js
+?? tests/moris-hard-negatives.test.js
+?? tests/moris-hole-assignment.test.js
+?? tests/moris-image-decision.test.js
+?? tests/moris-manual-batch.test.js
+?? tests/moris-manual-upsert.test.js
+?? tests/moris-multiview.test.js
+?? tests/moris-offline-boundary.test.js
+?? tests/moris-orientation-policy.test.js
+?? tests/moris-patch-verifier.test.js
+?? tests/moris-profile-contract.test.js
+?? tests/moris-query-boundary.test.js
+?? tests/moris-reliability.test.js
+?? tests/moris-retrieval-contract.test.js
+?? tests/moris-score-fusion.test.js
+?? tools/ablate-moris-v6.mjs
+?? tools/check-moris-ann.mjs
+?? tools/check-moris-camera-ranking.mjs
+?? tools/check-moris-camera.mjs
+?? tools/check-moris-catalogue-db.mjs
+?? tools/check-moris-e2e.mjs
+?? tools/check-moris-provenance-db.mjs
+?? tools/check-moris-vector-db.mjs
+?? tools/evaluate-moris-v6.mjs
+?? tools/validate-moris-dataset.mjs

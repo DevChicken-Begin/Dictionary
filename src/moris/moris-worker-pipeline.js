@@ -14,7 +14,7 @@
 import { processLayer1Optical } from "./moris-layer1-optical.js";
 import { extractDinov2Tokens, downsampleTo16x16Grid, computeHybridMaskedGemEmbedding, extractTopKeyPatches, executeGeometricGate, synthesizePerspectiveCentroid, rankStage2Candidates } from "./moris-layer2-embedding.js";
 import { computeEllipticFourierDescriptors, rerankLayer3Top10 } from "./moris-layer3-rerank.js";
-import { saveSignature, saveSignaturesBatch, getAllSignatures } from "./moris-idb.js";
+import { saveSignature, saveSignaturesBatch, getAllSignatures, OFFLINE_PROFILE, isFreshSignature } from "./moris-idb.js";
 /**
  * Enrolls a new SKU part into the Moris v2 signature representation:
  * Runs Layer 1 -> DINOv2 -> Layer 2 -> Multi-prototype perturbation -> Layer 3 features.
@@ -35,6 +35,7 @@ export async function enrollSkuSignature(skuId, rgba, width, height, extractor) 
     const signature = {
         skuId,
         version: 2,
+        offlineProfile: OFFLINE_PROFILE, enrolledAt: Date.now(),
         aspectRatio: opt.aspectRatio,
         solidity: opt.solidity,
         holeCount: opt.holeCount,
@@ -65,7 +66,7 @@ export async function searchPartTop10(rgba, width, height, extractor, cachedCand
     const queryEfd = computeEllipticFourierDescriptors(opt.outerContour, 16);
     // 4. Candidate Retrieval (from provided pool or IndexedDB)
     const candidatePool = cachedCandidates && cachedCandidates.length > 0
-        ? cachedCandidates
+        ? cachedCandidates.filter(sig => isFreshSignature(sig))
         : await getAllSignatures();
     // 5. Stage 2A Hard Geometric Gate
     const gateResult = executeGeometricGate({
@@ -113,6 +114,7 @@ export async function reindexBatchSignatures(items, extractor, onProgress) {
             signatures.push({
                 skuId: item.skuId,
                 version: 2,
+                offlineProfile: OFFLINE_PROFILE, enrolledAt: Date.now(),
                 aspectRatio: opt.aspectRatio,
                 solidity: opt.solidity,
                 holeCount: opt.holeCount,

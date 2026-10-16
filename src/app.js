@@ -534,12 +534,7 @@ createApp({
         this.session.user = me;
         await this.loadParts(true);
 
-        // Retry các vector job còn tồn tại từ lần save trước.
-        setTimeout(() => {
-          this.processMorisVectorQueue().catch(
-            error => console.warn('Moris vector queue retry failed', error)
-          );
-        }, 1200);
+
       } catch(e) { this.session.token=''; this.session.user=null; }
     },
     async login() {
@@ -1492,6 +1487,27 @@ createApp({
       return queryFeatures.every(qf => dbFeatures.some(df => this.isSingleFeatureMatch(df, qf)));
     },
 
+    async scanFilteredCatalogue(requestSeq) {
+      const rows = new Map();
+      const pageSize = 300;
+      // Explicit budget: never report a silently truncated filter result.
+      for (let offset = 0; offset < 10000; offset += pageSize) {
+        const page = await this.rpcRows('app_search_catalogue', {
+          p_session_token: this.session.token, p_search: '',
+          p_usage_side: this.filters.usage, p_view_mode: this.filters.viewMode,
+          p_limit: Math.min(pageSize, 10000 - offset), p_offset: offset
+        });
+        if (requestSeq !== this.catalogueRequestSeq) return [];
+        let added = 0;
+        for (const row of page) if (row?.id != null && !rows.has(String(row.id))) {
+          rows.set(String(row.id), row); added++;
+        }
+        if (page.length < Math.min(pageSize, 10000 - offset)) return [...rows.values()];
+        if (!added) throw new Error('Phân trang catalogue không tiến triển; vui lòng tải lại.');
+      }
+      throw new Error('Catalogue vượt ngân sách quét 10.000 dòng; cần bộ lọc server trước khi tiếp tục.');
+    },
+
     async loadParts(reset=false) {
       if (reset) this.page = 0;
 
@@ -1504,14 +1520,7 @@ createApp({
 
         // 1. CHẾ ĐỘ LỌC MỤC TIÊU: ID linh kiện (part_id - EXACT MATCH 100%)
         if (targetMode === 'part_id' && rawSearch) {
-          const rows = await this.rpcRows('app_search_catalogue', {
-            p_session_token: this.session.token,
-            p_search: '',
-            p_usage_side: this.filters.usage,
-            p_view_mode: this.filters.viewMode,
-            p_limit: 2000,
-            p_offset: 0
-          });
+          const rows = await this.scanFilteredCatalogue(requestSeq);
           if (requestSeq !== this.catalogueRequestSeq) return;
 
           const searchVal = rawSearch.toLowerCase();
@@ -1524,14 +1533,7 @@ createApp({
 
         // 2. CHẾ ĐỘ LỌC MỤC TIÊU: Mã linh kiện (code - FLEXIBLE MATCH SUBSTRING)
         if (targetMode === 'code' && rawSearch) {
-          const rows = await this.rpcRows('app_search_catalogue', {
-            p_session_token: this.session.token,
-            p_search: '',
-            p_usage_side: this.filters.usage,
-            p_view_mode: this.filters.viewMode,
-            p_limit: 2000,
-            p_offset: 0
-          });
+          const rows = await this.scanFilteredCatalogue(requestSeq);
           if (requestSeq !== this.catalogueRequestSeq) return;
 
           const searchVal = rawSearch.toLowerCase();
@@ -1559,10 +1561,10 @@ createApp({
         const qAST = this.parseIdentifyingFeaturesAST(this.filters.search);
         const isFeatureSearch = qFeatures.length > 0 || qAST.totalHoles != null || qAST.bigHoles != null || qAST.smallHoles != null || qAST.holeShapes.length > 0;
 
-        const fetchLimit = isFeatureSearch ? 2000 : CONFIG.PAGE_LIMIT + 1;
+        const fetchLimit = CONFIG.PAGE_LIMIT + 1;
         const fetchOffset = isFeatureSearch ? 0 : this.page * CONFIG.PAGE_LIMIT;
 
-        const rows = await this.rpcRows('app_search_catalogue', {
+        const rows = isFeatureSearch ? await this.scanFilteredCatalogue(requestSeq) : await this.rpcRows('app_search_catalogue', {
           p_session_token:this.session.token,
           p_search: isFeatureSearch ? '' : (this.filters.search || ''),
           p_usage_side:this.filters.usage,
@@ -2995,25 +2997,20 @@ createApp({
       if (candidate?.is_feature_match || candidate?.badge_label === 'Khớp' || candidate?.score_source === 'identifying_features_match') {
         return null;
       }
-      const match = Number(candidate?.match_score);
-      const vector = Number(candidate?.vector_similarity);
-      const final = Number(candidate?.compatibility_score ?? candidate?.final_score);
+      const values=[candidate?.final_score,candidate?.match_score,candidate?.compatibility_score,candidate?.vector_similarity];
+      const score=values.find(v=>typeof v==='number'&&Number.isFinite(v));
+      if(score===undefined)return null;
+      return Math.max(0,Math.min(100,Math.round(score*100)));
+    },
 
-      const score =
-        Number.isFinite(match) && match > 0
-          ? match
-          : (
-              Number.isFinite(final) && final > 0
-                ? final
-                : (
-                    Number.isFinite(vector) && vector > 0
-                      ? vector
-                      : null
-                  )
-            );
-
-      if (score == null) return null;
-      return Math.max(0, Math.min(100, Math.round(score * 100)));
+    morisCandidateEvidence(candidate) {
+      const labels={vector:'Kiểu dáng',holes:'Lỗ',aspect:'Tỷ lệ',contour:'Đường viền',patch:'Chi tiết',metadata:'Mô tả',structural:'Cấu trúc'};
+      const parts=(candidate?.score_breakdown?.signals||[]).filter(s=>s.reliability>0).map(s=>`${labels[s.name]||s.name}: ${Math.round(s.score*100)}/100`);
+      const view=candidate?.best_view_evidence?.asset_type;
+      if(view)parts.push(`Ảnh đối chiếu: ${{front:'mặt trước',back:'mặt sau',thumb:'thu nhỏ',detail:'chi tiết'}[view]||view}`);
+      if(candidate?.query_quality?.reliable===false)parts.push('Vùng linh kiện chưa rõ; cần chụp lại');
+      if(candidate?.geometric_warning)parts.push(candidate.geometric_warning);
+      return parts.join(' · ');
     },
 
     isMorisMobileDevice() {
@@ -3164,26 +3161,13 @@ createApp({
         this.setMorisScanStep(70, 'LỚP 2: TRÍCH XUẤT XONG', 'VECTOR 384D ĐÃ TẠO · TRUY VẤN KHO HNSW...');
       }
 
-      // Lớp 3: Chạy Funnel 3 Lớp Moris V2 nếu IndexedDB đã có signatures
-      let v2SearchResult = null;
-      try {
-        if (typeof mod.searchPartTop10V2 === 'function') {
-          const sigCount = typeof mod.countSignaturesV2 === 'function' ? await mod.countSignaturesV2() : 0;
-          if (sigCount > 0) {
-            v2SearchResult = await mod.searchPartTop10V2(imageDataUrl);
-          }
-        }
-      } catch (v2Err) {
-        console.warn('[Moris V2] Local 3-layer search error:', v2Err);
-      }
-
+      // Server retrieval owns online results; offline signatures never alter them.
       return {
         embedding:probes[0].embedding,
         profile:probes[0].profile,
         probes,
         geometry:result?.geometry || null,
-        diagnostics:result?.diagnostics || null,
-        v2SearchResult
+        diagnostics:result?.diagnostics || null
       };
     },
 
@@ -3242,58 +3226,6 @@ createApp({
       }
     },
 
-    mediaUrlForVectorPath(path) {
-      if (!path) return '';
-      return `${CONFIG.R2_MEDIA_BASE_URL}/${String(path)
-        .replace(/^\/+/,'')
-        .split('/')
-        .map(encodeURIComponent)
-        .join('/')}`;
-    },
-
-    async upsertMorisVectors(vectors) {
-      if (!Array.isArray(vectors) || !vectors.length) {
-        return {
-          ok:true,
-          accepted:0,
-          written:0,
-          failed:0,
-          chunks:0,
-          results:[]
-        };
-      }
-
-      if (!this._morisChunkedUpsertModulePromise) {
-        this._morisChunkedUpsertModulePromise = import(
-          CONFIG.MORIS_VECTOR_UPSERT_MODULE_URL
-        );
-      }
-
-      let mod;
-      try {
-        mod = await this._morisChunkedUpsertModulePromise;
-      } catch (error) {
-        this._morisChunkedUpsertModulePromise = null;
-        throw error;
-      }
-
-      return mod.upsertVectorsChunked({
-        endpoint:'/api/moris/vector-upsert',
-        sessionToken:await this.freshAuth(),
-        vectors,
-        chunkSize:CONFIG.MORIS_VECTOR_UPSERT_CHUNK_SIZE,
-        timeoutMs:180000,
-        strict:true,
-        onChunk:info => {
-          if (info?.phase === 'start' && info?.chunk_count > 1) {
-            console.info(
-              `Moris vector chunk ${info.chunk_number}/${info.chunk_count}`
-            );
-          }
-        }
-      });
-    },
-
     readMorisVectorQueue() {
       try {
         const rows = JSON.parse(
@@ -3325,47 +3257,6 @@ createApp({
       }
     },
 
-    moveMorisVectorJobToFailed(job) {
-      const rows = this.readMorisVectorFailedQueue();
-
-      rows.push({
-        ...job,
-        failed_at:new Date().toISOString()
-      });
-
-      localStorage.setItem(
-        CONFIG.MORIS_VECTOR_QUEUE_FAILED_KEY,
-        JSON.stringify(rows.slice(-100))
-      );
-    },
-
-    enqueueMorisVectorJob(recordId, assets, code='') {
-      const rows = this.readMorisVectorQueue();
-
-      const normalizedAssets = (assets || [])
-        .filter(a => a?.image_path)
-        .map(a => ({
-          asset_type:a.asset_type,
-          image_path:a.image_path,
-          storage_provider:a.storage_provider || 'r2',
-          sort_order:Number(a.sort_order || 1)
-        }));
-
-      const key = String(recordId);
-      const next = rows.filter(row => String(row?.record_id) !== key);
-
-      next.push({
-        record_id:key,
-        code:String(code || ''),
-        assets:normalizedAssets,
-        retries:0,
-        created_at:new Date().toISOString()
-      });
-
-      this.writeMorisVectorQueue(next);
-      return next.length;
-    },
-
     removeMorisVectorJob(recordId) {
       const key = String(recordId || '');
       if (!key) return;
@@ -3393,184 +3284,6 @@ createApp({
     clearAllMorisVectorJobs() {
       localStorage.removeItem(CONFIG.MORIS_VECTOR_QUEUE_KEY);
       localStorage.removeItem(CONFIG.MORIS_VECTOR_QUEUE_FAILED_KEY);
-    },
-
-    async processMorisVectorQueue() {
-      if (this._morisVectorQueueRunning) return;
-      if (!this.session.token || !this.canEdit) return;
-
-      const isMobile = this.isMorisMobileDevice();
-      if (
-        (isMobile && !CONFIG.MORIS_VECTOR_AUTO_ON_SAVE_MOBILE) ||
-        (!isMobile && !CONFIG.MORIS_VECTOR_AUTO_ON_SAVE_DESKTOP)
-      ) return;
-
-      this._morisVectorQueueRunning = true;
-
-      try {
-        let rows = this.readMorisVectorQueue();
-
-        while (rows.length) {
-          const job = rows[0];
-
-          try {
-            const result = await this.vectorizeSavedPart(
-              job.record_id,
-              job.assets
-            );
-
-            rows.shift();
-            this.writeMorisVectorQueue(rows);
-
-            if (result?.written) {
-              this.toast(
-                'success',
-                `Vector AI: đã cập nhật ${result.written} vector cho ${job.code || job.record_id}.`
-              );
-            }
-          } catch (error) {
-            job.retries = Number(job.retries || 0) + 1;
-            job.last_error = error?.message || String(error);
-            job.updated_at = new Date().toISOString();
-
-            if (job.retries >= CONFIG.MORIS_VECTOR_QUEUE_MAX_RETRIES) {
-              console.warn('Moris vector job exhausted', job);
-              this.moveMorisVectorJobToFailed(job);
-              rows.shift();
-
-              this.toast(
-                'error',
-                `Vector AI chưa xử lý được ${job.code || job.record_id}. ` +
-                'Job đã chuyển sang danh sách lỗi.'
-              );
-            } else {
-              rows[0] = job;
-            }
-
-            this.writeMorisVectorQueue(rows);
-            break;
-          }
-        }
-      } finally {
-        this._morisVectorQueueRunning = false;
-      }
-    },
-
-    async vectorizeCurrentEditorPart() {
-      if (!this.editor.form.id) return;
-
-      this.editor.vectorBusy = true;
-      this.editor.vectorStatus = 'Đang nạp model và tạo vector...';
-
-      try {
-        const result = await this.vectorizeSavedPart(
-          this.editor.form.id,
-          this.editor.assets
-        );
-
-        this.editor.vectorStatus =
-          result?.written
-            ? `Đã ghi ${result.written} vector vào Supabase.`
-            : 'Không có vector mới được ghi.';
-
-        this.toast('success', this.editor.vectorStatus);
-      } catch (error) {
-        this.editor.vectorStatus =
-          `Tạo vector thất bại: ${error?.message || error}`;
-
-        this.toast(
-          'error',
-          'Không tạo được vector. Mở Trung tâm Vector để kiểm tra.'
-        );
-      } finally {
-        this.editor.vectorBusy = false;
-      }
-    },
-
-    async vectorizeSavedPart(recordId, assets) {
-      const isMobile = this.isMorisMobileDevice();
-
-      if (
-        (isMobile && !CONFIG.MORIS_VECTOR_AUTO_ON_SAVE_MOBILE) ||
-        (!isMobile && !CONFIG.MORIS_VECTOR_AUTO_ON_SAVE_DESKTOP)
-      ) return;
-
-      const seen = new Set();
-      const selected = [];
-
-      const priority = ['front','back','detail','compare'];
-
-      for (const type of priority) {
-        for (const asset of (assets || [])) {
-          if (asset?.asset_type !== type) continue;
-
-          const key = String(asset?.image_path || '').replace(/^\/+/,'');
-          if (!key || seen.has(key)) continue;
-
-          seen.add(key);
-          selected.push({
-            record_id:String(recordId),
-            asset_type:type,
-            object_key:key
-          });
-        }
-      }
-
-      if (!selected.length) {
-        const fallback = (assets || []).find(
-          a => ['thumb','front'].includes(a?.asset_type) && a?.image_path
-        );
-        if (fallback) {
-          selected.push({
-            record_id:String(recordId),
-            asset_type:String(fallback.asset_type || 'thumb'),
-            object_key:String(fallback.image_path).replace(/^\/+/,'')
-          });
-        }
-      }
-
-      if (!selected.length) {
-        const error = new Error(
-          'SKU không có asset image_path để tạo vector.'
-        );
-        error.code = 'MORIS_VECTOR_NO_ASSET';
-        throw error;
-      }
-
-      const vectors = [];
-
-      for (const item of selected.slice(0,4)) {
-        const mod = await this.loadMorisBrowserVectorModule();
-        const imageUrl = new URL(
-          this.mediaUrlForVectorPath(item.object_key),
-          location.origin
-        ).href;
-        const result = await mod.embedImageDinov2Variants(
-          imageUrl,
-          {includeGray:true}
-        );
-
-        for (const probe of (result.probes || [])) {
-          vectors.push({
-            ...item,
-            view_variant:probe.view_variant,
-            embedding:probe.embedding,
-            embedding_profile:probe.profile,
-            foreground_status:'browser_dinov2_v59_canonical'
-          });
-        }
-
-        // Đăng ký Moris V2 Signature vào IndexedDB phục vụ funnel 3 lớp offline
-        try {
-          if (typeof mod.enrollSkuSignatureV2 === 'function' && item.record_id) {
-            await mod.enrollSkuSignatureV2(String(item.record_id), imageUrl);
-          }
-        } catch (v2Err) {
-          console.warn('[Moris V2] Enroll signature failed for', item.record_id, v2Err);
-        }
-      }
-
-      return this.upsertMorisVectors(vectors);
     },
 
     morisCandidateUrl(candidate) {
@@ -3877,27 +3590,7 @@ createApp({
           return;
         }
 
-        // Unified 3-Layer Supabase Search: server candidates are primary single source of truth.
-        // v2SearchResult is only used as defensive fallback if server returns empty candidates.
-        if ((!data?.candidates || data.candidates.length === 0) && vectorResult?.v2SearchResult?.top10?.length > 0) {
-          const v2Top10 = vectorResult.v2SearchResult.top10;
-          const localMatched = [];
-          for (const item of v2Top10) {
-            const part = (this.parts || []).find(p => String(p.id) === String(item.skuId) || String(p.code) === String(item.skuId));
-            if (part) {
-              localMatched.push({
-                ...part,
-                final_score: item.finalScore,
-                match_score: item.finalScore,
-                v2_score: item.finalScore
-              });
-            }
-          }
-          if (localMatched.length > 0) {
-            data.candidates = localMatched;
-          }
-        }
-
+        // Empty server results remain empty; offline cache is a separate opt-in mode.
         this.applyMorisSearchResults(data);
         this.clearMorisImage();
 

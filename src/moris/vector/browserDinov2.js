@@ -1,8 +1,7 @@
-import { canonicalizeImageVariants } from "./imageCanonicalizer.js";
 
 const WORKER_URL = new URL("./dinov2.worker.js", import.meta.url);
 
-export const MORIS_DINOV2_PROFILE = Object.freeze({"model": "onnx-community/dinov2-small", "model_version": "ef1fb10", "preprocess_version": "kim_canon_v2", "profile": "cls_l2_v1", "dimension": 384});
+export const MORIS_DINOV2_PROFILE = Object.freeze({"model": "onnx-community/dinov2-small", "model_version": "ef1fb10", "preprocess_version": "kim_canon_v3_letterbox", "profile": "hybrid_gem3_edge_55_45_pseudorgb_u8_v1", "dimension": 384});
 
 let worker = null;
 let sequence = 0;
@@ -97,7 +96,7 @@ export async function embedImageDinov2(image) {
 
   return {
     embedding: result.embedding,
-    profile: MORIS_DINOV2_PROFILE,
+    profile: { ...MORIS_DINOV2_PROFILE, preprocess_version: "raw_image_v1", profile: "cls_l2_raw_v1" },
     runtime: result.runtime || null
   };
 }
@@ -114,58 +113,34 @@ export function disposeDinov2() {
 }
 
 
-export async function embedImageDinov2Variants(image, { includeGray = true } = {}) {
-  try {
-    if (typeof Worker !== "undefined") {
-      const res = await request("embed-variants-v2", { image, includeGray });
-      if (res && Array.isArray(res.probes) && res.probes.length > 0) {
-        return res;
-      }
+export async function embedImageDinov2Variants(image, { includeGray = true, allowMirror = false, includeSpatial = false } = {}) {
+  const result = await request("embed-variants-v2", { image, includeGray, allowMirror, includeSpatial });
+  if (!result?.probes?.length) throw new Error("DINOv2 spatial embedding unavailable.");
+  for (const probe of result.probes) {
+    if (Object.keys(MORIS_DINOV2_PROFILE).some(key => probe.profile?.[key] !== MORIS_DINOV2_PROFILE[key]) ||
+        !Array.isArray(probe.embedding) || probe.embedding.length !== 384 ||
+        probe.embedding.some(v => typeof v !== "number" || !Number.isFinite(v)) ||
+        Math.abs(Math.hypot(...probe.embedding) - 1) > 0.001) {
+      throw new Error("DINOv2 embedding/profile contract mismatch.");
     }
-  } catch (workerErr) {
-    console.warn("embedImageDinov2Variants worker v2 fallback:", workerErr);
   }
-
-  const canonical = await canonicalizeImageVariants(image, { includeGray });
-  const probes = [];
-
-  for (const variant of canonical.variants) {
-    const result = await embedImageDinov2(variant.image_data_url);
-    probes.push({
-      probe_id: variant.probe_id,
-      view_variant: variant.view_variant,
-      embedding: result.embedding,
-      profile: {
-        ...result.profile,
-        preprocess_version: 'kim_canon_v2'
-      },
-      runtime: result.runtime || null,
-      diagnostics: variant.diagnostics || null
-    });
-  }
-
-  return {
-    probes,
-    diagnostics: canonical.diagnostics,
-    geometry: canonical.geometry || null,
-    preprocess_version: 'kim_canon_v2'
-  };
+  return result;
 }
 
 export async function processLayer1InWorker(image) {
   return request("layer1", { image });
 }
 
-export async function enrollSkuSignatureV2(skuId, image) {
-  return request("enroll-signature-v2", { skuId, image });
+export async function enrollSkuSignatureV2(skuId, image, {source, confirmed} = {}) {
+  return request("enroll-signature-v2", { skuId, image, source, confirmed });
 }
 
 export async function searchPartTop10V2(image, candidates) {
   return request("search-v2", { image, candidates });
 }
 
-export async function reindexBatchV2(items) {
-  return request("reindex-batch-v2", { items });
+export async function reindexBatchV2(items, {source, confirmed} = {}) {
+  return request("reindex-batch-v2", { items, source, confirmed });
 }
 
 export async function deleteSignatureV2(skuId) {

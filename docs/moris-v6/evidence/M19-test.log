@@ -1,0 +1,16 @@
+
+> dictionary-catalogue-ai@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.3 /workspaces/Dictionary
+
+
+ Test Files  29 passed (29)
+      Tests  329 passed (329)
+   Start at  03:35:59
+   Duration  14.12s (tests 84%, transform 8%, import 6%, worker 2%)
+
+    Isolate  29 workers spawned · ~139ms startup each (spawn + environment, per file)
+             at least ~3.89s faster with isolate: false — reuses workers across files instead of one per file
+

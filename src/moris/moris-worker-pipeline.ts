@@ -39,7 +39,9 @@ import {
 import {
   saveSignature,
   saveSignaturesBatch,
-  getAllSignatures
+  getAllSignatures,
+  OFFLINE_PROFILE,
+  isFreshSignature
 } from "./moris-idb.js";
 
 export type Dinov2FeatureExtractor = (pseudoRgbTensor: Float32Array, opt: OpticalNormalizationResult) => Promise<any>;
@@ -74,6 +76,7 @@ export async function enrollSkuSignature(
   const signature: MorisPartSignature = {
     skuId,
     version: 2,
+    offlineProfile: OFFLINE_PROFILE, enrolledAt: Date.now(),
     aspectRatio: opt.aspectRatio,
     solidity: opt.solidity,
     holeCount: opt.holeCount,
@@ -121,7 +124,7 @@ export async function searchPartTop10(
 
   // 4. Candidate Retrieval (from provided pool or IndexedDB)
   const candidatePool = cachedCandidates && cachedCandidates.length > 0
-    ? cachedCandidates
+    ? cachedCandidates.filter(sig => isFreshSignature(sig))
     : await getAllSignatures();
 
   // 5. Stage 2A Hard Geometric Gate
@@ -196,6 +199,7 @@ export async function reindexBatchSignatures(
       signatures.push({
         skuId: item.skuId,
         version: 2,
+    offlineProfile: OFFLINE_PROFILE, enrolledAt: Date.now(),
         aspectRatio: opt.aspectRatio,
         solidity: opt.solidity,
         holeCount: opt.holeCount,

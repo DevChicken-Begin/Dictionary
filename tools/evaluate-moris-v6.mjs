@@ -1,0 +1,24 @@
+// Offline evaluation of saved candidates. No network, model or database operations.
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {dirname,resolve} from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {evaluateSnapshots} from '../evaluation/moris-v6/metrics.js';
+const args=process.argv.slice(2),pos=args.filter(a=>!a.startsWith('--'));
+const [manifestFile,predictionFile,out]=pos;
+if(!manifestFile||!predictionFile||!out)throw Error('Usage: node tools/evaluate-moris-v6.mjs manifest.jsonl predictions.json output-prefix [--allow-provisional]');
+const manifest=(await readFile(manifestFile,'utf8')).trim().split('\n').map(JSON.parse);
+const snapshotBytes=await readFile(predictionFile);const snapshot=JSON.parse(snapshotBytes);
+if(!snapshot.profile||!snapshot.algorithm||!snapshot.latency_scope)throw Error('Snapshot needs profile, algorithm and latency_scope provenance');
+const report=evaluateSnapshots(manifest,snapshot.predictions,{allowProvisional:args.includes('--allow-provisional')});
+report.timestamp=new Date().toISOString();
+report.commit_sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+report.working_tree_dirty=!!execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim();
+report.snapshot_sha256=createHash('sha256').update(snapshotBytes).digest('hex');
+report.source_tree_diff_sha256=createHash('sha256').update(execFileSync('git',['diff','--binary','HEAD'])).digest('hex');
+report.provenance={profile:snapshot.profile,algorithm:snapshot.algorithm,latency_scope:snapshot.latency_scope,original_timestamp:snapshot.created_at||null};
+report.evaluator_sha256=createHash('sha256').update(await readFile(new URL('../evaluation/moris-v6/metrics.js',import.meta.url))).update(await readFile(new URL('../evaluation/moris-v6/manifest.js',import.meta.url))).update(await readFile(new URL(import.meta.url))).digest('hex');
+report.production_writes=0;
+const lines=['# Moris V6 offline evaluation','',`Queries: ${report.n}; known: ${report.known_n}; unknown: ${report.unknown_n}.`,`Dataset SHA256: ${report.dataset.sha256}`,`Snapshot SHA256: ${report.snapshot_sha256}`,`Commit: ${report.commit_sha}; dirty tree: ${report.working_tree_dirty}.`,'',`Profile: ${JSON.stringify(snapshot.profile)}`,`Algorithm: ${snapshot.algorithm}; latency scope: ${snapshot.latency_scope}.`,'','| Metric | Measured value |','|---|---|',...Object.entries(report.metrics).map(([k,v])=>`| ${k} | ${v??'Not measured'} |`),'','Top1/recall measure ranking independent of abstention; false-accept uses the explicit saved acceptance decision. Recall@50 requires complete requested Top50 retrieval evidence for every known query. Missing fields remain unmeasured, never zero.','Bootstrap CI is omitted below 30 known queries; related captures can still invalidate independence. Stratified source categories are retained in JSON.','',report.dataset.provisional?'**Provisional development labels: not a release accuracy claim.**':'Label approval is recorded in the manifest; review source kind/split before acceptance.',''];
+await mkdir(dirname(resolve(out)),{recursive:true});await writeFile(`${out}.json`,JSON.stringify(report,null,2)+'\n');await writeFile(`${out}.md`,lines.join('\n'));
+console.log(JSON.stringify({n:report.n,metrics:report.metrics,dataset_sha256:report.dataset.sha256,output:out},null,2));

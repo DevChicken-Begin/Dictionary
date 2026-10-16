@@ -905,20 +905,10 @@
               <div>
                 <p class="text-sm font-black text-violet-900">Vector hình ảnh</p>
                 <p class="text-xs font-semibold text-violet-700 mt-1">
-                  {{ editor.vectorStatus || 'Tách vector trong Trung tâm Vector AI hoặc bấm nút Tạo vector bên cạnh.' }}
+                  Lưu ảnh xong, mở Trung tâm Vector AI để tạo/cập nhật vector thủ công
                 </p>
               </div>
-              <button
-                v-if="editor.form.id"
-                type="button"
-                @click="vectorizeCurrentEditorPart"
-                class="btn h-10 px-3 bg-violet-600 text-white hover:bg-violet-700 shrink-0"
-                :disabled="editor.vectorBusy"
-              >
-                <i v-if="editor.vectorBusy" data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
-                <i v-else data-lucide="sparkles" class="w-4 h-4"></i>
-                {{ editor.vectorBusy ? 'Đang tạo...' : 'Tạo vector' }}
-              </button>
+
             </div>
           </div>
 
@@ -1491,12 +1481,13 @@
             <div class="min-w-0">
               <div class="text-xs font-black text-slate-900 truncate">{{ c.code }}</div>
               <div class="text-[10px] font-bold text-slate-500 truncate">ID: {{ c.part_id || c.code || '---' }} · {{ usageLabel(c.usage_side) }}</div>
+              <div v-if="morisCandidateEvidence(c)" class="mt-1 text-[10px] text-slate-600 line-clamp-3">{{ morisCandidateEvidence(c) }}</div>
               <div v-if="c.match_reason" class="mt-1 text-[10px] text-emerald-700 font-bold line-clamp-2">{{ c.match_reason }}</div>
             </div>
             <div class="text-right">
               <div v-if="c.is_feature_match || c.badge_label==='Khớp'" class="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">Khớp</div>
-              <div v-else-if="morisCandidatePercent(c)!==null" class="text-xs font-black text-emerald-700">{{ morisCandidatePercent(c) }}%</div>
-              <div v-else class="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">Khớp</div>
+              <div v-else-if="morisCandidatePercent(c)!==null" class="text-xs font-black text-emerald-700">Điểm {{ morisCandidatePercent(c) }}/100</div>
+              <div v-else class="text-[10px] text-slate-500">Chưa đủ dữ liệu</div>
               <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 ml-auto mt-1"></i>
             </div>
           </button>

@@ -25,7 +25,10 @@ export async function upsertVectorsChunked({
   timeoutMs=180000,
   strict=true,
   fetchImpl=fetch,
-  onChunk
+  onChunk,
+  mode="skip",
+  source="vector_center",
+  confirmed=false
 }={}) {
   const rows = Array.isArray(vectors) ? vectors : [];
   if (!rows.length) {
@@ -45,6 +48,7 @@ export async function upsertVectorsChunked({
     ok:true,
     accepted:0,
     written:0,
+    skipped:0,
     failed:0,
     chunks:chunks.length,
     results:[]
@@ -73,7 +77,8 @@ export async function upsertVectorsChunked({
         },
         body:JSON.stringify({
           session_token:String(sessionToken || ""),
-          vectors:chunk
+          vectors:chunk,
+          mode, source, confirmed
         })
       });
 
@@ -98,6 +103,7 @@ export async function upsertVectorsChunked({
 
       aggregate.accepted += accepted;
       aggregate.written += written;
+      aggregate.skipped += Number(data?.skipped || 0);
       aggregate.failed += failed;
       aggregate.results.push(...(
         Array.isArray(data?.results) ? data.results : []
@@ -142,7 +148,7 @@ export async function upsertVectorsChunked({
     }
   }
 
-  if (strict && aggregate.written !== rows.length) {
+  if (strict && aggregate.written + aggregate.skipped !== rows.length) {
     const error = new Error(
       `Vector write không toàn vẹn: expected=${rows.length}, written=${aggregate.written}.`
     );

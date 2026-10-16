@@ -13,6 +13,13 @@
  * - Full memory store fallback for Node.js / test environments where IDB is unavailable.
  * ============================================================================
  */
+export const OFFLINE_PROFILE = "offline_768_gem3_edge60_40_letterbox_v1";
+export const OFFLINE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export function isFreshSignature(sig, now = Date.now()) {
+    return !!sig && sig.version === 2 && sig.offlineProfile === OFFLINE_PROFILE &&
+        typeof sig.enrolledAt === "number" && Number.isFinite(sig.enrolledAt) &&
+        sig.enrolledAt <= now && now - sig.enrolledAt < OFFLINE_TTL_MS;
+}
 const DB_NAME = "moris_cv_db";
 const DB_VERSION = 2;
 const STORE_NAME = "signatures_v2";
@@ -28,6 +35,8 @@ export function serializeSignature(sig) {
     return {
         skuId: sig.skuId,
         version: 2,
+        offlineProfile: sig.offlineProfile,
+        enrolledAt: sig.enrolledAt,
         aspectRatio: sig.aspectRatio,
         solidity: sig.solidity,
         holeCount: sig.holeCount,
@@ -48,7 +57,9 @@ export function serializeSignature(sig) {
 export function deserializeSignature(raw) {
     return {
         skuId: String(raw.skuId),
-        version: 2,
+        version: raw.version,
+        offlineProfile: raw.offlineProfile,
+        enrolledAt: raw.enrolledAt,
         aspectRatio: Number(raw.aspectRatio || 1.0),
         solidity: Number(raw.solidity || 1.0),
         holeCount: Number(raw.holeCount || 0),
@@ -136,14 +147,15 @@ export async function saveSignaturesBatch(signatures) {
 export async function getSignatureBySku(skuId) {
     const db = await openMorisDatabase();
     if (!db) {
-        return memoryStore.get(skuId) || null;
+        const sig = memoryStore.get(skuId) || null;
+        return isFreshSignature(sig) ? sig : null;
     }
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, "readonly");
         const store = tx.objectStore(STORE_NAME);
         const req = store.get(skuId);
         req.onsuccess = () => {
-            if (req.result) {
+            if (req.result && isFreshSignature(req.result)) {
                 resolve(deserializeSignature(req.result));
             }
             else {
@@ -159,7 +171,7 @@ export async function getSignatureBySku(skuId) {
 export async function getAllSignatures() {
     const db = await openMorisDatabase();
     if (!db) {
-        return Array.from(memoryStore.values());
+        return Array.from(memoryStore.values()).filter(sig => isFreshSignature(sig));
     }
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, "readonly");
@@ -167,7 +179,7 @@ export async function getAllSignatures() {
         const req = store.getAll();
         req.onsuccess = () => {
             const records = Array.isArray(req.result) ? req.result : [];
-            resolve(records.map(deserializeSignature));
+            resolve(records.filter(sig => isFreshSignature(sig)).map(deserializeSignature));
         };
         req.onerror = () => reject(req.error);
     });
@@ -210,15 +222,5 @@ export async function deleteSignature(skuId) {
  * Returns total count of enrolled SKU signatures.
  */
 export async function countSignatures() {
-    const db = await openMorisDatabase();
-    if (!db) {
-        return memoryStore.size;
-    }
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, "readonly");
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.count();
-        req.onsuccess = () => resolve(Number(req.result || 0));
-        req.onerror = () => reject(req.error);
-    });
+    return (await getAllSignatures()).length;
 }

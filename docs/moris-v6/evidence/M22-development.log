@@ -1,0 +1,82 @@
+[
+  {
+    "mode": "global",
+    "n": 93,
+    "metrics": {
+      "top1": 0.6236559139784946,
+      "recall10": 0.8387096774193549,
+      "recall50": 0.946236559139785,
+      "recall50_measured_n": 93,
+      "mrr10": 0.6896057347670254,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 5,
+      "rerank_misses": 30,
+      "latency_p50_ms": 1346.701435,
+      "latency_p95_ms": 2897.570748999999,
+      "latency_measured_n": 93
+    }
+  },
+  {
+    "mode": "holes",
+    "n": 93,
+    "metrics": {
+      "top1": 0.5806451612903226,
+      "recall10": 0.8064516129032258,
+      "recall50": 0.946236559139785,
+      "recall50_measured_n": 93,
+      "mrr10": 0.6501792114695342,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 5,
+      "rerank_misses": 34,
+      "latency_p50_ms": 1344.7935230000003,
+      "latency_p95_ms": 2889.9226331999994,
+      "latency_measured_n": 93
+    }
+  },
+  {
+    "mode": "contour",
+    "n": 93,
+    "metrics": {
+      "top1": 0.5806451612903226,
+      "recall10": 0.8064516129032258,
+      "recall50": 0.946236559139785,
+      "recall50_measured_n": 93,
+      "mrr10": 0.6519713261648747,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 5,
+      "rerank_misses": 34,
+      "latency_p50_ms": 1351.8997209999998,
+      "latency_p95_ms": 2890.898028399999,
+      "latency_measured_n": 93
+    }
+  },
+  {
+    "mode": "patch",
+    "n": 93,
+    "metrics": {
+      "top1": 0.5806451612903226,
+      "recall10": 0.8064516129032258,
+      "recall50": 0.946236559139785,
+      "recall50_measured_n": 93,
+      "mrr10": 0.6519713261648747,
+      "unknown_false_accept": null,
+      "abstain_rate": null,
+      "decision_measured_n": 0,
+      "known_abstain_rate": null,
+      "retrieval_misses": 5,
+      "rerank_misses": 34,
+      "latency_p50_ms": 1344.0790379999999,
+      "latency_p95_ms": 2891.8467263999987,
+      "latency_measured_n": 93
+    }
+  }
+]

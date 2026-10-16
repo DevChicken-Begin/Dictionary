@@ -1,0 +1,10 @@
+{
+  "schema_version": "moris_dataset_v1",
+  "rows": 6,
+  "sha256": "eded8ebfcf6197cce09a78aff42a60bf5686316359467c152acade55ca58feb8",
+  "camera": 6,
+  "holdout": 0,
+  "approved": 0,
+  "provisional": 6,
+  "verified_image_bytes": 6
+}

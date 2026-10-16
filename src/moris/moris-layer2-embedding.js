@@ -8,7 +8,7 @@
  *
  * Key Algorithms Implemented:
  * 1. DINOv2-small ONNX Output Extraction: 256 spatial patch tokens ([1, 257, 384]),
- *    skipping [CLS] token, with robust fallback for [1, 384] single-vector outputs.
+ *    skipping [CLS] token; pooled-only outputs fail closed.
  * 2. 16x16 Grid Downsampling of fgMask and scharrEdgeMap.
  * 3. Signed Generalized Mean (GeM, p = 3.0) Pooling across foreground patches.
  * 4. Edge-Detail Saliency Weighted Pooling (detailVec, 384-dim).
@@ -55,19 +55,23 @@ export function dotProduct(a, b) {
  * - [1, 257, 384] -> skips index 0 [CLS], extracts 256 spatial patches
  * - [257, 384] -> skips index 0 [CLS], extracts 256 spatial patches
  * - [256, 384] -> directly 256 patches, synthesizes CLS by average
- * - [1, 384] or [384] -> fallback: uses CLS and replicates 256 times
+ * - [1, 384] or [384] -> rejected: CLS cannot supply spatial patches
  */
 export function extractDinov2Tokens(onnxOutput) {
     const data = onnxOutput?.data || onnxOutput;
     const dims = Array.isArray(onnxOutput?.dims) ? onnxOutput.dims : [];
     const dim = 384;
     const numPatches = 256;
-    if (!data || data.length < dim) {
-        throw new Error(`DINOv2 ONNX tensor không hợp lệ: length=${data?.length}`);
+    if (!data || !dims.length || dims.some(d => !Number.isInteger(d) || d <= 0) ||
+        dims.reduce((a, b) => a * b, 1) !== data.length) {
+        throw new Error("DINOv2 tensor shape/data mismatch.");
     }
     const raw = data instanceof Float32Array ? data : new Float32Array(data);
+    if (raw.some(v => !Number.isFinite(v)))
+        throw new Error("DINOv2 tensor non-finite.");
+    const shape = dims.join(",");
     // Case 1: [1, 257, 384] or [257, 384] -> 257 tokens (CLS at 0, 256 patches at 1..256)
-    if (raw.length >= 257 * dim || (dims.length === 3 && dims[1] === 257 && dims[2] === dim)) {
+    if (shape === "1,257,384" || shape === "257,384") {
         const clsToken = new Float32Array(dim);
         clsToken.set(raw.subarray(0, dim));
         l2NormalizeVector(clsToken);
@@ -76,7 +80,7 @@ export function extractDinov2Tokens(onnxOutput) {
         return { clsToken, patchTokens, isSpatial: true };
     }
     // Case 2: [256, 384] -> 256 patches directly
-    if (raw.length === numPatches * dim) {
+    if (shape === "256,384" || shape === "1,256,384") {
         const patchTokens = new Float32Array(numPatches * dim);
         patchTokens.set(raw);
         const clsToken = new Float32Array(dim);
@@ -89,16 +93,7 @@ export function extractDinov2Tokens(onnxOutput) {
         l2NormalizeVector(clsToken);
         return { clsToken, patchTokens, isSpatial: true };
     }
-    // Case 3: [1, 384] or [384] -> single CLS token fallback
-    const clsToken = new Float32Array(dim);
-    clsToken.set(raw.subarray(0, dim));
-    l2NormalizeVector(clsToken);
-    // Safe fallback: replicate CLS token across all 256 spatial cells
-    const patchTokens = new Float32Array(numPatches * dim);
-    for (let p = 0; p < numPatches; p++) {
-        patchTokens.set(clsToken, p * dim);
-    }
-    return { clsToken, patchTokens, isSpatial: false };
+    throw new Error(`DINOv2 spatial tokens required; received [${dims}]. CLS fallback is disabled.`);
 }
 /**
  * Downsamples 224x224 binary mask and Scharr gradient map into 16x16 patch grids (14x14 cell size).

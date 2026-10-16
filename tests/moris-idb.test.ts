@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
+  OFFLINE_PROFILE,
   saveSignature,
   saveSignaturesBatch,
   getSignatureBySku,
@@ -20,6 +21,7 @@ describe('moris-idb: IndexedDB Part Signature Storage v2', () => {
     const orig: MorisPartSignature = {
       skuId: '3411160201',
       version: 2,
+      offlineProfile: OFFLINE_PROFILE, enrolledAt: Date.now(),
       aspectRatio: 2.15,
       solidity: 0.88,
       holeCount: 6,
@@ -52,6 +54,7 @@ describe('moris-idb: IndexedDB Part Signature Storage v2', () => {
     const sig: MorisPartSignature = {
       skuId: 'SKU-001',
       version: 2,
+      offlineProfile: OFFLINE_PROFILE, enrolledAt: Date.now(),
       aspectRatio: 1.5,
       solidity: 0.9,
       holeCount: 2,
@@ -78,6 +81,7 @@ describe('moris-idb: IndexedDB Part Signature Storage v2', () => {
       batch.push({
         skuId: `SKU-${String(i).padStart(4, '0')}`,
         version: 2,
+      offlineProfile: OFFLINE_PROFILE, enrolledAt: Date.now(),
         aspectRatio: 1.0 + (i % 5) * 0.2,
         solidity: 0.85,
         holeCount: i % 8,

@@ -1,0 +1,79 @@
+{
+  "project_id": "vhsikdgkzecdfopkpzum",
+  "method": "Supabase MCP execute_sql; BEGIN READ ONLY; aggregate SELECT; COMMIT",
+  "before": {
+    "captured_at": "2026-10-16 02:13:45.271137+00",
+    "read_only": "on",
+    "catalogue_rows": 545,
+    "distinct_skus": 545,
+    "vector_rows": 1090,
+    "active_vectors": 1090,
+    "vector_groups": [
+      {
+        "rows": 545,
+        "is_active": true,
+        "asset_type": "front",
+        "view_variant": "canon_rgb_v2",
+        "embedding_model": "onnx-community/dinov2-small",
+        "embedding_profile": "cls_l2_v1",
+        "preprocess_version": "kim_canon_v2",
+        "embedding_model_version": "ef1fb10"
+      },
+      {
+        "rows": 545,
+        "is_active": true,
+        "asset_type": "thumb",
+        "view_variant": "canon_rgb_v2",
+        "embedding_model": "onnx-community/dinov2-small",
+        "embedding_profile": "cls_l2_v1",
+        "preprocess_version": "kim_canon_v2",
+        "embedding_model_version": "ef1fb10"
+      }
+    ],
+    "catalogue_views": [
+      {
+        "rows": 545,
+        "view_mode": "single_face"
+      }
+    ]
+  },
+  "after": {
+    "captured_at": "2026-10-16 02:14:13.000037+00",
+    "read_only": "on",
+    "catalogue_rows": 545,
+    "distinct_skus": 545,
+    "vector_rows": 1090,
+    "active_vectors": 1090,
+    "vector_groups": [
+      {
+        "rows": 545,
+        "is_active": true,
+        "asset_type": "front",
+        "view_variant": "canon_rgb_v2",
+        "embedding_model": "onnx-community/dinov2-small",
+        "embedding_profile": "cls_l2_v1",
+        "preprocess_version": "kim_canon_v2",
+        "embedding_model_version": "ef1fb10"
+      },
+      {
+        "rows": 545,
+        "is_active": true,
+        "asset_type": "thumb",
+        "view_variant": "canon_rgb_v2",
+        "embedding_model": "onnx-community/dinov2-small",
+        "embedding_profile": "cls_l2_v1",
+        "preprocess_version": "kim_canon_v2",
+        "embedding_model_version": "ef1fb10"
+      }
+    ],
+    "catalogue_views": [
+      {
+        "rows": 545,
+        "view_mode": "single_face"
+      }
+    ]
+  },
+  "writes_performed": 0,
+  "observed_vector_rows_delta": 0,
+  "observed_catalogue_rows_delta": 0
+}

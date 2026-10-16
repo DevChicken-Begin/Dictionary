@@ -1,0 +1,1 @@
+Build changed only version.json. Restored pre-task dist/version.json; all dist file paths and SHA-256 hashes match pre-task snapshot.

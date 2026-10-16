@@ -1,0 +1,29 @@
+{
+  "observed_at": "2026-10-16T04:35:57.972Z",
+  "scope": "Local headless browser capability and existing catalogue metadata, no inference or production mutation",
+  "references": 545,
+  "assets": 1090,
+  "asset_types": {
+    "front": 545,
+    "thumb": 545
+  },
+  "view_modes": {
+    "single_face": 545
+  },
+  "usage_sides": {
+    "unknown": 521,
+    "left": 11,
+    "right": 10,
+    "both": 3
+  },
+  "verified_symmetric": 0,
+  "mirror_eligible_with_unknown_query": 0,
+  "browser_version": "141.0.7390.37",
+  "gpu": {
+    "api_available": true,
+    "adapter_available": false,
+    "adapter_info": null
+  },
+  "physical_mobile_webgpu_certified": false,
+  "production_writes": 0
+}

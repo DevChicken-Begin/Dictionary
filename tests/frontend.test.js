@@ -330,8 +330,8 @@ describe('yêu cầu mới — icon, tab Quy đổi, Vector AI, quản lý user'
     expect(savePartMatch[1]).not.toContain('enqueueMorisVectorJob');
     expect(savePartMatch[1]).not.toContain('processMorisVectorQueue');
 
-    // UI hướng dẫn rõ ràng: tách trong Trung tâm Vector AI hoặc bấm nút Tạo vector
-    expect(html).toContain('Tách vector trong Trung tâm Vector AI');
+    // M02: UI chỉ hướng dẫn mở Trung tâm Vector AI.
+    expect(html).toContain('Lưu ảnh xong, mở Trung tâm Vector AI để tạo/cập nhật vector thủ công');
   });
 });
 

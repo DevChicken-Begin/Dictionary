@@ -91,6 +91,11 @@ export async function encodeQueryImage(env, config, {
       throw e;
     }
 
+    if (!sameVectorProfile(expected, data.profile)) {
+      const error = new Error("Embedding endpoint profile mismatch.");
+      error.status = 502;
+      throw error;
+    }
     const vector = l2Normalize(data.embedding);
 
     assertEmbeddingContract({

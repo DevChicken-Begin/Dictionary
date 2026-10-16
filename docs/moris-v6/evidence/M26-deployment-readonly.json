@@ -1,0 +1,24 @@
+{
+  "observed_at": "2026-10-16T04:22:39.676Z",
+  "url": "https://a27e4cf6.dictionary-dnw.pages.dev",
+  "environment": "production (Cloudflare metadata)",
+  "method": "GET only",
+  "results": [
+    {
+      "path": "/",
+      "status": 404,
+      "content_type": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/config.js",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/version.json",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8"
+    }
+  ],
+  "writes": 0
+}

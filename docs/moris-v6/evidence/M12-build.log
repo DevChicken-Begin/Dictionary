@@ -1,0 +1,7 @@
+
+> dictionary-catalogue-ai@0.1.0 build
+> node tools/build-static.mjs
+
+✔ build static xong: 44 file -> dist/
+✔ config.js: 8 biến công khai (không có secret)
+  Kiểm tra trước khi deploy:  ls -A dist/

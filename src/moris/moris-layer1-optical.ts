@@ -84,6 +84,14 @@ export function classifyHoleSizes1D(holeAreas: number[]): HoleSizeClassification
   };
 }
 
+export interface MaskQuality {
+  version: "mask_quality_v1";
+  reliable: boolean;
+  flags: string[];
+  foregroundFraction: number;
+  borderSpread: number;
+}
+
 export interface OpticalNormalizationResult {
   fgMask: Uint8Array;               // 224 x 224 binary mask (1 = metal, 0 = bg/hole)
   canonicalRgba: Uint8ClampedArray; // 224 x 224 x 4 RGBA canonical image
@@ -105,6 +113,7 @@ export interface OpticalNormalizationResult {
     rawForegroundArea: number;
     convexHullArea: number;
     segmentationMode?: string;
+    maskQuality: MaskQuality;
   };
 }
 
@@ -214,7 +223,7 @@ interface RawSegmentation {
     relArea: number;
   }>;
   bbox: { minX: number; minY: number; maxX: number; maxY: number; width: number; height: number };
-  diagnostics?: { segmentationMode: string };
+  diagnostics: { segmentationMode: string; maskQuality: MaskQuality };
 }
 
 /**
@@ -226,6 +235,10 @@ export function segmentForegroundAndHoles(
   width: number,
   height: number
 ): RawSegmentation {
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 2 || height < 2 ||
+      width * height > 16_000_000 || rgba.length !== width * height * 4) {
+    throw new Error("Invalid image dimensions or RGBA length.");
+  }
   const total = width * height;
 
   // 1. Estimate background and mode from outer border samples
@@ -338,11 +351,26 @@ export function segmentForegroundAndHoles(
     }
   }
 
-  // Fallback if lighting is completely uniform
-  if (rawPartPixels < total * 0.015) {
-    initialMask.fill(1);
-    rawPartPixels = total;
+  // Never interpret a blank/failed segmentation as a full-frame part.
+  const flags: string[] = [];
+  if (rawPartPixels < total * 0.015) flags.push("insufficient_foreground");
+  if (rawPartPixels > total * 0.90) flags.push("foreground_fills_frame");
+  if (!isCutoutMode && bgSpread > 30) flags.push("background_nonuniform");
+  let clipped = 0;
+  let boundaryForeground = 0;
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const i = y * width + x;
+    if (initialMask[i]) {
+      if (x === 0 || y === 0 || x === width - 1 || y === height - 1) boundaryForeground++;
+      if (Math.max(rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]) >= 250) clipped++;
+    }
   }
+  if (boundaryForeground) flags.push("subject_touches_edge");
+  if (rawPartPixels && clipped / rawPartPixels > 0.1) flags.push("foreground_highlights_clipped");
+  const maskQuality: MaskQuality = {
+    version: "mask_quality_v1", reliable: flags.length === 0, flags,
+    foregroundFraction: rawPartPixels / total, borderSpread: bgSpread
+  };
   const avgMetalLuma = rawPartPixels > 0 ? metalLumaSum / rawPartPixels : 100;
 
   // 3. Connected Components Flood-Fill from Borders to identify OUTER BACKGROUND
@@ -427,7 +455,7 @@ export function segmentForegroundAndHoles(
 
   if (fgArea === 0 || maxX < minX || maxY < minY) {
     minX = 0; minY = 0; maxX = width - 1; maxY = height - 1;
-    fgArea = total;
+    // Keep foregroundArea=0: unknown mask is not a full-frame object.
   }
 
   const bw = maxX - minX + 1;
@@ -558,7 +586,7 @@ export function segmentForegroundAndHoles(
     aspectRatio,
     holes,
     bbox: { minX, minY, maxX, maxY, width: bw, height: bh },
-    diagnostics: { segmentationMode }
+    diagnostics: { segmentationMode, maskQuality }
   };
 }
 
@@ -725,17 +753,22 @@ function cropAndResize224(
   const rgba224 = new Uint8ClampedArray(targetW * targetH * 4);
   const mask224 = new Uint8Array(targetW * targetH);
 
-  const scaleX = cropW / targetW;
-  const scaleY = cropH / targetH;
+  // Uniform scaling plus letterbox preserves long-part proportions.
+  const scaleX = Math.max(cropW / targetW, cropH / targetH);
+  const scaleY = scaleX;
+  const offsetX = (targetW - cropW / scaleX) / 2;
+  const offsetY = (targetH - cropH / scaleY) / 2;
 
   for (let y = 0; y < targetH; y++) {
-    const srcY = cropY + y * scaleY;
+    const srcY = cropY + (y - offsetY) * scaleY;
+    if (y < offsetY || srcY >= cropY + cropH) continue;
     const y0 = Math.max(0, Math.min(srcH - 1, Math.floor(srcY)));
     const y1 = Math.max(0, Math.min(srcH - 1, y0 + 1));
     const fy = srcY - y0;
 
     for (let x = 0; x < targetW; x++) {
-      const srcX = cropX + x * scaleX;
+      const srcX = cropX + (x - offsetX) * scaleX;
+      if (x < offsetX || srcX >= cropX + cropW) continue;
       const x0 = Math.max(0, Math.min(srcW - 1, Math.floor(srcX)));
       const x1 = Math.max(0, Math.min(srcW - 1, x0 + 1));
       const fx = srcX - x0;
@@ -1203,6 +1236,8 @@ export function processLayer1Optical(
   // Step 1: Initial Segmentation & Hole Identification
   const seg = segmentForegroundAndHoles(rawRgba, rawWidth, rawHeight);
 
+  if (!seg.foregroundArea) throw new Error("Không xác định được vật thể; vui lòng chụp lại ảnh rõ hơn.");
+
   // Step 2: PCA Major Axis Angle
   const pca = computePcaAngle(seg.fgMask, rawWidth, rawHeight);
   const angleDeg = Number(((pca.theta * 180) / Math.PI).toFixed(2));
@@ -1573,7 +1608,8 @@ export function processLayer1Optical(
       flipV,
       rawForegroundArea: canonicalFgArea,
       convexHullArea: Math.round(canonicalFgArea / Math.max(0.01, canonicalSolidity)),
-      segmentationMode: seg.diagnostics?.segmentationMode || "unknown"
+      segmentationMode: seg.diagnostics.segmentationMode,
+      maskQuality: seg.diagnostics.maskQuality
     }
   };
 }

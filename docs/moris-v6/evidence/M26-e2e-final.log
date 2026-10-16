@@ -1,0 +1,20 @@
+{
+  passed: 12,
+  checks: [
+    'mount: zero writes/model',
+    'batch preview/cancel: zero writes',
+    'partial SQL failure: one row, SKU partial',
+    'retry missing view: exactly two rows',
+    'explicit rebuild: zero row growth',
+    'same-key changed ETag: stale without writes',
+    'stale-only batch pause/resume: no replay, same row count',
+    'Vue Editor save: metadata/assets only, zero model/index calls',
+    'Moris 1280px: ranking score/evidence and correct detail click',
+    'Moris 390px: ranking score/evidence and correct detail click',
+    'mobile Center exposes per-asset actions without mount writes',
+    'per-asset click updates only selected front, leaves thumb stale and row count unchanged'
+  ],
+  scope: 'Local Chromium + real API handlers + real pgvector RPC. Auth/R2/model are fixtures; not staging authentication or camera accuracy.',
+  production_writes: 0,
+  local_vector_rows: 2
+}

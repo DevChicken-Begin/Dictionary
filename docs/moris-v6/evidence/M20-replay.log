@@ -1,0 +1,21 @@
+{
+  "n": 6,
+  "metrics": {
+    "top1": 0,
+    "recall10": 0.6666666666666666,
+    "recall50": null,
+    "recall50_measured_n": 0,
+    "mrr10": 0.18353174603174602,
+    "unknown_false_accept": null,
+    "abstain_rate": null,
+    "decision_measured_n": 0,
+    "known_abstain_rate": null,
+    "retrieval_misses": null,
+    "rerank_misses": null,
+    "latency_p50_ms": 126,
+    "latency_p95_ms": 171.25,
+    "latency_measured_n": 6
+  },
+  "dataset_sha256": "eded8ebfcf6197cce09a78aff42a60bf5686316359467c152acade55ca58feb8",
+  "output": "docs/moris-v6/evidence/M20-phase-a-replay"
+}

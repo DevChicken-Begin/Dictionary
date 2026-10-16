@@ -1,0 +1,5 @@
+BEGIN
+INSERT 0 3
+DO
+NOTICE:  PASS: retry, replace, distinct variant, changed ETag, changed key, atomic rollback, sibling assets, privileges
+ROLLBACK

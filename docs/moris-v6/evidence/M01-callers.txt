@@ -1,0 +1,12 @@
+tools/moris-vector-reindex.js:148:        const upsert = await postJson("/api/moris/vector-upsert",{
+tools/moris-vector-center.js:477:    const upsertRes = await postJson("/api/moris/vector-upsert", {
+tools/moris-vector-center.js:578:          const upsertRes = await postJson("/api/moris/vector-upsert", {
+src/moris/vector/browserDinov2.js:159:export async function enrollSkuSignatureV2(skuId, image) {
+src/moris/vector/chunkedUpsert.js:21:  endpoint="/api/moris/vector-upsert",
+src/app.js:3281:        endpoint:'/api/moris/vector-upsert',
+src/app.js:3342:    enqueueMorisVectorJob(recordId, assets, code='') {
+src/app.js:3417:            const result = await this.vectorizeSavedPart(
+src/app.js:3466:        const result = await this.vectorizeSavedPart(
+src/app.js:3490:    async vectorizeSavedPart(recordId, assets) {
+src/app.js:3565:          if (typeof mod.enrollSkuSignatureV2 === 'function' && item.record_id) {
+src/app.js:3566:            await mod.enrollSkuSignatureV2(String(item.record_id), imageUrl);

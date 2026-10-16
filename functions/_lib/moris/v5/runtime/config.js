@@ -5,14 +5,19 @@ export function readMorisConfig(env) {
     enabled:boolEnv(env.MORIS_ENABLED, true),
 
     features:{
+      // M22 development ablation lost four Top1 hits; require new acceptance evidence.
+      geometryVerification:false,
+      // Experimental verifier remains OFF until M22 demonstrates benefit.
+      contourVerification:false,
+      spatialVerification:false,
       vectorSearch:boolEnv(env.MORIS_VECTOR_SEARCH_ENABLED, false)
     },
 
     vector:{
       model:String(env.MORIS_VECTOR_MODEL || "onnx-community/dinov2-small"),
       modelVersion:String(env.MORIS_VECTOR_MODEL_VERSION || "ef1fb10"),
-      preprocessVersion:String(env.MORIS_PREPROCESS_VERSION || "kim_canon_v2"),
-      profile:String(env.MORIS_EMBEDDING_PROFILE || "cls_l2_v1"),
+      preprocessVersion:String(env.MORIS_PREPROCESS_VERSION || "kim_canon_v3_letterbox"),
+      profile:String(env.MORIS_EMBEDDING_PROFILE || "hybrid_gem3_edge_55_45_pseudorgb_u8_v1"),
       dimension:boundedInt(env.MORIS_VECTOR_DIMENSION, 384, 8, 4096),
       topK:boundedInt(env.MORIS_VECTOR_TOP_K, 60, 5, 100),
       resolverK:boundedInt(env.MORIS_RESOLVER_TOP_K, 10, 2, 20),

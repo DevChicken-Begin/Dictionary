@@ -1,0 +1,110 @@
+{
+  "n": 6,
+  "indexed_skus": 545,
+  "profile": {
+    "model": "onnx-community/dinov2-small",
+    "model_version": "ef1fb10",
+    "preprocess_version": "kim_canon_v2",
+    "profile": "cls_l2_v1",
+    "dimension": 384
+  },
+  "runtime": {
+    "device": "wasm",
+    "dtype": "q8",
+    "model": "onnx-community/dinov2-small",
+    "revision": "ef1fb10"
+  },
+  "retrieval": {
+    "top1": 4,
+    "recall10": 5,
+    "recall50": 6,
+    "mrr10": 0.75
+  },
+  "diagnostic_geometry": {
+    "top1": 0,
+    "recall10": 3,
+    "recall50": 6,
+    "mrr10": 0.10714285714285714
+  },
+  "queries": [
+    {
+      "query_id": "3450730001",
+      "expected_sku": "3450730001",
+      "sha256": "ab973091eba6c0d115d31f7f1dc1ae8469947fdaf9869405152feadb7af29bcf",
+      "latency_ms": 8816,
+      "detected_holes": 20,
+      "detected_aspect_ratio": 1.9329,
+      "retrieval_rank": 1,
+      "retrieval_top1": "3450730001",
+      "geometry_rank": 7,
+      "geometry_top1": "3446350101",
+      "captured_at": "2026-10-16 02:58:26.317458+00"
+    },
+    {
+      "query_id": "3451550001",
+      "expected_sku": "3451550001",
+      "sha256": "26262d9410438a810f5111569d5234b489a93e5c9b16875a8e2a19d3e37edab8",
+      "latency_ms": 1345,
+      "detected_holes": 4,
+      "detected_aspect_ratio": 2.8009,
+      "retrieval_rank": 1,
+      "retrieval_top1": "3451550001",
+      "geometry_rank": 13,
+      "geometry_top1": "3421730001",
+      "captured_at": "2026-10-16 02:58:27.120425+00"
+    },
+    {
+      "query_id": "3460370001",
+      "expected_sku": "3460370001",
+      "sha256": "d0e9ab5f144e3f17e8401d2894624a347f41c85b35b18839064e852010d4642c",
+      "latency_ms": 1125,
+      "detected_holes": 8,
+      "detected_aspect_ratio": 1.2306,
+      "retrieval_rank": 27,
+      "retrieval_top1": "3443650201",
+      "geometry_rank": 11,
+      "geometry_top1": "3410980001",
+      "captured_at": "2026-10-16 02:58:27.998546+00"
+    },
+    {
+      "query_id": "3465950101",
+      "expected_sku": "3465950101",
+      "sha256": "e7545b40cf00cadd31b275a3d6db80b359bf95baf3f21d4e191b9e74d9b8bfad",
+      "latency_ms": 1094,
+      "detected_holes": 20,
+      "detected_aspect_ratio": 1.665,
+      "retrieval_rank": 1,
+      "retrieval_top1": "3465950101",
+      "geometry_rank": 3,
+      "geometry_top1": "3408350301",
+      "captured_at": "2026-10-16 02:58:28.642166+00"
+    },
+    {
+      "query_id": "3671110401",
+      "expected_sku": "3671110401",
+      "sha256": "b7898cb0eb85d895504e4ebe537f728fc948292f19cd916d09e11101cf5a7b90",
+      "latency_ms": 1440,
+      "detected_holes": 11,
+      "detected_aspect_ratio": 3.4909,
+      "retrieval_rank": 2,
+      "retrieval_top1": "3442130301",
+      "geometry_rank": 6,
+      "geometry_top1": "3460430001",
+      "captured_at": "2026-10-16 02:58:29.228389+00"
+    },
+    {
+      "query_id": "3960230001",
+      "expected_sku": "3960230001",
+      "sha256": "1420cf9f00ce62f0eb59c4431a0b99925a265bcecdafb86f5f013a1a8f439ebd",
+      "latency_ms": 994,
+      "detected_holes": 7,
+      "detected_aspect_ratio": 1.307,
+      "retrieval_rank": 1,
+      "retrieval_top1": "3960230001",
+      "geometry_rank": 15,
+      "geometry_top1": "3430410301",
+      "captured_at": "2026-10-16 02:58:29.903338+00"
+    }
+  ],
+  "scope": "Six unprocessed camera images supplied by owner; expected SKU inferred from filenames. Exact read-only cosine over matching active production index, collapse best view per SKU, then current geometricReranker on top50. Not the complete deployed multi-probe/chat pipeline; no algorithm tuning or production writes."
+}

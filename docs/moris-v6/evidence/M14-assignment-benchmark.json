@@ -1,0 +1,8 @@
+{
+  "fixture": "synthetic 64 holes; rotation-only, no real camera quality claim",
+  "runs": 100,
+  "p50_ms": 2.444718000000023,
+  "p95_ms": 5.106702999999996,
+  "max_ms": 22.271155,
+  "node": "v24.21.0"
+}

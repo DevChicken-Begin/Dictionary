@@ -1,3 +1,5 @@
+// Legacy display/diagnostic canonicalizer. Not an embedding path: Center and query
+// both use processLayer1Optical in dinov2.worker.js (kim_canon_v3_letterbox).
 import { computeOrientationPCA } from "../geometry/pcaAligner.js";
 import { extractHoleTopology } from "../geometry/holeTopology.js";
 

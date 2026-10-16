@@ -26,6 +26,15 @@ export function buildMorisUserMessage(result){
     return MORIS_PUBLIC_MESSAGES.noMatch;
   }
 
+  if(rows.length && mode.startsWith("MORIS_VECTOR")){
+    const reasons=result?.decision?.reasons||[];
+    const guidance=reasons.includes('low_quality')?'Ảnh chưa rõ vùng linh kiện; anh chụp lại trên nền đồng nhất, đủ sáng và không cắt mép.':
+      reasons.includes('orientation_uncertain')?'Chưa xác định rõ mặt hoặc bên trái/phải; anh bổ sung góc chụp để đối chiếu.':
+      reasons.includes('close_candidates')?'Các mã có điểm gần nhau; anh đối chiếu lỗ, rãnh và mặt linh kiện trước khi chọn.':
+      'Anh đối chiếu ảnh và đặc điểm trước khi xác nhận mã.';
+    return `Em gợi ý ${rows.length} mã để đối chiếu. Điểm so khớp không phải xác suất đúng. ${guidance}\n${listCodes(rows).join("\n")}`;
+  }
+
   if(rows.length){
     return `Em tìm thấy ${rows.length} mã phù hợp:\n${listCodes(rows).join("\n")}`;
   }

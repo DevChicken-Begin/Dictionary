@@ -2,14 +2,14 @@
   "system": {
     "project": "Catalogue AI (Dictionary)",
     "stack": "Vue 3 CDN + Cloudflare Pages Functions + Supabase (pgvector) + Cloudflare R2",
-    "updated_at": "2026-10-14T09:20:00Z",
+    "updated_at": "2026-10-16T05:07:00Z",
     "memory_version": "2.2.0",
-    "status": "completed"
+    "status": "in_progress"
   },
   "current_session": {
-    "active_task": "all_tasks_completed",
-    "last_checkpoint": "Đã hoàn thành toàn bộ yêu cầu: Thêm thanh filter mục tiêu ID & Mã cho Main Catalogue & Moris, đánh giá kiến trúc và loại bỏ an toàn tách vector tự động khi lưu chỉnh sửa linh kiện",
-    "resumption_prompt": "Tất cả các task đã hoàn thành, 229/229 unit tests pass 100%, dist/ đồng bộ sạch sẽ."
+    "active_task": "M21_curator_review_tooling_and_rejection_schema_completed",
+    "last_checkpoint": "M21 curator review tooling (tools/review-moris-hard-negatives.mjs), rejected status validation in evaluation/moris-v6/hardNegatives.js, and HTML export sheet created. Focused tests 12/12 pass, tsc exit 0. Real human curator labels remain 0/57; acceptance gate remains open.",
+    "resumption_prompt": "M21 curator review tooling is complete and validated. Human curator review outcomes for 57 items in evaluation/moris-v6/hard-negative-review-queue.json are pending human input; use 'node tools/review-moris-hard-negatives.mjs' or view 'evaluation/moris-v6/hard-negative-review-sheet.html' to review. Proceed to next step in TECH_DEBT_ROADMAP.md or record curator decisions when supplied."
   },
   "tasks": [
     {
@@ -188,7 +188,7 @@
       "diagnostics": {
         "finding_1": "Bề mặt kim loại dập nổi (convex) bị chụp từ mặt sau (concave) làm sai lệch hướng đổ bóng và cosine similarity trong pgvector Supabase.",
         "finding_2": "72 bản ghi front legacy trong DB bị gán nhầm hole_count = 0 mặc dù identifying_features mô tả rõ số lượng lỗ, gây phạt điểm nhầm trong Layer 3 reranker.",
-        "finding_3": "Tìm kiếm text đặc điểm nhận dạng nhạy cảm với thứ tự chuỗi ('5 lỗ tròn 4 lỗ to + 1 lỗ nhỏ' vs '1 lỗ nhỏ 4 lỗ to 5 lỗ tròn') và ranh giới số chưa chuẩn hoá AST.",
+        "finding_3": "Tìm kiếm text đặc điểm nhận dạng nhạy cảm với thứ tự chuỗi ('5 lỗ tròn 4 lỗ to + 1 lỗ nhỏ' vs '1 lỗ nhỏ 4 lỗ to 5 lỗ tròn') và ranh giới số chưa chuẩn hoá AST."
       },
       "solution": "1) Step 1: Nâng cấp Layer 1 (moris-layer1-optical.ts) Dual-Mode segmentation (R2 cutouts vs Live camera), hạ ngưỡng diện tích lỗ tối thiểu xuống 0.04% (0.0004), phân cụm 1D Log-Area Otsu (classifyHoleSizes1D) tách bigHoleCount & smallHoleCount, chuẩn hoá in-plane 180° rotation (flipH + flipV đồng thời), aspectRatio >= 1.0; 2) Step 2: Nâng cấp Layer 2 (moris-layer2-embedding.ts) sinh vector 384D chuẩn Supabase pgvector qua computeSupabase384HybridEmbedding (0.55 GeM + 0.45 Edge-Detail), tính biến thể đảo ngược phù điêu computeReliefInvertedOptical, handler embed-variants-v2 trong Worker sinh canon_rgb_v2 & canon_gray_v2 cùng rich geometry; 3) Step 3: Nâng cấp featureMatcher.js và src/app.js với parseIdentifyingFeaturesAST và matchFeatureQueryFlexible hỗ trợ giao hoán thứ tự, suy luận tổng số lỗ ngầm định (big + small = total), sai số cảm tính (+/- 1) và ranh giới số nghiêm ngặt; 4) Step 4: Nâng cấp geometricReranker.js Cross-Modal Recovery phục hồi số lượng lỗ cho 72 mã legacy từ text identifying_features, so khớp phân bổ lỗ to/nhỏ, bất biến phản xạ gương tâm lỗ và bất biến xoay tỷ lệ khung hình; làm sạch src/app.js xoá bỏ split-brain IndexedDB; 5) Step 5: Đồng bộ dist/ 42 files, bổ sung unit tests trong tests/moris-features-filter.test.js và tests/moris-reranker.test.js.",
       "evidence": "npx tsc --noEmit sạch 0 lỗi, npm test pass 18/18 test suites (210/210 unit tests pass 100%), npm run build sinh 42 files dist/ sạch sẽ."
@@ -234,10 +234,368 @@
     }
   ],
   "verification": {
-    "total_unit_tests": 229,
-    "passing_tests": 229,
-    "failing_tests": 0
+    "total_unit_tests": 398,
+    "passing_tests": 398,
+    "failing_tests": 0,
+    "typescript_exit_code": 0,
+    "build_exit_code": 0,
+    "unit_files": 44,
+    "build_files": 49,
+    "local_e2e_passed": 12,
+    "staging": "skipped_by_owner",
+    "evidence": "docs/moris-v6/RELEASE_CHECKLIST.md"
+  },
+  "moris_v6": {
+    "M00": {
+      "status": "completed",
+      "completed_at": "2026-10-16T02:15:32.934562Z",
+      "baseline_sha": "02289afa79747722b992938bee7c2d0414f7a9d2",
+      "branch": "feat/moris-v6",
+      "evidence": "docs/moris-v6/BASELINE.md",
+      "tests": {
+        "files_passed": 18,
+        "tests_passed": 229,
+        "tests_failed": 0,
+        "exit_code": 0
+      },
+      "build": {
+        "files": 42,
+        "exit_code": 0
+      },
+      "typescript": "not_run_no_verified_compiler",
+      "database": {
+        "read_only": true,
+        "sku_count": 545,
+        "vector_rows": 1090,
+        "writes": 0,
+        "observed_rows_delta": 0
+      },
+      "deployed": false,
+      "commit_created": false,
+      "pre_completion_report": "Git, actual tests, risks and rollback reported before completion",
+      "next_gate": "Owner review of M00 only; do not start another task"
+    },
+    "M01": {
+      "status": "completed",
+      "completed_at": "2026-10-16T02:44:54.121772+00:00",
+      "evidence": "ARCHITECTURE.md + AGENTS vector ownership contract; static callers evidence; npm test exit 0, 18 files / 229 tests. No DB writes. Rollback: reverse M01 documentation hunks. Continue M02 per owner instruction.",
+      "production_writes": 0,
+      "deployed": false
+    },
+    "M02": {
+      "status": "completed",
+      "completed_at": "2026-10-16T02:47:24.632747+00:00",
+      "evidence": "Removed Editor write helpers/UI and session retry; 6 behavior regressions; npm test exit 0: 235/235, 19 files. Updated old UI assertion for authorized M02 text change. No production writes. Rollback: reverse Editor/test hunks. Evidence M02-test.log.",
+      "production_writes": 0,
+      "deployed": false
+    },
+    "M03": {
+      "status": "completed",
+      "completed_at": "2026-10-16T02:48:26.700360+00:00",
+      "evidence": "Center single/batch confirmation fails closed; legacy reindex redirects; server session/role + intent checks. npm test exit 0: 246/246, 20 files (M03-test.log). No production writes. Rollback M03 UI/API/tests. Continue M04.",
+      "production_writes": 0,
+      "deployed": false
+    },
+    "M04": {
+      "status": "completed",
+      "completed_at": "2026-10-16T02:52:15.910288+00:00",
+      "evidence": "RGB-only explicit skip/replace, full composite-key atomic RPC + source ETag; proposed migration tested ONLY local pgvector. npm test 253/253, 21 files; SQL fixture pass; 8 concurrent writes -> 1 row (1 created/7 skipped). Evidence M04-*. No production writes. Rollback requires provenance/activity snapshot for local replacement; production migration not applied; Gate D required.",
+      "production_writes": 0,
+      "deployed": false
+    },
+    "M05": {
+      "status": "completed",
+      "completed_at": "2026-10-16T02:54:18.613067+00:00",
+      "evidence": "Per-asset profile/source ETag states; unknown source fails closed, legacy vectors stale, SKU partial aggregation; npm test exit 0: 266/266, 22 files. M05-test.log. No production writes. Gate A pending browser review; rollback app + proposed migration per report. Continue authorized TypeScript/E2E/camera verification.",
+      "production_writes": 0,
+      "deployed": false
+    },
+    "phase_a_verification": {
+      "verified_at": "2026-10-16T03:13:59.671445+00:00",
+      "report": "docs/moris-v6/PHASE_A_REVIEW.md",
+      "gate_a": "owner_review_pending",
+      "unit_tests": {
+        "passed": 266,
+        "files": 22,
+        "exit_code": 0
+      },
+      "typescript": {
+        "exit_code": 0,
+        "diagnostics": 0
+      },
+      "build": {
+        "exit_code": 0,
+        "files": 42
+      },
+      "local_e2e": {
+        "passed": 10,
+        "exit_code": 0,
+        "auth_r2_model": "fixtures",
+        "service_workers": "blocked_in_test_context"
+      },
+      "local_database": "SQL fixtures, 8 concurrent calls -> 1 created/7 skipped/1 row; transactional schema rollback passed",
+      "camera": {
+        "directory": "image 2/",
+        "samples": 6,
+        "labels": "filenames_not_independently_audited",
+        "v5_top1": 0,
+        "v5_recall10": 4,
+        "quality_gate": "not_passed"
+      },
+      "production": {
+        "writes": 0,
+        "deployed": false,
+        "sku_count": 545,
+        "vector_rows": 1090,
+        "observed_row_delta": 0,
+        "migration_applied": false
+      },
+      "staging_e2e": "not_verified_no_staging_environment_provided",
+      "git": {
+        "branch": "feat/moris-v6",
+        "head": "02289afa79747722b992938bee7c2d0414f7a9d2",
+        "commit_created": false
+      },
+      "rollback": "Reverse scoped M01–M05 hunks and rebuild; preserve original user changes. Proposed migration only local. Full details in report."
+    },
+    "M06": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:20:59.472344+00:00",
+      "evidence": "Spatial-only hybrid contract; legacy profile isolated, no CLS replication/browser fallback. 277/277 tests, 23 files; TS/build exit 0; real WASM 6/6 embeddings. No DB writes/commit/deploy. Risks and scoped rollback: docs/moris-v6/M06.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M07": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:23:46.232098+00:00",
+      "evidence": "Shared Worker canonicalization, aspect-preserving letterbox/version, explicit mask quality and no full-frame fallback. 286/286 tests; TS/build exit 0; real WASM 6/6, 4 masks flagged unreliable. Zero DB writes/deploy. Evidence/rollback docs/moris-v6/M07.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M08": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:27:11.136434+00:00",
+      "evidence": "Nullable geometry/version/quality; unknown neutral, API refuses unsafe legacy null coercion. READ ONLY audit 55/545 mismatches. 294/294 tests, TS/build pass, local E2E 10/10. No production writes/deploy. Report/rollback docs/moris-v6/M08.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M09": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:29:09.401236+00:00",
+      "evidence": "Filters preserved after hydrate; raw cosine separate from RRF, view/probe evidence retained, bounded oversampling. 300/300 tests; TS/build43 pass. New-profile exact/ANN validation deferred to matching benchmark index, not claimed. No DB writes/deploy. Report/rollback docs/moris-v6/M09.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M10": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:32:25.981512+00:00",
+      "evidence": "Complete bounded ID/code/feature paging; proposed stable SQL order tested on 1000 tied rows local. 309/309 tests, paging9/9, TS/build43 pass. Production migration unapplied. Zero production writes/deploy. Evidence/rollback docs/moris-v6/M10.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M11": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:34:38.385604+00:00",
+      "evidence": "Online server results isolated from offline cache; explicit local enrollment, profile and TTL. 314/314 tests, TS/build43 pass; 503 distinguished from empty. No DB writes/deploy. Evidence/rollback docs/moris-v6/M11.md. Next M19/M20 early benchmark per master dependency order.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M19": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:59:06.531208+00:00",
+      "evidence": "Owner approves124 labels/scope; frozen93dev31holdout before new pixel inspection,124hashes verified,validator15/15/full latest372/372. No unknown negatives. Evidence and rollback docs/moris-v6/M19.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M20": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:39:17.922327+00:00",
+      "evidence": "Offline metrics runner validated:335/335 tests, TS/build43 pass. Historical six-camera replay 0/6 Top1,4/6 Recall10; missing metrics null. M19 holdout/label acceptance remains pending. No network/DB writes/deploy. Report/rollback docs/moris-v6/M20.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M12": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:42:25.832612+00:00",
+      "evidence": "Single final score owner, metadata penalties retained, count evidence not double-counted, unknown neutral. 341/341 tests, TS/build44 pass. Weights uncalibrated pending M22. No DB writes/deploy. Evidence/rollback docs/moris-v6/M12.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M13": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:44:03.085561+00:00",
+      "evidence": "Chirality policy rotation-only by default, evidence-gated reflection, no implicit mirrored query probe; PCA accepts binary masks. 347/347 tests; TS/build45 pass. No DB writes/deploy. Report/rollback docs/moris-v6/M13.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M14": {
+      "status": "implemented_acceptance_pending",
+      "completed_at": "2026-10-16T03:46:03.734657+00:00",
+      "evidence": "Optimal bounded hole assignment with pairing/reliability evidence; brute-force oracle tests. 353/353 tests, TS/build46 pass; synthetic64-hole p95 5.107ms. Real hard-negative validation pending M21/M22. Zero DB writes/deploy. docs/moris-v6/M14.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false,
+      "blocker": "Real hard-negative non-regression gate unverified; current camera geometry development ablation loses4 Top1 hits versus global. Historical code/unit checkpoint retained, not full acceptance."
+    },
+    "M15": {
+      "status": "implemented_acceptance_pending",
+      "evidence": "docs/moris-v6/M15.md",
+      "tests": "358/358,34 files; TS/build47 exit0",
+      "feature_enabled": false,
+      "blocker": "Curated real hard-negative improvement not measured; OFF until M21/M22",
+      "production_writes": 0
+    },
+    "M16": {
+      "status": "implemented_acceptance_pending",
+      "evidence": "docs/moris-v6/M16.md",
+      "tests": "363/363,35 files; TS/build48 exit0",
+      "feature_enabled": false,
+      "blocker": "Real WASM ablation shows no improvement; real WebGPU/device budget unverified; OFF",
+      "production_writes": 0
+    },
+    "M17": {
+      "status": "completed",
+      "completed_at": "2026-10-16T03:54:29.076630+00:00",
+      "evidence": "Reliability-aware available signals, neutral missing metadata, scaled conflicts; 368/368 tests, TS/build48 pass. Zero production writes/deploy. Evidence and rollback docs/moris-v6/M17.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M18": {
+      "status": "implemented_acceptance_pending",
+      "evidence": "docs/moris-v6/M18.md",
+      "tests": "372/372,37 files; TS/build48 exit0",
+      "blocker": "RGB/gray A/B on approved matching-profile dataset pending",
+      "production_writes": 0
+    },
+    "M21": {
+      "status": "curator_tooling_ready_human_review_pending",
+      "evidence": "docs/moris-v6/M21.md",
+      "tests": "Focused review tests 12/12 pass; tsc --noEmit exit 0",
+      "tooling": "tools/review-moris-hard-negatives.mjs (summary/list/inspect/export-html/record-reject/record-approve); evaluation/moris-v6/hard-negative-review-sheet.html (32KB); evaluation/moris-v6/hardNegatives.js (rejected status support)",
+      "blocker": "57 curator outcomes and before/after ranking evidence still required from human domain expert",
+      "production_writes": 0,
+      "review_evidence": {
+        "cases": 57,
+        "record_refs_resolved": 55,
+        "front_hashes_verified": 59,
+        "curator_labels": 0,
+        "evidence": "evaluation/moris-v6/hard-negative-review-queue.json; docs/moris-v6/M21.md; docs/moris-v6/evidence/M21-development-priority.json"
+      },
+      "development_prioritization": {
+        "review_cases": 57,
+        "linked_same_sku_dev_queries": 11,
+        "without_dev_query": 46,
+        "specified_pairs_with_dev_query": 0,
+        "holdout_used": false,
+        "evidence": "docs/moris-v6/evidence/M21-development-priority.json"
+      }
+    },
+    "M22": {
+      "status": "measured_acceptance_pending",
+      "evidence": "docs/moris-v6/M22.md",
+      "tests": "395/395,43files; TS/build49; localE2E12/12",
+      "decision": "no_go",
+      "inference": "545 references +93development +31holdout complete;669/669success",
+      "production_writes": 0,
+      "development": {
+        "n": 93,
+        "global_top1": 58,
+        "global_recall10": 78,
+        "recall50": 88,
+        "geometry_top1": 54
+      },
+      "ann_local": {
+        "queries": 93,
+        "references": 545,
+        "mean_recall_vs_exact": 0.999784946236559,
+        "min_recall_vs_exact": 0.98
+      },
+      "holdout": {
+        "n": 31,
+        "top1": 20,
+        "recall10": 29,
+        "recall50": 31,
+        "reliable_masks": 0
+      },
+      "blocker": "Curated hard negatives, approved multi-view/gray A/B, unknown negatives and capture strata missing; no post-holdout tuning",
+      "runtime_geometry_enabled": false,
+      "followup_evidence": "docs/moris-v6/evidence/M22-development-quality-audit.json",
+      "runtime_change": "Default image geometry OFF based on frozen development selection; structural image-count fallback gated, typed constraints preserved. No holdout tuning."
+    },
+    "M23": {
+      "status": "completed",
+      "completed_at": "2026-10-16T04:10:37.000806+00:00",
+      "evidence": "Additive nullable provenance proposal only; local data+ACL restore/rollback, service-only RPC checks pass;380tests TS/build48 pass. Production1090 unchanged, no writes/deploy. Quota/risks/rollback docs/moris-v6/DB_MIGRATION.md; GateD remains closed.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M24": {
+      "status": "completed",
+      "completed_at": "2026-10-16T04:16:31.366522+00:00",
+      "evidence": "Center preview/missing/stale/rebuild and per-asset pause/retry;385tests TS/build49, isolated localE2E10/10 pass; rows1→2 then stable2. Zero production writes/deploy. Risks/rollback docs/moris-v6/M24.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M25": {
+      "status": "completed",
+      "completed_at": "2026-10-16T04:19:45.870980+00:00",
+      "evidence": "Ranking points/evidence and conservative review guidance;389tests TS/build49 and localE2E12/12 pass incldesktop/mobile detailclick. Zero production writes/deploy. Risks/rollback docs/moris-v6/M25.md.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    "M26": {
+      "status": "local_verified_release_pending",
+      "evidence": "docs/moris-v6/RELEASE_CHECKLIST.md",
+      "unit_tests": {
+        "passed": 398,
+        "files": 44,
+        "failed": 0
+      },
+      "typescript": "exit0",
+      "build": "49 files, exit0",
+      "local_e2e": "12/12, auth/R2/model fixtures; real local API/SQL",
+      "provided_url": "production main; unauthenticated404 consistent with Gatekeeper, not an outage diagnosis",
+      "blockers": [
+        "camera acceptance and curated hard negatives",
+        "real device/WebGPU canary",
+        "owner release sign-off"
+      ],
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false,
+      "staging_e2e": "skipped_by_owner_request; not verified",
+      "owner_scope_update": "Proceed beyond staging; no production writes/deploy authorization granted",
+      "final_tests": "398/398,44files; TS/build49 and localE2E12/12 from prior application checkpoint; reviewer tooling does not change application bundle"
+    }
+  },
+  "resource_control": {
+    "owner_request": "Close current task; avoid quota overrun affecting project schedule",
+    "new_heavy_runs_scheduled": false,
+    "remaining_quota": "not known; no quota claim",
+    "closed_at": "2026-10-16T04:39:48.632426+00:00"
+  },
+  "handoff": {
+    "file": "docs/moris-v6/HANDOFF.md",
+    "roadmap": "docs/moris-v6/TECH_DEBT_ROADMAP.md",
+    "scope": "Known Moris V6 acceptance debt M06-M26; not a repository-wide code audit",
+    "next_action": "Start with M21 curator evidence, then obtain a fresh frozen camera dataset before M14/M15/M16/M18/M22 acceptance; keep M26 release pending",
+    "owner_request": "Prepare a clear checkpoint for another agent before quota is exhausted",
+    "heavy_runs_scheduled": false,
+    "quota_remaining": "unknown; not estimated",
+    "recorded_at": "2026-10-16T04:47:10.075434+00:00"
   }
 }
-
-

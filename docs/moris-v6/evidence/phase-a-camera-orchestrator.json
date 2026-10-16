@@ -1,0 +1,390 @@
+{
+  "created_at": "2026-10-16T03:01:41.988Z",
+  "n": 6,
+  "catalogue_skus": 545,
+  "catalogue_snapshot_sha256": "75130db37e54bcc0d7f836a9d66388f0e19f5731328aa4c67f541471965ad3b7",
+  "profile": {
+    "model": "onnx-community/dinov2-small",
+    "modelVersion": "ef1fb10",
+    "preprocessVersion": "kim_canon_v2",
+    "profile": "cls_l2_v1",
+    "dimension": 384,
+    "topK": 60,
+    "resolverK": 10,
+    "minSimilarity": 0.55
+  },
+  "top1": 0,
+  "recall10": 4,
+  "mrr10": 0.18353174603174602,
+  "read_only_vector_rpc_calls": 12,
+  "production_writes": 0,
+  "scope": "Actual browser RGB+gray query probes and unmodified V5 orchestrator, live read-only vector RPC, catalogue snapshot hydration adapter. No indexed gray created. Not deployed HTTP/auth/UI or full staging E2E. Six owner camera files; labels from filenames; no unknown negatives/holdout.",
+  "results": [
+    {
+      "query_id": "3450730001",
+      "expected_sku": "3450730001",
+      "sha256": "ab973091eba6c0d115d31f7f1dc1ae8469947fdaf9869405152feadb7af29bcf",
+      "probe_count": 2,
+      "inference_ms": 13331,
+      "search_ms": 160,
+      "rank": 3,
+      "mode": "MORIS_VECTOR_CLEAR",
+      "top10": [
+        {
+          "code": "3457820001",
+          "score": 0.5382
+        },
+        {
+          "code": "3457810001",
+          "score": 0.5333
+        },
+        {
+          "code": "3450730001",
+          "score": 0.5232
+        },
+        {
+          "code": "3464150001",
+          "score": 0.5097
+        },
+        {
+          "code": "3405490301",
+          "score": 0.4733
+        },
+        {
+          "code": "3450740001",
+          "score": 0.4722
+        },
+        {
+          "code": "3405500301",
+          "score": 0.4694
+        },
+        {
+          "code": "3445470201",
+          "score": 0.465
+        },
+        {
+          "code": "3464030001",
+          "score": 0.4515
+        },
+        {
+          "code": "3465950101",
+          "score": 0.4341
+        }
+      ],
+      "detected_holes": 20,
+      "trace": [
+        "exact_lookup",
+        "text_retrieval",
+        "preprocess",
+        "encode",
+        "vector_search",
+        "hydrate_candidates"
+      ]
+    },
+    {
+      "query_id": "3451550001",
+      "expected_sku": "3451550001",
+      "sha256": "26262d9410438a810f5111569d5234b489a93e5c9b16875a8e2a19d3e37edab8",
+      "probe_count": 2,
+      "inference_ms": 1887,
+      "search_ms": 90,
+      "rank": 8,
+      "mode": "MORIS_VECTOR_CLEAR",
+      "top10": [
+        {
+          "code": "3430390001",
+          "score": 0.8784
+        },
+        {
+          "code": "3421730001",
+          "score": 0.8593
+        },
+        {
+          "code": "3466160001",
+          "score": 0.8355
+        },
+        {
+          "code": "3421740001",
+          "score": 0.8314
+        },
+        {
+          "code": "3445290001",
+          "score": 0.8216
+        },
+        {
+          "code": "3420560101",
+          "score": 0.8144
+        },
+        {
+          "code": "3420710101",
+          "score": 0.7663
+        },
+        {
+          "code": "3451550001",
+          "score": 0.7113
+        },
+        {
+          "code": "3434440101",
+          "score": 0.6992
+        },
+        {
+          "code": "3423500001",
+          "score": 0.6881
+        }
+      ],
+      "detected_holes": 4,
+      "trace": [
+        "exact_lookup",
+        "text_retrieval",
+        "preprocess",
+        "encode",
+        "vector_search",
+        "hydrate_candidates"
+      ]
+    },
+    {
+      "query_id": "3460370001",
+      "expected_sku": "3460370001",
+      "sha256": "d0e9ab5f144e3f17e8401d2894624a347f41c85b35b18839064e852010d4642c",
+      "probe_count": 2,
+      "inference_ms": 2446,
+      "search_ms": 92,
+      "rank": null,
+      "mode": "MORIS_VECTOR_CLEAR",
+      "top10": [
+        {
+          "code": "3410980001",
+          "score": 0.8626
+        },
+        {
+          "code": "3443650201",
+          "score": 0.8209
+        },
+        {
+          "code": "3453650201",
+          "score": 0.8015
+        },
+        {
+          "code": "3960790001",
+          "score": 0.7608
+        },
+        {
+          "code": "3453660201",
+          "score": 0.7544
+        },
+        {
+          "code": "3443660201",
+          "score": 0.7271
+        },
+        {
+          "code": "3446450201",
+          "score": 0.7115
+        },
+        {
+          "code": "3446460201",
+          "score": 0.7091
+        },
+        {
+          "code": "3434450201",
+          "score": 0.7076
+        },
+        {
+          "code": "3434460201",
+          "score": 0.7011
+        }
+      ],
+      "detected_holes": 8,
+      "trace": [
+        "exact_lookup",
+        "text_retrieval",
+        "preprocess",
+        "encode",
+        "vector_search",
+        "hydrate_candidates"
+      ]
+    },
+    {
+      "query_id": "3465950101",
+      "expected_sku": "3465950101",
+      "sha256": "e7545b40cf00cadd31b275a3d6db80b359bf95baf3f21d4e191b9e74d9b8bfad",
+      "probe_count": 2,
+      "inference_ms": 1696,
+      "search_ms": 121,
+      "rank": 2,
+      "mode": "MORIS_VECTOR_CLEAR",
+      "top10": [
+        {
+          "code": "3408350301",
+          "score": 0.6314
+        },
+        {
+          "code": "3465950101",
+          "score": 0.5261
+        },
+        {
+          "code": "3464040001",
+          "score": 0.4851
+        },
+        {
+          "code": "3464030001",
+          "score": 0.4844
+        },
+        {
+          "code": "3455520001",
+          "score": 0.4498
+        },
+        {
+          "code": "3445470201",
+          "score": 0.4427
+        },
+        {
+          "code": "3408360301",
+          "score": 0.4361
+        },
+        {
+          "code": "3445620001",
+          "score": 0.4293
+        },
+        {
+          "code": "3433360101",
+          "score": 0.4211
+        },
+        {
+          "code": "3455550101",
+          "score": 0.4194
+        }
+      ],
+      "detected_holes": 20,
+      "trace": [
+        "exact_lookup",
+        "text_retrieval",
+        "preprocess",
+        "encode",
+        "vector_search",
+        "hydrate_candidates"
+      ]
+    },
+    {
+      "query_id": "3671110401",
+      "expected_sku": "3671110401",
+      "sha256": "b7898cb0eb85d895504e4ebe537f728fc948292f19cd916d09e11101cf5a7b90",
+      "probe_count": 2,
+      "inference_ms": 1364,
+      "search_ms": 175,
+      "rank": 7,
+      "mode": "MORIS_VECTOR_CLEAR",
+      "top10": [
+        {
+          "code": "3405270301",
+          "score": 0.7841
+        },
+        {
+          "code": "3464260001",
+          "score": 0.5987
+        },
+        {
+          "code": "3460430001",
+          "score": 0.5528
+        },
+        {
+          "code": "3464250001",
+          "score": 0.5266
+        },
+        {
+          "code": "3410410001",
+          "score": 0.5265
+        },
+        {
+          "code": "3442140301",
+          "score": 0.5254
+        },
+        {
+          "code": "3671110401",
+          "score": 0.5191
+        },
+        {
+          "code": "3442130301",
+          "score": 0.5187
+        },
+        {
+          "code": "3445410201",
+          "score": 0.5095
+        },
+        {
+          "code": "3459200101",
+          "score": 0.5018
+        }
+      ],
+      "detected_holes": 11,
+      "trace": [
+        "exact_lookup",
+        "text_retrieval",
+        "preprocess",
+        "encode",
+        "vector_search",
+        "hydrate_candidates"
+      ]
+    },
+    {
+      "query_id": "3960230001",
+      "expected_sku": "3960230001",
+      "sha256": "1420cf9f00ce62f0eb59c4431a0b99925a265bcecdafb86f5f013a1a8f439ebd",
+      "probe_count": 2,
+      "inference_ms": 1247,
+      "search_ms": 131,
+      "rank": null,
+      "mode": "MORIS_VECTOR_CLEAR",
+      "top10": [
+        {
+          "code": "3430420301",
+          "score": 0.8169
+        },
+        {
+          "code": "3424910001",
+          "score": 0.7941
+        },
+        {
+          "code": "3434210001",
+          "score": 0.7938
+        },
+        {
+          "code": "3434220001",
+          "score": 0.789
+        },
+        {
+          "code": "3233050001",
+          "score": 0.7455
+        },
+        {
+          "code": "3419490101",
+          "score": 0.6668
+        },
+        {
+          "code": "3426970001",
+          "score": 0.6424
+        },
+        {
+          "code": "3425180001",
+          "score": 0.6198
+        },
+        {
+          "code": "3425170001",
+          "score": 0.614
+        },
+        {
+          "code": "3961380001",
+          "score": 0.5859
+        }
+      ],
+      "detected_holes": 7,
+      "trace": [
+        "exact_lookup",
+        "text_retrieval",
+        "preprocess",
+        "encode",
+        "vector_search",
+        "hydrate_candidates"
+      ]
+    }
+  ]
+}

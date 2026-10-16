@@ -1,0 +1,283 @@
+{
+  "observed_at": "2026-10-16T03:24:09.205Z",
+  "read_only": "on",
+  "sku_count": 545,
+  "mismatches": 55,
+  "mismatch_pairs": [
+    {
+      "front": 10,
+      "thumb": 4,
+      "record_ref": "af96de8636016e57942c8b54eb778bda"
+    },
+    {
+      "front": 24,
+      "thumb": 23,
+      "record_ref": "4d3271f73ae30e8d1c1a78ec4739bcec"
+    },
+    {
+      "front": 16,
+      "thumb": 10,
+      "record_ref": "008e5befec1a5e1640c0231188260e2b"
+    },
+    {
+      "front": 21,
+      "thumb": 16,
+      "record_ref": "fe6318079cc610b19b81496205a86fc7"
+    },
+    {
+      "front": 22,
+      "thumb": 20,
+      "record_ref": "0c4afbaf772d794cabbb913847a0dfac"
+    },
+    {
+      "front": 20,
+      "thumb": 17,
+      "record_ref": "8bafc82cc4c4c3ad2694fbd57f4c0b6d"
+    },
+    {
+      "front": 25,
+      "thumb": 19,
+      "record_ref": "8752f889e657581de567ed13a0ec111d"
+    },
+    {
+      "front": 12,
+      "thumb": 8,
+      "record_ref": "057239d918ebe5e4d09fe09cc21baada"
+    },
+    {
+      "front": 22,
+      "thumb": 21,
+      "record_ref": "57134ad4b2b2fa82ba9fcbf94bbd9903"
+    },
+    {
+      "front": 18,
+      "thumb": 16,
+      "record_ref": "0ea5433cd7b2299bdfc396edc81ef186"
+    },
+    {
+      "front": 19,
+      "thumb": 18,
+      "record_ref": "405c1d35dfd28f5499d1601a8506a83f"
+    },
+    {
+      "front": 11,
+      "thumb": 10,
+      "record_ref": "87734378b96fb082eb54fe8c82249762"
+    },
+    {
+      "front": 25,
+      "thumb": 13,
+      "record_ref": "ed3ebd18652333629ad38fc169626752"
+    },
+    {
+      "front": 4,
+      "thumb": 3,
+      "record_ref": "6c53fa4ee587889bb7f7cb36c89d3584"
+    },
+    {
+      "front": 21,
+      "thumb": 19,
+      "record_ref": "4770874f641a76866d9aeb41e6fa2fa1"
+    },
+    {
+      "front": 25,
+      "thumb": 19,
+      "record_ref": "14b0205540ed110e1b324f4fafdf4ef3"
+    },
+    {
+      "front": 16,
+      "thumb": 11,
+      "record_ref": "3b069a1e55a07862f8f46e80be40f468"
+    },
+    {
+      "front": 5,
+      "thumb": 9,
+      "record_ref": "3e78dcd102429385692b6f6de40cfd09"
+    },
+    {
+      "front": 21,
+      "thumb": 20,
+      "record_ref": "c29c3c14c676d77937163ad73b03da95"
+    },
+    {
+      "front": 24,
+      "thumb": 22,
+      "record_ref": "6f76130a1e8b571eb0bf3070ed4df04c"
+    },
+    {
+      "front": 18,
+      "thumb": 16,
+      "record_ref": "84ef1105aa6d8209261b0f2587fb8437"
+    },
+    {
+      "front": 7,
+      "thumb": 6,
+      "record_ref": "2ea8aec2170f99866dad66576933507b"
+    },
+    {
+      "front": 14,
+      "thumb": 13,
+      "record_ref": "eff631f91a2160b407a745c7b9a5c0b0"
+    },
+    {
+      "front": 11,
+      "thumb": 7,
+      "record_ref": "010eb1c97e207b97b7fa4ccbd0939628"
+    },
+    {
+      "front": 7,
+      "thumb": 6,
+      "record_ref": "25cf1ac6caeb167086a994820ab5d03a"
+    },
+    {
+      "front": 26,
+      "thumb": 25,
+      "record_ref": "99503e36a2114156e817d8520cca5937"
+    },
+    {
+      "front": 16,
+      "thumb": 4,
+      "record_ref": "0e96df84c7d98f3d56cb079895172c4b"
+    },
+    {
+      "front": 5,
+      "thumb": 3,
+      "record_ref": "0148a031ab304f95cf9eff3813e1ec32"
+    },
+    {
+      "front": 0,
+      "thumb": 4,
+      "record_ref": "3412a06477787ed707517e97ac35a840"
+    },
+    {
+      "front": 21,
+      "thumb": 18,
+      "record_ref": "b38e1007d82ea00029e6aad6d2770cec"
+    },
+    {
+      "front": 25,
+      "thumb": 24,
+      "record_ref": "f4f98ae541d199d8129121c16c89499a"
+    },
+    {
+      "front": 11,
+      "thumb": 9,
+      "record_ref": "2494d91bfe9f180beb3a2867fad6af85"
+    },
+    {
+      "front": 9,
+      "thumb": 8,
+      "record_ref": "917f123b5a778db1470bc8f6816990d7"
+    },
+    {
+      "front": 17,
+      "thumb": 11,
+      "record_ref": "2a709e6bc8dd9051c10608b819c5383a"
+    },
+    {
+      "front": 16,
+      "thumb": 11,
+      "record_ref": "88004be83ce35ed63f42eb71bda64779"
+    },
+    {
+      "front": 14,
+      "thumb": 15,
+      "record_ref": "1d808cd8234acea22a98c88042c48bbf"
+    },
+    {
+      "front": 11,
+      "thumb": 10,
+      "record_ref": "9c978942a4d3476037db30b5e73925ef"
+    },
+    {
+      "front": 25,
+      "thumb": 23,
+      "record_ref": "003c4aa2dae02a6fc5ed9d798e130c68"
+    },
+    {
+      "front": 20,
+      "thumb": 17,
+      "record_ref": "99ac2223fcce1a563f357f50ebf9fd6a"
+    },
+    {
+      "front": 24,
+      "thumb": 21,
+      "record_ref": "2501879fd08b6a0a6b08ef6f4314ac8b"
+    },
+    {
+      "front": 4,
+      "thumb": 3,
+      "record_ref": "2681182bd91343f5a42b22c459f8af3f"
+    },
+    {
+      "front": 22,
+      "thumb": 17,
+      "record_ref": "6197f52f8b8d63fbcbbf5812f7948f19"
+    },
+    {
+      "front": 31,
+      "thumb": 25,
+      "record_ref": "2c2293128932a082e68596a0320f0394"
+    },
+    {
+      "front": 11,
+      "thumb": 10,
+      "record_ref": "cabda416c4f027049db848e9f2278a8d"
+    },
+    {
+      "front": 12,
+      "thumb": 11,
+      "record_ref": "56355596ace1f75290db2d6b20cd38f1"
+    },
+    {
+      "front": 18,
+      "thumb": 17,
+      "record_ref": "fed420504eb31803c627aaa56670c66e"
+    },
+    {
+      "front": 21,
+      "thumb": 17,
+      "record_ref": "2f199f39b15206d72a5e7312ac07141a"
+    },
+    {
+      "front": 22,
+      "thumb": 19,
+      "record_ref": "004b68112dd1da9d11ae39bfdbeb5424"
+    },
+    {
+      "front": 25,
+      "thumb": 16,
+      "record_ref": "1cd33f6b4aab4a394170e28d65ece77f"
+    },
+    {
+      "front": 24,
+      "thumb": 22,
+      "record_ref": "28e819b4506ce2060c6ba48945d34549"
+    },
+    {
+      "front": 33,
+      "thumb": 32,
+      "record_ref": "ad6af938853066c94bca856e8f707282"
+    },
+    {
+      "front": 33,
+      "thumb": 24,
+      "record_ref": "52cd42a16c958d9fa69560552aae30fb"
+    },
+    {
+      "front": 24,
+      "thumb": 16,
+      "record_ref": "1329642ebdc433db2cfe4efb674a12f5"
+    },
+    {
+      "front": 21,
+      "thumb": 18,
+      "record_ref": "6dfc5f6d71f67104914d2a9ceb4fa2e3"
+    },
+    {
+      "front": 18,
+      "thumb": 19,
+      "record_ref": "b17777356fb21625acbcfdbf792d2cb0"
+    }
+  ]
+}

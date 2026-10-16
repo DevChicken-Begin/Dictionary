@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-10-16T04:20:54.294Z",
+  "url": "https://dictionary-dnw.pages.dev",
+  "method": "GET only, no credentials transmitted",
+  "results": [
+    {
+      "path": "/",
+      "status": 404,
+      "content_type": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/config.js",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8",
+      "supabase_origins": []
+    },
+    {
+      "path": "/version.json",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8",
+      "valid_json": false
+    }
+  ],
+  "production_writes": 0
+}

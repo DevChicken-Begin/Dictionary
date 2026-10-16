@@ -1,0 +1,9 @@
+{
+  "scope": "synthetic Node CPU; no camera claim",
+  "n": 100,
+  "p50_ms": 3.0175690000000372,
+  "p95_ms": 13.581356999999997,
+  "json_bytes": 3451,
+  "raw_float32_bytes": 576,
+  "production_storage_bytes_added": 0
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "command": "npm ls typescript --depth=0",
+    "exit_code": 1,
+    "output": "dictionary-catalogue-ai@0.1.0 /workspaces/Dictionary\n\u2514\u2500\u2500 (empty)\n\n"
+  },
+  {
+    "command": "bash -c command -v tsc",
+    "exit_code": 1,
+    "output": ""
+  }
+]

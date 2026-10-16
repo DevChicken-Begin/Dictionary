@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-10-16T04:36:35.022937+00:00",
+  "scope": "Development only, diagnostics from the frozen encoder; no threshold changes or holdout tuning",
+  "n": 93,
+  "flags": {
+    "subject_touches_edge": 86,
+    "background_nonuniform": 25
+  },
+  "reliable_mask_groups": {
+    "True": {
+      "n": 7,
+      "global_top1": 7,
+      "holes_top1": 3,
+      "retrieval_misses": 0
+    },
+    "False": {
+      "n": 86,
+      "global_top1": 51,
+      "holes_top1": 51,
+      "retrieval_misses": 5
+    }
+  },
+  "geometry_changes": {
+    "top1_gained": 0,
+    "top1_lost": 4
+  },
+  "interpretation_limit": "Quality flags are algorithm outputs, not human segmentation labels. Do not loosen thresholds solely to increase eligible count.",
+  "production_writes": 0
+}

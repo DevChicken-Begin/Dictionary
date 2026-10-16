@@ -15,10 +15,12 @@ export function assertEmbeddingContract({
   }
 
   for(const value of vector){
-    if(!Number.isFinite(Number(value))){
+    if(typeof value !== "number" || !Number.isFinite(value)){
       throw new Error("Embedding chứa giá trị không hữu hạn.");
     }
   }
+
+  if (Math.hypot(...vector) < 1e-12) throw new Error("Embedding zero norm.");
 
   if(!model || !modelVersion || !preprocessVersion || !profile){
     throw new Error("Thiếu embedding contract version.");
@@ -30,6 +32,11 @@ export function assertEmbeddingContract({
 export function l2Normalize(vector){
   let sum = 0;
   for(const value of vector) sum += Number(value) ** 2;
-  const norm = Math.sqrt(sum) || 1;
+  const norm = Math.sqrt(sum);
+  if (!Number.isFinite(norm) || norm < 1e-12 || Array.from(vector).some(v => typeof v !== "number" || !Number.isFinite(v))) {
+    const error = new Error("Embedding invalid or zero norm.");
+    error.status = 400;
+    throw error;
+  }
   return Array.from(vector,value=>Number(value)/norm);
 }
