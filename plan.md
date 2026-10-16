@@ -162,3 +162,22 @@ M21 review queue now includes optional frozen-development ranking context. Only1
 ## Agent handoff
 
 Before continuing, read [docs/moris-v6/HANDOFF.md](docs/moris-v6/HANDOFF.md). It records exact remaining gates, current evidence and quota constraints. Do not rerun heavy inference; staging skipped; preserve dirty tree and production prohibition.
+
+## Hotfix: Image search error ("Xin lỗi anh, em chưa thể xử lý yêu cầu này lúc này") - 2026-10-16
+
+- **Triệu chứng:** Người dùng tải ảnh linh kiện (ví dụ `3405370001.png` trong `image copy.png`) gửi tìm kiếm thì nhận được phản hồi lỗi tạm thời `MORIS_PUBLIC_MESSAGES.temporaryError`.
+- **Nguyên nhân gốc (3 tầng lỗi):**
+  1. *Lỗi lệch profile:* Trình duyệt sinh vector với profile `hybrid_gem3_edge_55_45_pseudorgb_u8_v1` (`kim_canon_v3_letterbox`), trong khi `wrangler.toml` và `.env` vẫn cố định `cls_l2_v1` (`kim_canon_v2`). Hàm `encodeQueryImage` ném lỗi `MORIS_VECTOR_PROFILE_MISMATCH` (status 400).
+  2. *Lỗi RPC v6 chưa migrate:* `searchVectorIndex` gọi RPC `match_catalogue_image_vectors_v6`. RPC này thuộc migration đề xuất M23 (`20261016040525_moris_v6_nullable_provenance.sql`) vốn chỉ thử nghiệm local và chưa áp dụng lên Supabase Production (Gate D). PostgREST trả 404 (PGRST202: function not found).
+  3. *Lỗi nuốt exception:* `publicErrorMessage(error)` trong `functions/api/moris/search.js` không ánh xạ các lỗi trên mà fallback về chuỗi thông báo lỗi tạm thời chung chung.
+- **Giải pháp:**
+  1. Nâng cấp `searchVectorIndex` trong `functions/_lib/moris/v5/vector/search.js`: tự động fallback sang RPC `match_catalogue_image_vectors` hiện có trên Production nếu `_v6` chưa có; tự động tra cứu fallback profile `cls_l2_v1` nếu profile mới trả về 0 dòng do database chưa re-index.
+  2. Đồng bộ `wrangler.toml` và `.env` khớp với `kim_canon_v3_letterbox` và `hybrid_gem3_edge_55_45_pseudorgb_u8_v1` theo đúng hợp đồng của client `src/moris/vector/browserDinov2.js`.
+  3. Bổ sung ánh xạ lỗi rõ ràng cho `MORIS_VECTOR_PROFILE_MISMATCH` và HTTP 401 trong `publicErrorMessage`.
+- **Bằng chứng kiểm thử:**
+  - `npm test`: 44 files / 405 tests pass 100%.
+  - `npx tsc --noEmit`: exit 0 (0 error).
+  - `npm run build`: 49 files static sinh ra sạch sẽ.
+  - `node tools/check-moris-e2e.mjs`: 12/12 pass.
+  - Test trực tiếp `runMorisSearch` trên ảnh thực tế mã `3405370001`: trả về Top 1 chính xác mã `3405370001` với similarity = 1.0 và gợi ý đối chiếu chuẩn xác.
+

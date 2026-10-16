@@ -24,6 +24,14 @@ function publicErrorMessage(error) {
     return "Xin lỗi anh, tìm kiếm bằng hình ảnh hiện chưa sẵn sàng. Anh thử mô tả đặc điểm giúp em nhé.";
   }
 
+  if (error?.code === "MORIS_VECTOR_PROFILE_MISMATCH") {
+    return "Xin lỗi anh, phiên bản nhận diện hình ảnh giữa trình duyệt và máy chủ chưa đồng bộ. Anh tải lại trang giúp em nhé.";
+  }
+
+  if (Number(error?.status) === 401) {
+    return "Phiên đăng nhập đã hết hạn. Anh vui lòng đăng nhập lại để tiếp tục.";
+  }
+
   return MORIS_PUBLIC_MESSAGES.temporaryError;
 }
 
