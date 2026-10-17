@@ -1,12 +1,12 @@
 # Moris V6 — Bàn giao khi quota còn thấp
 
-Cập nhật: 2026-10-16. Mục đích: agent tiếp theo tiếp tục đúng phạm vi, không chạy lại các lượt inference tốn tài nguyên và không nhầm mục đã code với gate đã nghiệm thu.
+Cập nhật: 2026-10-17. Mục đích: agent tiếp theo tiếp tục đúng phạm vi, không chạy lại các lượt inference tốn tài nguyên và không nhầm mục đã code với gate đã nghiệm thu.
 
-> Bắt đầu nhanh: đọc [TECH_DEBT_ROADMAP.md](TECH_DEBT_ROADMAP.md) để nắm thứ tự xử lý và các nguồn thông tin chuẩn; roadmap là kiểm kê gate Moris đã biết, không thay cho audit toàn repository.
+> Bắt đầu nhanh: đọc [TECH_DEBT_ROADMAP.md](TECH_DEBT_ROADMAP.md) để nắm thứ tự xử lý và các nguồn thông tin chuẩn; roadmap là kiểm kê gate Moris đã biết, không thay cho audit toàn repository. Kế hoạch thi hành hiện hành nằm ở `pipeline_moris.md` §12; prompt bàn giao phiên mới ở [SESSION_BOOT_PROMPT.md](SESSION_BOOT_PROMPT.md).
 
 ## Ràng buộc không đổi
 
-- Đọc `AGENTS.md`, `state.json`, file này và `MORIS_V6_MASTER_PLAN.md` trước khi sửa.
+- Đọc `AGENTS.md`, `state.json`, file này, `pipeline_moris.md` (§10–12) trước khi sửa. (`MORIS_V6_MASTER_PLAN.md` và `MORIS_V6_QUICK_CHECKLIST.md` đã bị chủ dự án xoá — không khôi phục; cần đọc bản cũ dùng `git show 2657b49:<tên_file>`.)
 - Không ghi database production, không deploy, không dùng secret trong chat hoặc `.env` cho thao tác ghi. Không tạo commit khi chưa được yêu cầu.
 - Chủ dự án yêu cầu bỏ qua staging; giữ trạng thái `skipped`, tuyệt đối không ghi staging pass và không hỏi lại URL staging.
 - Chủ dự án yêu cầu tránh vượt quota. Mức quota còn lại chưa được đo. Không chạy lại model WASM trên 545 ảnh, holdout, benchmark hay full suite chỉ để xác nhận số cũ. Báo chủ dự án trước khi cân nhắc một lượt tốn tài nguyên mới.
@@ -14,7 +14,11 @@ Cập nhật: 2026-10-16. Mục đích: agent tiếp theo tiếp tục đúng ph
 
 ## Git và checkpoint
 
-Branch `feat/moris-v6`, HEAD `02289afa79747722b992938bee7c2d0414f7a9d2`; worktree có khoảng139 mục thay đổi/untracked tại checkpoint, chưa commit. Bảo toàn mọi thay đổi gốc, gồm tài liệu bị xóa, `image/`, `image 2/` và `dist/version.json`. Không dùng `git reset --hard`, `git clean` hoặc hoàn tác hàng loạt. `git diff --check` sạch ở lần rà gần nhất.
+Cập nhật 2026-10-17: toàn bộ tài liệu kế hoạch (`pipeline_moris.md`, `plan.md`, `state.json`, `SESSION_BOOT_PROMPT.md`, file này) được chủ dự án yêu cầu commit và push thẳng lên `main`; worktree sạch tại thời điểm bàn giao. Commit nền trước bàn giao: `2657b49` (trùng tip `origin/feat/moris-v6`) — dùng hash này để đọc các file đã bị xoá.
+
+- 3 file master plan cũ (`MORIS_V6_MASTER_PLAN.md`, `MORIS_V6_QUICK_CHECKLIST.md`, `CODEX_MORIS_V6_TASK_PROMPTS.md`) do chủ dự án xoá — KHÔNG khôi phục.
+- Không dùng `git reset --hard`, `git clean` hoặc hoàn tác hàng loạt. Nếu worktree phát sinh thay đổi mới, đó là công việc đang làm dở — không xoá.
+- Trước khi sửa: `git status --short && git log --oneline -3` để tự xác nhận trạng thái thực tế (tài liệu có thể cũ hơn repo).
 
 ## Trạng thái task
 

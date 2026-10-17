@@ -195,3 +195,39 @@ Before continuing, read [docs/moris-v6/HANDOFF.md](docs/moris-v6/HANDOFF.md). It
   - `npm run build`: 49 files static sinh ra sạch sẽ.
   - `node tools/check-moris-e2e.mjs`: 12/12 pass.
 
+## Review kiến trúc Moris & cơ sở nghiên cứu phân biệt kích thước — 2026-10-17
+
+- [x] **Review toàn bộ kiến trúc vận hành Moris** (đường ghi Vector Center, đường đọc chat text, đường đọc ảnh 3 lớp, hợp đồng profile/geometry/DB RPC) và **viết tài liệu `pipeline_moris.md`** làm cơ sở cho bài nghiên cứu.
+- **Kết luận gốc:** pipeline bất biến tỉ lệ theo thiết kế (crop sát vật thể + letterbox 224×224, toạ độ lỗ chuẩn hoá, aspect ratio tỉ số) nên **không thể phân biệt hai mã cùng hình dạng khác kích thước**; DB không có cột kích thước mm; ảnh `image 2/` không có vật chuẩn tỉ lệ.
+- **Đề xuất trọng tâm trong tài liệu:** Tầng 0 "Size Gate" — neo tỉ lệ bằng thẻ in 4 marker + đo mm vật thể + bảng `catalogue_part_dimensions` (proposal, chờ Gate D) + lọc dung sai trước rerank; kèm lộ trình P0–P5, bộ metric size-pair/unknown-negative và 8 câu hỏi mở cần chủ dự án xác nhận.
+- Không thay đổi mã nguồn/runtime/migration/deploy trong lần review này; dirty tree và branch `feat/moris-v6` được giữ nguyên. Chi tiết: [pipeline_moris.md](pipeline_moris.md).
+
+## Subject Locking, Mask Purity & Size Contract — đề xuất M27/M28 (2026-10-17)
+
+- [x] **Bổ sung Phần 10 vào [pipeline_moris.md](pipeline_moris.md)** theo làm rõ của chủ dự án: (10.1) Subject Locking 5 lớp phòng thủ chống bóng đổ/lem nền/vật dư/chói + điều kiện readiness trước khi chốt khóa; (10.2) tái tạo chủ thể deterministic (matte + nền hằng số, làm phẳng chiếu sáng, fill chói kênh L/edge, validate lỗ) — cấm generative inpainting, ràng buộc `kim_canon_v4_*` + re-index qua Vector Center (Gate D); (10.3) Size Contract cặp `(length_mm, width_mm)` theo trục PCA (`L ≥ W`, bất biến hướng, hình vuông không special case, metric đối xứng có hoán vị); (10.4) phân kỳ an toàn S1 (không re-index) / S2 (đổi canonicalization); (10.5) bộ bằng chứng cần thu (mask IoU, size-pair, test-retest px/mm); (10.6) định nghĩa đề xuất M27/M28; (10.7) câu hỏi mở Q9–Q11. Cập nhật đồng bộ bảng proposal 5.3 (`length_mm/width_mm`) và thuật toán 5.4.
+- [ ] **[ĐỀ XUẤT] M27 — Subject Locking & Mask Purity (S1):** tap-to-lock + readiness + classifier bóng đổ/chói + voting đa khung trong camera modal; giữ nguyên canonicalization, không re-index; exit evidence: focused tests + mask IoU/reliable rate trên tập ảnh mới. Chưa được owner kích hoạt.
+- [ ] **[ĐỀ XUẤT] M28 — Size Contract & Size Gate (S1→S2):** chuẩn hoá cặp `(length_mm, width_mm)`, gate dung sai 2 tầng + UI nhập size; S2 gắn version canonicalization mới + re-index qua Vector Center. Exit evidence: size-pair benchmark + gate precision loại trừ ≥ 99% + A/B. Chưa được owner kích hoạt.
+- Ràng buộc chung của hai đề xuất: không đụng production/re-index/runtime; phụ thuộc câu trả lời Q1–Q11; bộ dữ liệu camera mới phải đóng băng manifest trước khi đo (theo M19/TECH_DEBT_ROADMAP).
+
+## Nghiệp vụ sai hình dạng lỗ, đa ảnh catalogue & dung lượng R2 (2026-10-17)
+
+- [x] **Bổ sung Phần 11 vào [pipeline_moris.md](pipeline_moris.md):** ca mẫu 3421750001 (5 lỗ tròn) vs 3421760001 (4 lỗ + 1 lỗ vuông) bị tìm nhầm khi chụp 1 tấm từ trên xuống; ghi nhận **B13** (không có phân loại hình dạng lỗ từ ảnh — chỉ có regex text metadata); kiểm kê hạ tầng đa ảnh đã có sẵn (image_assets thumb/front/back/detail/compare, Vector Center xử lý từng asset, multi-probe cap 3, M18 SKU pooling); đánh giá 3 mức giá trị của back + 2 detail kèm cảnh báo fairness coverage; phân tích R2 900 mã × 4–5 ảnh ≈ 0.75–1.3GB với nén WebP hiện có (an toàn dưới 10GB; ảnh gốc 3–5MB sẽ vượt 10.8–18GB); bổ sung Q12–Q15.
+- [ ] **Xác minh read-only asset/vector của 3421750001 và 3421760001** (asset_type + has_vector qua Vector Center listing) và mâu thuẫn M18-snapshot (chỉ front/thumb) — chờ chủ dự án.
+- [ ] **Bổ sung bộ hard-negative cặp mẫu** (ảnh thật nhiều góc: top-down xa, nghiêng, cận cảnh lỗ) + ablation multi-view (front-only vs +detail vs +back) vào kế hoạch M21 khi được cấp quota.
+- [ ] **Cập nhật phạm vi M27:** thêm "hole-shape evidence" (phân loại tròn/vuông/oval từ mask) — đã đồng bộ pipeline_moris.md §10.6 và state.json.
+
+
+## Chốt chuẩn 5 ảnh/mã, xác minh thay ảnh R2 & kế hoạch thực thi chi tiết — 2026-10-17
+
+- [x] **Chốt chuẩn dữ liệu với chủ dự án:** tối đa **5 asset/mã = thumb + front + back + 2 detail** (tối thiểu thực dụng 4: front+back+2 detail; thumb tự sinh từ front); yêu cầu **thay ảnh phải xoá object R2 cũ**, không ghi chồng thêm.
+- [x] **Xác minh code hành vi thay ảnh (phát hiện B14/B15):** hiện CHƯA đúng — `savePart` (`src/app.js:1889`) → `mergeAsset` (`:1883`) → `app_replace_part_assets` (`:1945`) chỉ đổi đường dẫn DB; object R2 cũ theo `uploadId` **không bị xoá** (không có `CATALOGUE_BUCKET.delete` trong luồng upload/save; chỉ `bulk-delete.js:81-93` và `delete-all.js` purge). `delete-part.js` (xoá 1 mã) cũng không purge R2. → Ghi B14/B15 vào `pipeline_moris.md` §4/§11.4.
+- [x] **Chốt toán dung lượng 4.500 ảnh:** 900 × 5 = 4.500 ảnh nén WebP ≈ **0.8–1.3GB — KHÔNG vượt 10GB** (ngưỡng ~2.2–2.4MB/ảnh trung bình); chỉ vượt nếu upload ảnh gốc 3–5MB (13.5–22.5GB). Số thật chốt bằng pilot đo dung lượng.
+- [x] **Bổ sung Phần 12 [pipeline_moris.md](pipeline_moris.md):** kế hoạch thực thi chi tiết cho phiên sau — 12.1 quyết định đã chốt; 12.2 chương trình milestone; 12.3 thứ tự P0–P3; 12.4 exit evidence & rollback; 12.5 việc KHÔNG làm.
+- [ ] **[ĐỀ XUẤT] M29 — Multi-view & Capture Enrichment (S1):** chuẩn 5 ảnh, index back/detail qua Vector Center, probe cap 3→5 có test, câu hỏi phân biệt tự động, fairness rule. Blocker: Q12/Q14 + xác minh 2 mã + M18 acceptance.
+- [ ] **[ĐỀ XUẤT] M30 — Asset Lifecycle & R2 Hygiene:** sửa B14 (xoá object cũ khi replace) + B15 (purge R2 khi xoá 1 mã), audit orphan, quota monitor. Blocker: duyệt phạm vi P0.
+- [ ] **P0 — chủ dự án (làm trước phiên sau):** trả lời Q1–Q15; xác minh read-only asset/vector 3421750001 & 3421760001 trên Trang Trung tâm Vector AI (asset_type + has_vector) để chốt mâu thuẫn M18 snapshot; duyệt phạm vi M30.
+- [ ] **P1 — code S1 (phiên sau):** M30 fix R2 lifecycle (focused tests) → pilot 20 mã chuẩn 5 ảnh (đo dung lượng WebP thật + index Vector Center front/back/detail) → M27 (subject locking + readiness + hole-shape evidence) → M28 (size UI + gate 2 tầng phía query, fail-open).
+- [ ] **P2 — đo lường:** EVAL đóng băng dataset (mask IoU, hole-shape accuracy, size-pair + cặp 3421750001/3421760001 hard-negative, unknown negatives, ablation multi-view) theo quota HANDOFF.
+- [ ] **P3 — gated:** S2 re-canonicalization `kim_canon_v4_*` + re-index 4.500 vector + A/B (chỉ sau Gate D + owner duyệt).
+- [x] **Prompt khởi động phiên mới:** tạo `docs/moris-v6/SESSION_BOOT_PROMPT.md` — agent mới dán nguyên khối PROMPT là vào dự án nhanh, chính xác, không cần đọc lại toàn bộ codebase.
+- [x] **Đồng bộ HANDOFF.md + push main (2026-10-17):** sửa phần "Git và checkpoint" theo trạng thái thực tế (main, commit nền 2657b49, file owner xoá đọc qua `git show 2657b49:`); cập nhật `SESSION_BOOT_PROMPT.md` hậu push; `npm test` 44 files/406 tests pass + `tsc` exit 0; commit và push toàn bộ lên `main` theo yêu cầu chủ dự án.
