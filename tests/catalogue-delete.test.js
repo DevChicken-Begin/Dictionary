@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { onRequestPost as handleBulkDelete } from "../functions/api/catalogue/bulk-delete.js";
 import { onRequestPost as handleDeletePart } from "../functions/api/catalogue/delete-part.js";
 import { onRequestPost as handleDeleteAll } from "../functions/api/catalogue/delete-all.js";
+import { onRequestPost as handlePurgeAssets } from "../functions/api/catalogue/purge-assets.js";
 
 function makeJwt(role = "admin") {
   const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
@@ -356,6 +357,303 @@ describe("Catalogue Delete Suite (Bulk Delete, Delete Part & Delete All)", () =>
       expect(data.deleted_vectors_count).toBe(2);
       expect(rpcDeleteCalled).toBe(true);
       expect(vectorDeleteCalled).toBe(true);
+
+      globalThis.fetch = originalFetch;
+    });
+
+    // M30 (B15): xóa 1 mã phải purge object R2 đối xứng với bulk-delete.
+    it("cho phép admin xóa mã đơn lẻ và purge đúng object R2 của mã đó", async () => {
+      const adminJwt = makeJwt("admin");
+      const targetId = "12345678-1234-1234-1234-123456789abc";
+      let deletedKeys = [];
+      const mockBucket = {
+        delete: vi.fn().mockImplementation((keys) => {
+          deletedKeys.push(...keys);
+          return Promise.resolve();
+        })
+      };
+      const mockEnv = {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        CATALOGUE_BUCKET: mockBucket
+      };
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation((url, opts) => {
+        const urlStr = String(url);
+        if (urlStr.includes("/rpc/app_me")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, role_name: "admin" }), { status: 200 }));
+        }
+        if (urlStr.includes("/rest/v1/image_assets")) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { image_path: "front/3421750001/u1.webp" },
+            { image_path: "back/3421750001/u2.webp" }
+          ]), { status: 200 }));
+        }
+        if (urlStr.includes("/rest/v1/image_library")) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { image_path: "thumb/3421750001/u3.webp" }
+          ]), { status: 200 }));
+        }
+        if (urlStr.includes("/rpc/app_delete_part")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, deleted_id: targetId }), { status: 200 }));
+        }
+        if (urlStr.includes("/rest/v1/catalogue_image_vectors") && opts?.method === "DELETE") {
+          return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+        }
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      });
+
+      const request = new Request("https://example.com/api/catalogue/delete-part", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ session_token: adminJwt, image_id: targetId })
+      });
+
+      const res = await handleDeletePart({ request, env: mockEnv });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.ok).toBe(true);
+      expect(data.r2_deleted_keys_count).toBe(3);
+      expect(mockBucket.delete).toHaveBeenCalledTimes(1);
+      expect(deletedKeys).toContain("front/3421750001/u1.webp");
+      expect(deletedKeys).toContain("back/3421750001/u2.webp");
+      expect(deletedKeys).toContain("thumb/3421750001/u3.webp");
+
+      globalThis.fetch = originalFetch;
+    });
+
+    it("không purge R2 nếu RPC xóa thất bại (mã không tồn tại)", async () => {
+      const adminJwt = makeJwt("admin");
+      const targetId = "12345678-1234-1234-1234-123456789abc";
+      const mockBucket = { delete: vi.fn().mockResolvedValue() };
+      const mockEnv = {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        CATALOGUE_BUCKET: mockBucket
+      };
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation((url) => {
+        const urlStr = String(url);
+        if (urlStr.includes("/rpc/app_me")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, role_name: "admin" }), { status: 200 }));
+        }
+        if (urlStr.includes("/rest/v1/image_assets")) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { image_path: "front/3421750001/u1.webp" }
+          ]), { status: 200 }));
+        }
+        if (urlStr.includes("/rpc/app_delete_part")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: false, message: "Không tìm thấy mã linh kiện để xóa" }), { status: 200 }));
+        }
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      });
+
+      const request = new Request("https://example.com/api/catalogue/delete-part", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ session_token: adminJwt, image_id: targetId })
+      });
+
+      const res = await handleDeletePart({ request, env: mockEnv });
+      expect(res.status).toBe(400);
+      expect(mockBucket.delete).not.toHaveBeenCalled();
+
+      globalThis.fetch = originalFetch;
+    });
+  });
+
+  // M30 (B14): endpoint dọn object R2 đã thay thế — xoá đúng key, không xoá sai key.
+  describe("/api/catalogue/purge-assets", () => {
+    it("từ chối 401 nếu thiếu session token", async () => {
+      const mockEnv = {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key"
+      };
+      const request = new Request("https://example.com/api/catalogue/purge-assets", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ r2_keys: ["front/M1/u1.webp"] })
+      });
+      const res = await handlePurgeAssets({ request, env: mockEnv });
+      expect(res.status).toBe(401);
+    });
+
+    it("từ chối 403 nếu tài khoản không phải admin", async () => {
+      const userJwt = makeJwt("editor");
+      const mockEnv = {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key"
+      };
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation((url) => {
+        if (String(url).includes("/rpc/app_me")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, role_name: "editor" }), { status: 200 }));
+        }
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      });
+
+      const request = new Request("https://example.com/api/catalogue/purge-assets", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ session_token: userJwt, r2_keys: ["front/M1/u1.webp"] })
+      });
+
+      const res = await handlePurgeAssets({ request, env: mockEnv });
+      expect(res.status).toBe(403);
+
+      globalThis.fetch = originalFetch;
+    });
+
+    it("từ chối 400 nếu r2_keys sai định dạng (chống path traversal)", async () => {
+      const adminJwt = makeJwt("admin");
+      const mockEnv = {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key"
+      };
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation((url) => {
+        if (String(url).includes("/rpc/app_me")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, role_name: "admin" }), { status: 200 }));
+        }
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      });
+
+      const request = new Request("https://example.com/api/catalogue/purge-assets", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          session_token: adminJwt,
+          r2_keys: ["../etc/passwd", "front/../secret.webp", "front/M1/u1.exe"]
+        })
+      });
+
+      const res = await handlePurgeAssets({ request, env: mockEnv });
+      expect(res.status).toBe(400);
+
+      globalThis.fetch = originalFetch;
+    });
+
+    it("từ chối 503 nếu thiếu R2 binding CATALOGUE_BUCKET", async () => {
+      const adminJwt = makeJwt("admin");
+      const mockEnv = {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key"
+      };
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation((url) => {
+        if (String(url).includes("/rpc/app_me")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, role_name: "admin" }), { status: 200 }));
+        }
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      });
+
+      const request = new Request("https://example.com/api/catalogue/purge-assets", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ session_token: adminJwt, r2_keys: ["front/M1/u1.webp"] })
+      });
+
+      const res = await handlePurgeAssets({ request, env: mockEnv });
+      expect(res.status).toBe(503);
+
+      globalThis.fetch = originalFetch;
+    });
+
+    it("xoá key không còn tham chiếu và giữ nguyên key đang được DB dùng", async () => {
+      const adminJwt = makeJwt("admin");
+      let deletedKeys = [];
+      const mockBucket = {
+        delete: vi.fn().mockImplementation((keys) => {
+          deletedKeys.push(...keys);
+          return Promise.resolve();
+        })
+      };
+      const mockEnv = {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        CATALOGUE_BUCKET: mockBucket
+      };
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation((url) => {
+        const urlStr = String(url);
+        if (urlStr.includes("/rpc/app_me")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, role_name: "admin" }), { status: 200 }));
+        }
+        if (urlStr.includes("/rest/v1/image_assets")) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { image_path: "front/M1/u1.webp" }
+          ]), { status: 200 }));
+        }
+        if (urlStr.includes("/rest/v1/image_library")) {
+          return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+        }
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      });
+
+      const request = new Request("https://example.com/api/catalogue/purge-assets", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          session_token: adminJwt,
+          r2_keys: ["front/M1/u1.webp", "thumb/M1/u2.webp"]
+        })
+      });
+
+      const res = await handlePurgeAssets({ request, env: mockEnv });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.ok).toBe(true);
+      expect(data.verification).toBe("ok");
+      expect(data.deleted_keys).toEqual(["thumb/M1/u2.webp"]);
+      expect(data.skipped_referenced_keys).toEqual(["front/M1/u1.webp"]);
+      expect(deletedKeys).toEqual(["thumb/M1/u2.webp"]);
+
+      globalThis.fetch = originalFetch;
+    });
+
+    it("fail-closed: không xoá key nào nếu không xác minh được tham chiếu DB", async () => {
+      const adminJwt = makeJwt("admin");
+      const mockBucket = { delete: vi.fn().mockResolvedValue() };
+      const mockEnv = {
+        SUPABASE_URL: "https://test.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        CATALOGUE_BUCKET: mockBucket
+      };
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation((url) => {
+        const urlStr = String(url);
+        if (urlStr.includes("/rpc/app_me")) {
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, role_name: "admin" }), { status: 200 }));
+        }
+        if (urlStr.includes("/rest/v1/image_assets") || urlStr.includes("/rest/v1/image_library")) {
+          return Promise.reject(new Error("network down"));
+        }
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      });
+
+      const request = new Request("https://example.com/api/catalogue/purge-assets", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ session_token: adminJwt, r2_keys: ["front/M1/u1.webp"] })
+      });
+
+      const res = await handlePurgeAssets({ request, env: mockEnv });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.verification).toBe("unavailable");
+      expect(data.deleted_count).toBe(0);
+      expect(mockBucket.delete).not.toHaveBeenCalled();
 
       globalThis.fetch = originalFetch;
     });

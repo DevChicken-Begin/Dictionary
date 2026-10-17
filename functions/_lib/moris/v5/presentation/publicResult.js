@@ -30,13 +30,16 @@ export function toPublicMorisResult(result,{debug=false}={}){
     decision:result?.decision || null
   };
 
+  if(result?.size_evidence) out.size_evidence = result.size_evidence;
+
   if(debug){
     out.debug = {
       mode:result?.mode || null,
       summary:result?.summary || null,
       warnings:result?.warnings || [],
       ai_calls:result?.ai_calls ?? null,
-      candidate_pool_hash:result?.candidate_pool_hash || null
+      candidate_pool_hash:result?.candidate_pool_hash || null,
+      size_evidence:result?.size_evidence || null
     };
   }
   return out;

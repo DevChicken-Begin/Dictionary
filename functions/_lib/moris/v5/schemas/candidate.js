@@ -28,6 +28,8 @@ export function publicCandidate(row) {
     conflicts:row?.conflicts || [],
     unknown:row?.unknown || [],
     hole_count:row?.hole_count == null ? null : Number(row.hole_count),
-    aspect_ratio:row?.aspect_ratio == null ? null : Number(row.aspect_ratio)
+    aspect_ratio:row?.aspect_ratio == null ? null : Number(row.aspect_ratio),
+    size_status:row?.size_status || null,
+    size_evidence:row?.size_evidence || null
   };
 }

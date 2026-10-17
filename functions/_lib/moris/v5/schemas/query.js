@@ -1,4 +1,5 @@
 import { normalizeGeometry } from "./geometry.js";
+import { normalizeQuerySize } from "../retrieval/sizeGate.js";
 function assertEmbedding(vector,dimension,label){
   if(!Array.isArray(vector) || vector.length!==dimension){
     const e=new Error(`${label} phải đúng ${dimension} chiều.`);
@@ -66,6 +67,8 @@ export function validateMorisQuery(body, config) {
       view_mode:viewMode
     },
     hints:body?.hints || {},
-    geometry:body?.geometry ? normalizeGeometry(body.geometry) : null
+    geometry:body?.geometry ? normalizeGeometry(body.geometry) : null,
+    // M28 Size Contract (S1): fail-open — payload size không hợp lệ trở thành null.
+    size:normalizeQuerySize(body?.size)
   };
 }

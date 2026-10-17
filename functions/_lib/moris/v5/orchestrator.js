@@ -24,6 +24,10 @@ import { fuseCandidateScore } from "./retrieval/scoreFusion.js";
 import { collectGeometryEvidence } from "./retrieval/geometricReranker.js";
 import { finalizeCandidatePool } from "./retrieval/candidatePool.js";
 import { collapseBestVectorHitPerRecord } from "./retrieval/vectorHitCollapse.js";
+import {
+  applySizeGate,
+  loadCandidateDims
+} from "./retrieval/sizeGate.js";
 import { orientationWarnings } from "./guards/orientation.js";
 import { publicCandidate } from "./schemas/candidate.js";
 import {
@@ -342,8 +346,50 @@ export async function runMorisSearch(env, config, {
     {maxRows:config.limits.maxScanRows,filters:query.filters}
   );
 
+  // M28 Size Gate (S1, query-side only): lọc theo kích thước sau hydrate,
+  // trước rankMetadata. Fail-open: thiếu size query hoặc thiếu dims -> giữ nguyên pool.
+  let sizeGate = {
+    candidates:hydrated,
+    rejected:[],
+    evidence:{status:"not_provided"},
+    warnings:[]
+  };
+
+  if (config.features.sizeGate !== false && query.size) {
+    const dimsById = await loadCandidateDims(
+      env,
+      token,
+      hydrated.map(row => row?.record_id ?? row?.id)
+    );
+    sizeGate = applySizeGate({
+      candidates:hydrated,
+      querySize:query.size,
+      dimsById
+    });
+    ctx.warnings.push(...(sizeGate.warnings || []));
+  }
+
+  const sizeEvidenceAttach = sizeGate.evidence.status === "not_provided"
+    ? {}
+    : {size_evidence:sizeGate.evidence};
+
+  if (
+    hydrated.length > 0 &&
+    sizeGate.evidence.status === "applied" &&
+    !sizeGate.candidates.length
+  ) {
+    return {
+      mode:"MORIS_SIZE_GATE_NO_MATCH",
+      summary:"Các ứng viên tìm thấy đều khác kích thước ngoài dung sai.",
+      candidates:[],
+      warnings:ctx.warnings,
+      ...sizeEvidenceAttach,
+      ai_calls:null
+    };
+  }
+
   const metadataRanked = rankMetadata(
-    hydrated,
+    sizeGate.candidates,
     query.message,
     {excludeHoleEvidence:true}
   );
@@ -430,6 +476,7 @@ export async function runMorisSearch(env, config, {
     decision,
     candidates:sortedCandidates,
     warnings,
+    ...sizeEvidenceAttach,
     ai_calls:null,
     candidate_pool_hash:poolHash
   };

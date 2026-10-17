@@ -11,16 +11,18 @@ Bạn là agent tiếp nhận dự án **Catalogue AI (Dictionary)** — nhánh 
 ### 0. Đọc theo đúng thứ tự (khoảng 10 phút, đủ ngữ cảnh)
 
 1. `AGENTS.md` — Hiến pháp, bắt buộc tuân thủ.
-2. `state.json` — xem `current_session.last_checkpoint` + `resumption_prompt`, task cuối `task_22_asset_standard_r2_replace_plan`, và `moris_v6.M27/M28/M29/M30`.
+2. `state.json` — xem `current_session.last_checkpoint` + `resumption_prompt`, task cuối `task_27_m28_size_contract_gate`, và `moris_v6.M27/M28/M29/M30`.
 3. `pipeline_moris.md` — tài liệu nghiên cứu trung tâm (~650 dòng). Đọc kỹ **§10, §11, §12**; §0–9 chỉ tra khi cần.
 4. `plan.md` — các mục cuối (checkpoint 2026-10-17) là checklist việc.
-5. `docs/moris-v6/HANDOFF.md` + `docs/moris-v6/TECH_DEBT_ROADMAP.md` — ràng buộc quota/production (HANDOFF đã đồng bộ ngày 2026-10-17).
+5. `docs/moris-v6/HANDOFF.md` + `docs/moris-v6/TECH_DEBT_ROADMAP.md` + **`docs/moris-v6/TECH_DEBT_REGISTER.md`** (sổ nợ kỹ thuật + test backlog cho phiên này) — ràng buộc quota/production.
 
 ### 1. Trạng thái repo thực tế (đã kiểm chứng — không cần dò lại)
 
-- Worktree `/workspaces/Dictionary`; branch `main`. Toàn bộ tài liệu Moris V6 (`pipeline_moris.md`, `plan.md`, `state.json`, `SESSION_BOOT_PROMPT.md`, `docs/moris-v6/HANDOFF.md`) đã được commit và push lên `origin/main` ngày 2026-10-17 — worktree sạch lúc bàn giao.
-- Commit nền trước bàn giao: `2657b49` (trùng tip `origin/feat/moris-v6`) — dùng hash này để đọc file đã bị xoá: `MORIS_V6_MASTER_PLAN.md`, `MORIS_V6_QUICK_CHECKLIST.md`, `CODEX_MORIS_V6_TASK_PROMPTS.md` do CHỦ DỰ ÁN xoá — KHÔNG khôi phục.
-- Tự xác nhận trước khi làm: `git status --short && git log --oneline -3`. Nếu có thay đổi mới → là công việc đang làm dở, không xoá. KHÔNG `git reset --hard`, KHÔNG `git clean`; không commit/push/deploy khi chưa được yêu cầu.
+- Worktree `/workspaces/Dictionary`; branch `main`. Checkpoint push tài liệu gần nhất: `11b63c5`; phiên M30→M27→M28 + hardening đã commit + push lên `origin/main` cuối ngày 2026-10-17 theo yêu cầu chủ dự án (tip: `git log -1`; `image 2/` 83MB và `.env` KHÔNG push).
+- Trạng thái đã kiểm chứng cuối phiên: `npm test` **49 files / 475 tests pass**; `npx tsc --noEmit` exit 0; `npm run build` **46 files** exit 0 (đã loại `.ts` khỏi dist).
+- Purge R2 đã thực thi theo phê duyệt: 376/376 object (11.14MB), orphan còn 77 (chỉ `parts/`).
+- Commit nền để đọc file đã xoá: `2657b49` — `MORIS_V6_MASTER_PLAN.md`, `MORIS_V6_QUICK_CHECKLIST.md`, `CODEX_MORIS_V6_TASK_PROMPTS.md` do CHỦ DỰ ÁN xoá — KHÔNG khôi phục.
+- Tự xác nhận trước khi làm: `git status --short && git log --oneline -3`. KHÔNG `git reset --hard`, KHÔNG `git clean`; không commit/push/deploy khi chưa được yêu cầu.
 - Kiểm thử: `npm test` (vitest), `npx tsc --noEmit`, `npm run build` — ưu tiên focused test để tiết kiệm quota.
 
 ### 2. Bối cảnh dự án trong 10 dòng
@@ -55,10 +57,10 @@ Bạn là agent tiếp nhận dự án **Catalogue AI (Dictionary)** — nhánh 
 3. Duyệt phạm vi **M30**.
 
 **P1 — code S1 (đúng thứ tự, mỗi việc kèm focused test; chi tiết §12.3):**
-1. **M30** — sửa B14 (xoá object R2 cũ khi replace) + B15 (purge R2 khi xoá lẻ), audit orphan, quota monitor.
-2. **Pilot 20 mã** — chụp chuẩn 5 ảnh, đo dung lượng WebP thật (thay ước lượng), index Vector Center front/back/detail, đọc lại listing xác nhận.
-3. **M27** — tap-to-lock + readiness 5 điều kiện + classifier bóng/chói + voting đa khung + hole-shape evidence; giữ nguyên canonicalization v3, không re-index.
-4. **M28** — UI nhập size (cạnh dài/ngắn + "không rõ") + gate 2 tầng phía query (fail-open).
+1. **M30** — ✅ xong local 2026-10-17 (B14 purge-assets + B15 delete-part; audit read-only xong; **purge 376 orphan ĐÃ thực thi theo duyệt**, còn 77 `parts/`).
+2. **Pilot 20 mã** — ⏳ CHỜ ảnh thật chủ dự án: chụp chuẩn 5 ảnh, đo dung lượng WebP thật (thay ước lượng), index Vector Center front/back/detail, đọc lại listing xác nhận.
+3. **M27** — ✅ xong local 2026-10-17 (tap-to-lock + readiness + classifier bóng/chói + voting + hole-shape evidence; focused 21/21; đo ảnh thật `image 2/`; chưa feed mask vào embedding — chờ EVAL).
+4. **M28** — ✅ xong local 2026-10-17 (`src/moris/size-contract.js` + `functions/_lib/moris/v5/retrieval/sizeGate.js` fail-open 3 trạng thái, UI panel size + "không rõ", payload `size`; focused 28/28). **Còn:** Gate D cho bảng `catalogue_part_dimensions` + đo size-pair precision trên pilot.
 
 **P2 — EVAL:** dataset đóng băng + manifest SHA-256; đo mask IoU, hole-shape accuracy, size gate precision, Top1/Recall@10, ablation multi-view — theo quota.
 **P3 — gated:** CHỈ khi Gate D + owner duyệt: S2 `kim_canon_v4_*` + re-index 4.500 vector + A/B.
@@ -75,9 +77,9 @@ Bạn là agent tiếp nhận dự án **Catalogue AI (Dictionary)** — nhánh 
 
 ### 6. Bắt đầu ngay
 
-1. Chạy 1 lần `git status --short && git rev-parse --short HEAD` để xác nhận trạng thái ở mục 1.
-2. Hỏi chủ dự án các mục P0 chưa được cung cấp.
-3. Triển khai P1 bước 1 (M30) ngay khi được duyệt — bắt đầu bằng việc đọc 4 file trong bảng mục 3 + `pipeline_moris.md` §11.4/§12.2.
-4. Kết thúc phiên: cập nhật `state.json` + `plan.md`, ghi rõ việc đã xong / đang chờ / bằng chứng.
+1. Chạy 1 lần `git status --short && git log --oneline -3` để xác nhận trạng thái dirty có chủ đích ở mục 1.
+2. Đọc `docs/moris-v6/TECH_DEBT_REGISTER.md` — chọn việc từ bảng nợ (ưu tiên: Gate D/pilot khi được cấp; test backlog T1–T7 khi được phép sửa code).
+3. Việc code còn lại không cần dữ liệu ngoài: test backlog T1 (integration orchestrator size gate), T6, BUILD-01, DOC-01 — hỏi chủ dự án trước khi bắt đầu.
+4. Kết thúc phiên: cập nhật `state.json` + `plan.md` + register, ghi rõ việc đã xong / đang chờ / bằng chứng.
 
 ## (hết PROMPT)

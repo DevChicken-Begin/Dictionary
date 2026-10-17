@@ -1,6 +1,6 @@
 # Moris V6 — Technical Debt Roadmap
 
-Updated 2026-10-16. This is the fast entry point for the next agent. It consolidates known M06–M26 acceptance debt and external evidence gates; it is not a repository-wide semantic code audit. A targeted search found no additional actionable TODO/FIXME that supersedes the tracked gates. Do not infer that unlisted code is debt-free.
+Updated 2026-10-16 (sync 2026-10-17: bổ sung [TECH_DEBT_REGISTER.md](TECH_DEBT_REGISTER.md) — sổ nợ đầy đủ + test backlog). This is the fast entry point for the next agent. It consolidates known M06–M26 acceptance debt and external evidence gates; it is not a repository-wide semantic code audit. A targeted search found no additional actionable TODO/FIXME that supersedes the tracked gates. Do not infer that unlisted code is debt-free.
 
 ## Read only these first
 
@@ -8,7 +8,7 @@ Updated 2026-10-16. This is the fast entry point for the next agent. It consolid
 2. `state.json` — machine-readable current status and evidence.
 3. `docs/moris-v6/HANDOFF.md` — current checkpoint, benchmark facts, and quota limits.
 4. This roadmap — dependency order and next actions.
-5. `MORIS_V6_MASTER_PLAN.md` plus `MORIS_V6_QUICK_CHECKLIST.md` — task definitions and acceptance criteria.
+5. `MORIS_V6_MASTER_PLAN.md` plus `MORIS_V6_QUICK_CHECKLIST.md` — đã bị chủ dự án xoá; đọc bản cũ bằng `git show 2657b49:<tên_file>`. Task definitions và acceptance hiện hành nằm ở `pipeline_moris.md` §10–12 và `plan.md`.
 
 Then open only the task documents and implementation paths for the task being resumed. Treat older append-only sections in `plan.md`, task prompts, and M19 notes as historical when they conflict with the latest state/evidence. Do not recalculate old benchmark numbers.
 
@@ -30,4 +30,4 @@ At the latest recorded checkpoint: full suite 398/398 across 44 files predates t
 
 ## Safe continuation
 
-Preserve the existing dirty worktree and branch `feat/moris-v6`; do not reset, clean, or commit. Keep production database writes and deployment at zero. For a code change, first inspect only its call path and tests, make the narrow change, run the appropriate tests, record exact output and rollback in the task evidence, then update `state.json` and checklists. Leave every unsupported acceptance item unchecked. Roll back only the task-specific hunks; never restore whole files over pre-existing user changes.
+Preserve the existing worktree and branch `main`; never reset, clean, or discard uncommitted work without an explicit owner request (commit/push only khi chủ dự án yêu cầu). Keep production database writes and deployment at zero. For a code change, first inspect only its call path and tests, make the narrow change, run the appropriate tests, record exact output and rollback in the task evidence, then update `state.json` and checklists. Leave every unsupported acceptance item unchecked. Roll back only the task-specific hunks; never restore whole files over pre-existing user changes.

@@ -10,7 +10,9 @@ export function readMorisConfig(env) {
       // Experimental verifier remains OFF until M22 demonstrates benefit.
       contourVerification:false,
       spatialVerification:false,
-      vectorSearch:boolEnv(env.MORIS_VECTOR_SEARCH_ENABLED, false)
+      vectorSearch:boolEnv(env.MORIS_VECTOR_SEARCH_ENABLED, false),
+      // M28 Size Gate (S1): chỉ tác động khi query có size; fail-open khi thiếu dims.
+      sizeGate:boolEnv(env.MORIS_SIZE_GATE_ENABLED, true)
     },
 
     vector:{

@@ -2059,9 +2059,15 @@
 
         <!-- Khi đang quay live: hiển thị video -->
         <template v-else>
-          <video ref="camVideo" autoplay playsinline muted
-            class="w-full h-full block bg-black"
+          <video ref="camVideo" autoplay playsinline muted @click="handleCameraTap"
+            class="w-full h-full block bg-black cursor-crosshair"
             style="object-fit:cover;"></video>
+
+          <!-- M27: điểm khóa chủ thể (tap-to-lock) -->
+          <div v-if="camera.lock.seed" class="absolute pointer-events-none -translate-x-1/2 -translate-y-1/2"
+            :style="{ left: (camera.lock.seed.fx * 100) + '%', top: (camera.lock.seed.fy * 100) + '%' }">
+            <span class="block w-6 h-6 rounded-full border-2 border-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,.25)]"></span>
+          </div>
 
           <!-- Lớp tối bên ngoài + khung căn chỉnh -->
           <div v-if="!camera.error" class="pointer-events-none absolute inset-0">
@@ -2088,6 +2094,46 @@
             </div>
           </div>
         </template>
+      </div>
+
+      <!-- M27: Subject lock — readiness 5 điều kiện trước khi chụp -->
+      <div v-if="camera.lock.enabled && !camera.scanning && camera.ready && !camera.error"
+        class="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span v-for="chip in camera.lock.chips" :key="chip.key"
+            class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide border"
+            :class="chip.ok ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-slate-200 text-slate-400'">
+            <span class="w-1.5 h-1.5 rounded-full" :class="chip.ok ? 'bg-emerald-500' : 'bg-slate-300'"></span>{{ chip.label }}
+          </span>
+          <span class="ml-auto text-[11px] font-bold"
+            :class="camera.lock.ready ? 'text-emerald-600' : 'text-slate-500'">
+            {{ camera.lock.ready ? 'Sẵn sàng chụp' : (camera.lock.guidance[0] || 'Chạm vào linh kiện để khóa chủ thể') }}
+          </span>
+        </div>
+        <p v-if="camera.lock.seed" class="mt-1.5 text-[10px] font-bold text-slate-400">
+          Đã khóa chủ thể tại điểm chạm • mẫu {{ camera.lock.samples }} • đồng thuận đa khung {{ camera.lock.agreement ? Math.round(camera.lock.agreement * 100) + '%' : '—' }}
+        </p>
+      </div>
+
+      <!-- M28: Size Contract — cạnh dài nhất/ngắn nhất (mm), tuỳ chọn; để trống = bỏ qua lọc (fail-open) -->
+      <div v-if="camera.lock.enabled && !camera.scanning && camera.ready && !camera.error"
+        class="mt-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-[10px] font-black uppercase tracking-wide text-slate-500">Kích thước (mm)</span>
+          <input v-model="camera.size.length" @input="setCameraSizeUnknown(false)" :disabled="camera.size.unknown"
+            type="number" min="0.1" :max="CONFIG.MORIS_SIZE_MAX_MM" step="0.1" inputmode="decimal" placeholder="Cạnh dài nhất"
+            class="h-8 w-28 px-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-400 disabled:bg-slate-50 disabled:text-slate-400" />
+          <span class="text-slate-300 text-xs font-black">×</span>
+          <input v-model="camera.size.width" @input="setCameraSizeUnknown(false)" :disabled="camera.size.unknown"
+            type="number" min="0.1" :max="CONFIG.MORIS_SIZE_MAX_MM" step="0.1" inputmode="decimal" placeholder="Cạnh ngắn nhất"
+            class="h-8 w-28 px-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-400 disabled:bg-slate-50 disabled:text-slate-400" />
+          <button type="button" @click="setCameraSizeUnknown(true)"
+            class="h-8 px-2.5 rounded-lg border text-[10px] font-black uppercase tracking-wide"
+            :class="camera.size.unknown ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50'">
+            Không rõ kích thước
+          </button>
+          <span class="ml-auto text-[10px] font-bold" :class="camera.size.unknown ? 'text-slate-400' : 'text-emerald-600'">{{ cameraSizeHint }}</span>
+        </div>
       </div>
 
       <!-- Điều khiển -->
@@ -2121,6 +2167,7 @@
 
       <ul class="mt-3 text-[11px] font-bold text-slate-500 leading-relaxed list-disc pl-5">
         <li>Tỉ lệ khung 1000:410 — đặt vật thể gọn trong khung (nền sáng, một màu).</li>
+        <li><strong>Chạm vào linh kiện</strong> để khóa chủ thể; chờ đủ 5 điều kiện (trong khung, một vật, ổn định, ít chói, đủ nét) rồi chụp.</li>
         <li>Đối với <strong>linh kiện to và dài</strong>, bấm <strong>"Tải ảnh từ máy"</strong> để gửi ảnh chụp toàn cảnh rõ nét mà không lo bị thu nhỏ.</li>
         <li>Hệ thống tự động chạy phân tích AI 3 lớp (DINOv2 + PCA xoay góc + Trọng tâm lỗ &amp; Tỷ lệ khung hình).</li>
       </ul>

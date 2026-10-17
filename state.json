@@ -2,14 +2,15 @@
   "system": {
     "project": "Catalogue AI (Dictionary)",
     "stack": "Vue 3 CDN + Cloudflare Pages Functions + Supabase (pgvector) + Cloudflare R2",
-    "updated_at": "2026-10-17T05:59:58Z",
-    "memory_version": "2.2.7",
+    "updated_at": "2026-10-17T09:35:00Z",
+    "memory_version": "2.4.0",
     "status": "in_progress"
   },
   "current_session": {
-    "active_task": "handoff_docs_sync_and_push_main",
-    "last_checkpoint": "Đồng bộ docs/moris-v6/HANDOFF.md phần \"Git và checkpoint\" theo trạng thái thực tế (branch main, commit nền 2657b49, 3 file master plan owner xoá đọc qua git show 2657b49:..., hậu push), cập nhật SESSION_BOOT_PROMPT.md hậu push, rồi commit + push toàn bộ tài liệu lên main theo yêu cầu chủ dự án ngày 2026-10-17. Bằng chứng: npm test 44 files/406 tests pass 100%; npx tsc --noEmit exit 0; git diff --check sạch.",
-    "resumption_prompt": "Phiên sau bắt đầu từ P0/P1 (pipeline_moris.md §12): chờ chủ dự án trả lời Q1-Q15, xác minh read-only asset/vector của 3421750001/3421760001 trên Trang Trung tâm Vector AI (asset_type + has_vector) để chốt mâu thuẫn M18 snapshot, duyệt phạm vi M30 (sửa B14/B15). Khi được duyệt: P1 = M30 fix R2 lifecycle + focused tests, pilot 20 mã chuẩn 5 ảnh (đo dung lượng WebP thật), M27 (subject locking + hole-shape evidence), M28 (size gate phía query). Không re-index/đổi canonicalization khi chưa qua Gate D; không commit/deploy khi chưa yêu cầu. Prompt bàn giao sẵn sàng tại docs/moris-v6/SESSION_BOOT_PROMPT.md — dán nguyên khối PROMPT vào phiên agent mới."
+    "active_task": "m28_hardening_tests_build_fix_push_main",
+    "last_checkpoint": "2026-10-17 (phiên 2): (a) M30 purge orphan R2 ĐÃ THỰC THI trên production bucket (được chủ dự án duyệt): xoá 376/376 object (front 186, thumb 185, back 4, detail 1; 10.63MB), 0 lỗi; giữ 77 object legacy parts/ theo quyết định; log /tmp/opencode/r2-purge-log.json; re-audit sau purge: 1170 objects/32.22MB, orphans còn 77 (chỉ parts/), missing 0. (b) M28 Size Contract & Size Gate (S1) HOÀN TẤT local: module mới src/moris/size-contract.js (size_contract_v1 — (L,W) L>=W auto-swap, shape_class vuông 5%, dung sai 2 tầng max(5%,2mm), d_max, normalizeQuerySize) + mirror functions/_lib/moris/v5/retrieval/sizeGate.js (applySizeGate fail-open 3 trạng thái not_provided/dims_unavailable/applied + loadCandidateDims đọc bảng proposal catalogue_part_dimensions, 404/offline -> null) + migration proposal 20261017090000_catalogue_part_dimensions_proposal.sql (PROPOSAL ONLY — Gate D) + orchestrator chèn gate sau hydrate trước rankMetadata (mode mới MORIS_SIZE_GATE_NO_MATCH) + candidate/publicResult/userMessage size_status/size_evidence/note trung tính (Q8) + config features.sizeGate (env MORIS_SIZE_GATE_ENABLED, default true) + UI: panel nhập cạnh dài/ngắn (mm) + nút 'Không rõ kích thước' trong camera modal (index.html) + camera.size/readCameraSize/setCameraSizeUnknown/loadSizeContractModule (src/app.js, import động, fallback inline) + payload size gửi /api/moris/search + build-static PUBLIC_MORIS_SIZE_CONTRACT_MODULE_URL. Bằng chứng: focused 28/28 (tests/moris-size-contract.test.js + tests/moris-size-gate.test.js, gồm mirror parity client/server + fail-open khi bảng chưa tồn tại); full npm test 48 files/468 tests pass 100%; tsc exit 0; build 51 files (dist/src/moris/size-contract.js có mặt). Production writes phiên này: R2 DELETE 376 object theo phê duyệt — KHÔNG áp dụng migration proposal, không deploy, không commit. (c) Hardening phiên 3: T1 — file mới tests/moris-size-gate-orchestrator.test.js (5 test tích hợp orchestrator, fetch stub dims thật: applied lọc match/unknown + size_evidence, toàn bộ mismatch -> MORIS_SIZE_GATE_NO_MATCH pool rỗng, 404 -> dims_unavailable giữ nguyên pool, MORIS_SIZE_GATE_ENABLED=false hoặc thiếu query size -> không gọi dims); T6 — 2 test fail-open JSON loadCandidateDims (JSON không phải mảng / body lỗi -> null); BUILD-01 — tools/build-static.mjs loại cả .mjs + .ts khỏi dist (hết lộ 5 file moris-*.ts khi F12) + tests/frontend.test.js ghim 5 đường dẫn .ts vắng mặt; DOC-01 — đồng bộ TECH_DEBT_ROADMAP.md; viết docs/moris-v6/TECH_DEBT_REGISTER.md (sổ nợ + test backlog theo yêu cầu chủ dự án). Bằng chứng: focused 60/60 (3 file), full npm test 49 files/475 tests pass 100%, tsc exit 0, build 46 files (0 .ts). Chủ dự án yêu cầu commit + push toàn bộ lên origin/main (PQVinh99-Glory/Dictionary) — thực hiện cuối phiên; KHÔNG push image 2/ (83MB, dữ liệu tham chiếu) và .env (gitignored).",
+    "resumption_prompt": "Bước kế: (1) Chờ chủ dự án duyệt Gate D + cấp dữ liệu đo kẹp cho bảng catalogue_part_dimensions (proposal đã sẵn ở supabase/migrations/20261017090000_catalogue_part_dimensions_proposal.sql; gate đã fail-open nên UI không vỡ khi bảng chưa có); (2) P1.2 pilot 20 mã chụp theo thẻ chuẩn 4 marker — cần ảnh thật của chủ dự án, sau đó đo mask IoU/lỗ và size-pair trong điều kiện vận hành (Q14 chờ pilot trước batch 900 mã); (3) 77 object legacy parts/ — chờ quyết định purge/giữ của chủ dự án; (4) M29 BLOCKED chờ pilot (Q13 giữ probe cap 3); (5) Sổ nợ docs/moris-v6/TECH_DEBT_REGISTER.md đã viết (T1/T6/BUILD-01/DOC-01 xong; còn T2-T5, T7, EVAL-01) — cập nhật khi có phát sinh mới; (6) 3 cặp mã Q4 ghi vào EVAL/M21 khi pilot có ảnh chuẩn; (7) phiên này đã commit + push toàn bộ lên origin/main theo yêu cầu chủ dự án (trừ image 2/ và .env) — deploy vẫn cấm, production writes chỉ khi được duyệt.",
+    "tech_debt_register": "docs/moris-v6/TECH_DEBT_REGISTER.md"
   },
   "tasks": [
     {
@@ -303,19 +304,151 @@
       "production_writes": 0,
       "deployed": false,
       "commit_created": true
+    },
+    {
+      "id": "task_24_m30_asset_r2_lifecycle",
+      "title": "M30 (P1.1) — Asset Lifecycle & R2 Hygiene: sửa B14 (xoá object R2 cũ khi replace ảnh) + B15 (purge R2 khi xoá 1 mã), focused tests",
+      "status": "completed",
+      "completed_at": "2026-10-17T06:28:47Z",
+      "diagnostics": {
+        "root_cause_B14": "savePart (src/app.js:1889) upload key mới theo uploadId → mergeAsset (:1883) chỉ thay entry mảng → app_replace_part_assets (:1945) chỉ cập nhật DB; không có lệnh xoá R2 nào trong luồng save/upload → mỗi lần thay ảnh để lại object mồ côi 100-400KB.",
+        "root_cause_B15": "delete-part.js chỉ gọi RPC app_delete_part + xoá vector, không đụng R2; app_delete_part (migration 2026101200020000) không trả r2_keys như app_bulk_delete_parts → mã xoá lẻ để lại toàn bộ ảnh mồ côi.",
+        "owner_approval": "Chủ dự án duyệt P0 mục 3 ngày 2026-10-17 (chọn 'Duyệt — làm ngay') trước khi code."
+      },
+      "solution": "1) Endpoint mới functions/api/catalogue/purge-assets.js: admin-only, validate key theo regex asset catalogue (chống path traversal), fail-closed — chỉ xoá key KHÔNG còn được tham chiếu trong image_assets/image_library (đọc service role; không xác minh được thì giữ nguyên toàn bộ key); 2) src/app.js savePart thu replacedPaths (asset cùng type+sort_order bị thay, gồm cả thumb tự sinh khi upload front) trước khi merge, purge object cũ sau khi app_replace_part_assets thành công; khi save lỗi giữa chừng thì best-effort dọn các object vừa upload nhưng chưa được DB tham chiếu (uploadedPaths); thêm method purgeR2Assets (best-effort, không chặn luồng lưu); 3) functions/api/catalogue/delete-part.js thu r2_keys (image_assets + image_library qua service role) TRƯỚC khi gọi app_delete_part, purge R2 sau khi DB xoá thành công (đối xứng bulk-delete.js:81-93), trả thêm r2_deleted_keys_count; không purge nếu RPC xoá thất bại.",
+      "evidence": "Focused: npx vitest run tests/catalogue-delete.test.js tests/moris-editor-no-index.test.js → 2 files / 26 tests pass (thêm 6 test purge-assets: 401/403/400 path traversal/503/bỏ key còn tham chiếu/fail-closed; 2 test delete-part purge + không purge khi RPC fail; cập nhật assertion M02: savePart chỉ được gọi API /api/catalogue/purge-assets, không vector/model). Full: npm test 44 files / 414 tests pass 100% (trước M30: 406). npx tsc --noEmit exit 0. npm run build 49 files exit 0. Log key bị xoá: response deleted_keys/skipped_referenced_keys + r2_deleted_keys_count (test assert đúng key, không xoá key đang dùng).",
+      "owner_answers_recorded": {
+        "Q1": "ERP chưa có trường kích thước; hướng phát triển cần thêm dài + rộng, KHÔNG thêm dày (ảnh không phản ánh độ dày)",
+        "Q2": "Không có quy tắc chữ số mã hoá kích thước (ngoài chirality số 6)",
+        "Q3": "Bắt buộc thẻ chuẩn 4 marker cho ảnh mới",
+        "Q4": "Cả hai Case A + Case B; chủ dự án sẽ gửi 2-3 cặp mã mẫu mỗi loại (pending — cần cho EVAL/M21)",
+        "Q5": "Dung sai 'cùng kích thước' ≤ 5% toàn cục",
+        "Q6": "Chỉ dài × rộng (không thickness)",
+        "Q7": "Có nhân lực đo kẹp nhưng chậm",
+        "Q8": "Chấp nhận trạng thái trung tính 'Chưa đủ dữ liệu để kết luận kích thước'",
+        "Q9": "Chốt quy ước (L, W) theo trục PCA, L ≥ W",
+        "Q10": "Chấp nhận UX tap-to-lock",
+        "Q11": "S1 trước, quyết S2 sau A/B",
+        "Q12": "900 mã đủ 5 ảnh toàn bộ",
+        "Q13": "KHÔNG nâng probe cap 3→5 — giữ 1 ảnh front như hiện tại",
+        "Q14": "Chờ kết quả pilot 20 mã trước khi index back/detail hàng loạt"
+      },
+      "p0_verification_readonly": {
+        "method": "Supabase PostgREST read-only (service role) — không ghi production",
+        "3421750001": "id 9db3f19c-aec9-47ab-8cdb-ca94e1e90763; assets: thumb + front + back + detail×2; 7 vector rows (thumb×2, front×2, back, detail×2)",
+        "3421760001": "id 4b54eb77-7219-4303-bf7a-07f529456a2d; assets: chỉ thumb + front; 4 vector rows (thumb×2, front×2)",
+        "conclusion": "Xác nhận lời chủ dự án; chốt mâu thuẫn M18 snapshot 16-10 — catalogue đã có multi-view cho một phần mã nhưng CHƯA đồng đều; theo fairness §11.3 multi-view chưa được vào ranking."
+      },
+      "remaining_m30": ["purge 453 orphan (12.02MB) cần quyền ghi production — CHƯA ĐƯỢC CẤP (chỉ audit read-only đã xong)", "77 object legacy prefix 'parts/' không khớp KEY_PATTERN của purge-assets (thumb|front|back|detail|compare) — cần mở rộng pattern hoặc purge riêng khi được duyệt"],
+      "orphan_audit_2026_10_17": {
+        "tool": "tools/r2-audit.mjs (read-only: Cloudflare R2 REST list objects + Supabase PostgREST image_assets/image_library)",
+        "credentials": "CLOUDFLARE_API_TOKEN có trong .env (hợp lệ, verify OK); CLOUDFLARE_ACCOUNT_ID trống → tự resolve qua GET /accounts = 06783fecdbfbfab470cc1a70c31ab53e",
+        "bucket": "catalogue-images: 1546 objects / 42.84MB",
+        "db_refs": "image_assets 1093 path; image_library 545 path (tập con của image_assets); missing=0 (không có path DB nào thiếu trên R2)",
+        "orphans": "453 objects / 12.02MB — front 186, thumb 185, parts/ 77 (legacy), back 4, detail 1",
+        "purge": "CHƯA purge — cần chủ dự án cho phép ghi production"
+      },
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    {
+      "id": "task_25_m27_subject_lock",
+      "title": "M27 (P1.3) — Subject Locking & Mask Purity (S1): module capture-subject-lock + tap-to-lock + readiness 5 điều kiện + shadow/specular classifier + voting đa khung + hole-shape evidence; tích hợp camera modal; focused tests",
+      "status": "completed",
+      "completed_at": "2026-10-17T06:53:15Z",
+      "diagnostics": {
+        "scope_ref": "pipeline_moris.md §10.1 (5 lớp + readiness), §10.6 M27, §11.5 hole-shape evidence, §12.2; owner Q4/Q9/Q10/Q13 đã chốt; owner yêu cầu 'tiếp tục các M tiếp theo đến hoàn thiện dự án nâng cấp' (2026-10-17)",
+        "constraint": "S1 — KHÔNG đụng canonicalization kim_canon_v3_letterbox, KHÔNG re-index; mask chỉ dùng phía query/camera (overlay + evidence), không feed vào embedding ở bước này (tránh lệch phân phối center/query khi chưa có EVAL)"
+      },
+      "solution": "1) Module mới src/moris/capture-subject-lock.js (pure TypedArray, DOM-free, subject_lock_v1): estimateBackground/labelPixels (part/shadow/specular/bg — shadow = 'nền × hệ số tối' theo lumaRatio 0.45-0.95 + dist cap 130-180, kiểm tra TRƯỚC nhánh part; specular = vùng sáng kín trong thân, không liên thông biên, ngưỡng max(190, bgLuma+6) — không tính là lỗ), labelComponents 4-conn + seed selection (tap-to-lock thắng, fallback component lớn nhất), extractEnclosedHoles (chỉ lỗ kín, minArea 8), classifyHoleShape bằng DFT radial k=2/k=4 (bất biến xoay: vuông→A4, oval→A2, tròn→profile phẳng; unknown khi < 12px hoặc profile thưa), voteMasks (majority per-pixel + agreement), laplacianVariance (độ nét), computeReadiness 5 điều kiện + guidance tiếng Việt, maskIoU/scaleMaskNN/maskToRgba utilities. 2) Tích hợp src/app.js: CONFIG.MORIS_CAMERA_SUBJECT_LOCK_ENABLED=true + module URL; handleCameraTap (quy đổi tọa độ object-fit cover + crop 1000:410 → seed fx/fy); _sampleCameraLockFrame poll 450ms canvas ≤500px → analyzeFrame + sharpness + stability IoU≥0.92 + voting 4 mẫu; buildSubjectMaskDataUrl chạy capture-scale (extractHoles) → mask overlay + camera.lock.evidence + moris.captureEvidence (reliable theo coverage/margin/agreement) + fallback generatePartMaskDataUrl khi lỗi/tắt; scanStatus hiển thị 'Lỗ: n tròn • n vuông • n oval'; resetCameraLock nối vào openCamera/stopCameraStream. 3) index.html: @click tap-to-lock trên video + marker seed, panel readiness chips 5 điều kiện + guidance, hint cập nhật.",
+      "evidence": "Focused: npx vitest run tests/moris-capture-subject-lock.test.js → 17/17 pass, gồm eval tổng hợp 4 cảnh gán nhãn: [M27 eval] mean mask IoU = 1.0000; hole-shape accuracy = 100.0% (10/10); bất biến xoay vuông 30°/oval 40°; bóng đổ contamination = 0; chói không tạo lỗ giả; voting loại vật nhấp nháy; readiness chạm biên → 'lùi máy'. Full: npm test 45 files/431 tests pass 100% (trước M27: 414; 44 files). npx tsc --noEmit exit 0. npm run build 50 files exit 0 (dist/src/moris/capture-subject-lock.js có mặt; config.js thêm PUBLIC_MORIS_SUBJECT_LOCK_MODULE_URL). LƯU Ý trung thực: IoU/accuracy đo trên scene tổng hợp — số đo trên ảnh thật (ít nhất 3 cặp mã mẫu Q4 + pilot) phải thu ở P1.2 vì Node không có decoder PNG trong bộ test.",
+      "sample_pairs_q4_received": {
+        "date": "2026-10-17",
+        "images_dir": "image 2/ (129 ảnh; 6 PNG cặp mẫu có mặt)",
+        "pair_1": "3446950001.png (4 lỗ tròn + 1 lỗ vuông) vs 3446960001.png (5 lỗ tròn) — cùng size/ngoại quan, khác định dạng lỗ → B13/hole-shape",
+        "pair_2": "3440010001.png vs 3889630101.png — cùng hình dáng ngoại quan, khác số lỗ + kích thước chuẩn → hole topology + size",
+        "pair_3": "3400530401.png vs 3462530001.png — giống ngoại quan/số lỗ/định dạng lỗ, khác vị trí đục lỗ → hole layout/geometry",
+        "usage": "hard-negative cho EVAL/M21 + kiểm tra hole-shape evidence trên ảnh thật ở pilot; KHÔNG dùng làm holdout tuning lại"
+      },
+      "real_photo_validation": {
+        "date": "2026-10-17",
+        "dataset": "image 2/ = 129 mã: 125 ảnh camera THÔ (124 có nhãn chủ dự án + 3460370001 loại trừ giữ nguyên file) + 4 ảnh mới ĐÃ XỬ LÝ NỀN (cutout nền trong suốt: 3400530401, 3446950001, 3446960001, 3462530001); 128/129 mã có row image_library",
+        "tools_moi": "tools/png-decode.mjs (decoder PNG 8-bit RGB/RGBA thuần Node+zlib, không dependency) + tools/eval-m27-real-photos.mjs (harness đo ảnh thật: camera/cutout, composite nền trắng, alpha-GT, so nhãn identifying_features) + tests/png-decode.test.js 4/4",
+        "camera_124": "selected 124/124; coverage median 0.348; holes median 7/file (trước hardening 30); check fails: inFrame 115, singleSubject 6, lowSpecular 2, sharp 0 (ảnh thô chưa chụp theo thẻ chuẩn nên margin/coverage fail theo thiết kế UI)",
+        "cutout_4": "alphaIoU mean 0.9378 / min 0.9235 (classifier vs alpha); chữ ký lỗ lấy từ alpha: 3446950001 = 3 tròn+1 vuông+1 oval (khớp '4 tròn + 1 vuông' của chủ dự án, 1 tròn bị phối cảnh hóa thành oval); 3446960001 = 4 tròn+1 oval (khớp 5 tròn); 3400530401 (8 lỗ) vs 3462530001 (9 lỗ) khác vị trí rõ — khớp mô tả cặp Q4",
+        "nhan_21_ma": "21 mã camera có identifying_features parse được: exact shape match 3/21; |Δ| trung bình hình tròn 5.67, vuông 0.43, oval 4.57; bias 'rounded' (tròn+oval) got 123 vs exp 148 — nguyên nhân: phối cảnh làm tròn→oval, lỗ nhỏ 19–21 lỗ bị gộp/bỏ, lỗ trắng trên cutout bị specular ăn (chỉ cutout, alpha là chân lý)",
+        "hardening": "closeMask (closing 3x3 1 vòng) trong analyzeFrame + holeMinAreaFrac 0.0004 (min theo diện tích chủ thể) + gate fill>=0.4/bw,bh>=3 + trần profile A2<=0.55/A4<=0.55/radiusCV + squareMinA4 0.06 (bắt lỗ vuông bo góc) — giảm nhiễu lỗ 6.7x (6754→1003 trên 124 ảnh)",
+        "khong_lam": "không sửa canonicalization, không re-index, không ghi production, không commit",
+        "con_lai": "đo mask IoU có ground-truth nhãn tay (alpha chỉ có ở 4 cutout); pilot P1.2 chụp theo thẻ chuẩn 4 marker để đo trong điều kiện vận hành; 3460370001 do chủ dự án loại trừ"
+      },
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
+    },
+    {
+      "id": "task_26_r2_orphan_purge_executed",
+      "title": "M30 remaining — Purge orphan R2 (được chủ dự án phê duyệt): dry-run 376 mục tiêu, thực thi xoá, re-audit xác minh",
+      "status": "completed",
+      "completed_at": "2026-10-17T08:50:00Z",
+      "approval": "Chủ dự án bấm 'Duyệt — purge 376 object rác' (yêu cầu khôi phục todo phiên trước và tiếp tục hoàn thành)",
+      "solution": "Tool mới tools/r2-purge-orphans.mjs (fail-closed: re-đọc DB refs trước từng delete, KEEP_PREFIXES=['parts/'], MAX_TARGETS=500, MAX_BYTES=20MB, dry-run mặc định, --execute mới ghi, --log lưu nhật ký). Quy trình: dry-run → xác nhận đúng 376 targets → --execute → re-audit bằng tools/r2-audit.mjs.",
+      "evidence": "Dry-run: objects=1546 referenced=1093 orphans=453 kept=77({\"parts\":77}) targets=376 bytes=11141715 by_type={\"back\":4,\"detail\":1,\"front\":186,\"thumb\":185}. Execute: deleted=376 skipped=0 failed=0 deleted_bytes=11141715 (log /tmp/opencode/r2-purge-log.json). Re-audit: objects 1170/32.22MB; orphans 77/1.4MB (chỉ parts/); missing=0 (/tmp/opencode/r2-audit-after-purge.json).",
+      "production_writes": 376,
+      "deployed": false,
+      "commit_created": false,
+      "remaining": [
+        "77 object legacy prefix parts/ giữ nguyên — chờ chủ dự án quyết purge/giữ",
+        "quota monitor R2 chưa làm"
+      ]
+    },
+    {
+      "id": "task_27_m28_size_contract_gate",
+      "title": "M28 (P1.4) — Size Contract & Size Gate (S1, query-side): module (L,W) + dung sai 2 tầng + gate fail-open + UI nhập kích thước + migration proposal; focused tests",
+      "status": "completed",
+      "completed_at": "2026-10-17T09:08:00Z",
+      "diagnostics": {
+        "scope_ref": "pipeline_moris.md §5.3/§5.4/§10.3/§10.4/§10.6; owner Q1/Q5/Q6/Q8/Q9",
+        "constraint": "S1 — chỉ lọc phía query sau hydrate, KHÔNG re-index, KHÔNG đụng canonicalization; fail-open tuyệt đối khi thiếu dữ liệu (Q8 trạng thái trung tính); bảng dims là PROPOSAL (Gate D)"
+      },
+      "solution": "1) src/moris/size-contract.js: size_contract_v1 — normalizeSizePair (auto-swap L>=W, chấp nhận số/chuỗi thập phân phẩy, cap 5000mm), shapeClass (vuông khi |L-W|/L<=5%), toleranceForEdge (max(5%*cạnh, sàn 2mm)), evaluateSizeMatch (identity + d_max, edge-by-edge), sizeDistance, normalizeQuerySize (source/confidence sanitize), formatSizePair. 2) functions/_lib/moris/v5/retrieval/sizeGate.js: copy 1:1 pure functions (mirror parity có test) + applySizeGate (3 trạng thái: not_provided giữ nguyên pool; dims_unavailable giữ nguyên + cảnh báo; applied lọc match/mismatch, giữ unknown + size_status/size_evidence từng ứng viên, rejected list cap 10) + loadCandidateDims (PostgREST bảng proposal, max 100 id, 404/lỗi/thiếu env -> null, never throw). 3) Orchestrator: chèn gate sau hydrateVectorHits trước rankMetadata; pool rỗng sau gate -> mode MORIS_SIZE_GATE_NO_MATCH; gắn size_evidence vào kết quả. 4) schemas/query.js nhận body.size (fail-open -> null); candidate.js truyền size_status/size_evidence; publicResult.js phơi size_evidence (+debug); userMessage.js thông điệp riêng cho SIZE_GATE_NO_MATCH + note trung tính dims_unavailable + note 'đã loại N mã' khi applied; config.js features.sizeGate=boolEnv(MORIS_SIZE_GATE_ENABLED,true). 5) UI: index.html panel 'Kích thước (mm)' (cạnh dài nhất × ngắn nhất, nút 'Không rõ kích thước', hint cameraSizeHint); src/app.js camera.size state + resetCameraSize/setCameraSizeUnknown/loadSizeContractModule/readCameraSize (import động, fallback inline khi module lỗi) + truyền size vào sendMorisMessage (captureCamera + onCameraFileSelect) + payload size; tools/build-static.mjs thêm PUBLIC_MORIS_SIZE_CONTRACT_MODULE_URL. 6) Migration proposal 20261017090000_catalogue_part_dimensions_proposal.sql — CHƯA ÁP DỤNG, không policy anon, RLS bật.",
+      "evidence": "Focused: npx vitest run tests/moris-size-contract.test.js tests/moris-size-gate.test.js → 28/28 pass (chuẩn hoá L>=W; biên sàn 2mm; 404 -> null; cap 100 id; parity client/server; validateMorisQuery size; userMessage notes). Full: npm test 48 files/468 tests pass 100% (trước M28: 46/439). npx tsc --noEmit exit 0. npm run build 51 files exit 0 (dist/src/moris/size-contract.js có mặt; frontend.test.js thêm assertion M28).",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false,
+      "remaining": [
+        "Gate D + dữ liệu đo kẹp để tạo bảng catalogue_part_dimensions thật (Q7 đo chậm — ưu tiên mã hay nhầm)",
+        "Pilot P1.2 để đo size-pair precision trên ảnh thật theo thẻ chuẩn",
+        "S2 (re-canonicalization kim_canon_v4_*) chỉ sau A/B và Gate D (Q11)"
+      ]
+    },
+    {
+      "id": "task_28_m28_hardening_tests_and_push",
+      "title": "M28 hardening — T1 test tích hợp orchestrator, T6 fail-open JSON, BUILD-01 loại .ts khỏi dist, DOC-01 sync roadmap, register; commit + push toàn bộ lên origin/main theo yêu cầu chủ dự án",
+      "status": "completed",
+      "completed_at": "2026-10-17T09:35:00Z",
+      "diagnostics": {
+        "scope_ref": "docs/moris-v6/TECH_DEBT_REGISTER.md (T1/T6/BUILD-01/DOC-01)",
+        "constraint": "Không đổi hành vi runtime; chỉ test + build hygiene + docs; production writes 0; không deploy"
+      },
+      "solution": "1) tests/moris-size-gate-orchestrator.test.js (mới): 5 test tích hợp thật qua runMorisSearch + fetch stub cho loadCandidateDims — applied giữ match/unknown + size_evidence + cảnh báo 'loại N mã'; toàn bộ mismatch -> MORIS_SIZE_GATE_NO_MATCH pool rỗng; 404 -> dims_unavailable giữ nguyên pool; MORIS_SIZE_GATE_ENABLED=false -> không gọi dims + không có size_evidence; query size null -> không gọi dims. 2) tests/moris-size-gate.test.js: +2 test fail-open loadCandidateDims (response 200 JSON không phải mảng; body không phải JSON -> null không ném). 3) tools/build-static.mjs: walk loại cả .mjs + .ts (dist chỉ chứa .js đã build — hết lộ 5 file moris-*.ts); tests/frontend.test.js ghim 5 đường dẫn .ts phải vắng mặt. 4) DOC-01: TECH_DEBT_ROADMAP.md bỏ refs MORIS_V6_MASTER_PLAN.md đã xoá (trỏ git show 2657b49), branch feat/moris-v6 -> main, liên kết register. 5) Chủ dự án yêu cầu commit + push toàn bộ lên origin/main (PQVinh99-Glory/Dictionary) — thực hiện cuối phiên; KHÔNG push image 2/ (83MB) và .env (gitignored).",
+      "evidence": "Focused: npx vitest run tests/moris-size-gate.test.js tests/moris-size-gate-orchestrator.test.js tests/frontend.test.js -> 60/60 pass (3 files). Full: npm test 49 files/475 tests pass 100% (trước hardening: 48/468). npx tsc --noEmit exit 0. npm run build 46 files exit 0 (trước 51; find dist -name '*.ts' = 0). Commit + push origin main thực hiện cuối phiên 2026-10-17; production writes 0.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": true
     }
   ],
   "verification": {
-    "total_unit_tests": 405,
-    "passing_tests": 405,
+    "total_unit_tests": 475,
+    "passing_tests": 475,
     "failing_tests": 0,
     "typescript_exit_code": 0,
     "build_exit_code": 0,
-    "unit_files": 44,
-    "build_files": 49,
+    "unit_files": 49,
+    "build_files": 46,
     "local_e2e_passed": 12,
     "staging": "skipped_by_owner",
-    "evidence": "docs/moris-v6/RELEASE_CHECKLIST.md"
+    "evidence": "npm test 2026-10-17 sau hardening (49 files/475 tests); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_28_m28_hardening_tests_and_push, task_27_m28_size_contract_gate, task_26_r2_orphan_purge_executed, task_25_m27_subject_lock, task_24_m30_asset_r2_lifecycle"
   },
   "moris_v6": {
     "M00": {
@@ -664,30 +797,45 @@
       "final_tests": "398/398,44files; TS/build49 and localE2E12/12 from prior application checkpoint; reviewer tooling does not change application bundle"
     },
     "M27": {
-      "status": "proposed_not_authorized",
+      "status": "completed_local_verified",
       "title": "Subject Locking & Mask Purity (giai đoạn S1)",
-      "evidence": "pipeline_moris.md §10.1, §10.6; plan.md mục đề xuất 2026-10-17",
-      "scope": "tap-to-lock + readiness + shadow/specular classifier + multi-frame voting + hole-shape evidence (tròn/vuông/oval từ mask, xem pipeline_moris.md §11.5) trong camera modal; giữ nguyên canonicalization kim_canon_v3_letterbox; không re-index",
-      "exit_evidence": "focused tests + mask IoU/reliable rate trên tập ảnh camera mới có gán nhãn",
-      "blockers": [
-        "owner trả lời Q9-Q11 (pipeline_moris.md §10.7) và Q1-Q8 (§8)",
-        "tập ảnh camera mới đóng băng manifest trước khi đo (không dùng lại holdout cũ)",
-        "quota cho focused tests/benchmark mới"
+      "completed_at": "2026-10-17T06:53:15Z",
+      "evidence": "task_25_m27_subject_lock; src/moris/capture-subject-lock.js; tests/moris-capture-subject-lock.test.js 17/17; index.html camera modal; src/app.js; pipeline_moris.md §10.1/§10.6/§11.5; plan.md mục M27",
+      "scope": "ĐÃ LÀM: tap-to-lock + readiness 5 điều kiện + shadow/specular classifier + voting đa khung + hole-shape evidence (tròn/vuông/oval) trong camera modal; giữ nguyên canonicalization kim_canon_v3_letterbox; không re-index; mask + evidence chỉ phía query/camera (chưa feed embedding — chờ EVAL)",
+      "exit_evidence": "focused tests 21/21 (mean mask IoU 1.0000, hole-shape accuracy 10/10 trên 4 cảnh tổng hợp gán nhãn; +4 test hardening: closeMask, ngưỡng lỗ tương đối, profile răng cưa→unknown, khe nứt 1px) + full suite 439/439; xem real_photo_validation bên dưới",
+      "real_photo_validation": "2026-10-17: 124 ảnh camera thật selected 124/124, coverage median 0.348, holes median 7 (giảm 6.7x nhờ closeMask + holeMinAreaFrac + profile caps); 4 cutout alphaIoU 0.92-0.95 + chữ ký lỗ khớp mô tả Q4; 21 mã có nhãn identifying_features: vuông |Δ|0.43, tròn→oval do phối cảnh (bias rounded -25/148) — chi tiết task_25_m27_subject_lock.real_photo_validation",
+      "owner_answers": {
+        "Q3": "Bắt buộc thẻ chuẩn 4 marker cho ảnh mới",
+        "Q9": "Chốt quy ước (L, W) theo trục PCA, L ≥ W",
+        "Q10": "Chấp nhận UX tap-to-lock (auto-lock chỉ khi tin cậy cao)",
+        "Q11": "S1 trước, quyết S2 sau A/B"
+      },
+      "remaining": [
+        "Pilot P1.2: đo trên ảnh chụp theo thẻ chuẩn 4 marker (điều kiện vận hành) — ảnh trong image 2/ là ảnh thô chưa theo thẻ chuẩn",
+        "Mask IoU với ground-truth do người gán nhãn (alpha chỉ có ở 4 cutout)",
+        "Quyết định feed priorMask vào embedding query — chỉ sau EVAL/M21 và khi có A/B (tránh lệch phân phối center/query)"
       ],
       "production_writes": 0,
       "deployed": false,
       "commit_created": false
     },
     "M28": {
-      "status": "proposed_not_authorized",
+      "status": "completed_local_verified",
       "title": "Size Contract & Size Gate (S1 -> S2)",
-      "evidence": "pipeline_moris.md §10.3, §10.6; plan.md mục đề xuất 2026-10-17",
-      "scope": "cặp (length_mm, width_mm) theo trục PCA; bảng proposal catalogue_part_dimensions (5.3); gate dung sai 2 tầng; UI nhập size; S2 re-canonicalization kim_canon_v4_* + re-index qua Vector Center",
-      "exit_evidence": "size-pair benchmark + gate precision loại trừ >= 99% + A/B S1 vs S2 trên tập đóng băng",
+      "completed_at": "2026-10-17T09:08:00Z",
+      "evidence": "task_27_m28_size_contract_gate; task_28_m28_hardening_tests_and_push; src/moris/size-contract.js; functions/_lib/moris/v5/retrieval/sizeGate.js; tests/moris-size-contract.test.js; tests/moris-size-gate.test.js; tests/moris-size-gate-orchestrator.test.js; pipeline_moris.md §5.3/§5.4/§10.3/§10.6; docs/moris-v6/TECH_DEBT_REGISTER.md",
+      "scope": "ĐÃ LÀM (S1): cặp (length_mm,width_mm) L>=W auto-swap; dung sai 2 tầng max(5%,2mm); d_max; gate phía query sau hydrate (fail-open 3 trạng thái); UI nhập cạnh dài/ngắn + nút 'Không rõ kích thước'; migration proposal catalogue_part_dimensions (CHƯA áp dụng — Gate D); module mirror client/server. CHƯA LÀM: S2 re-canonicalization kim_canon_v4_* + re-index; dữ liệu đo kẹp.",
+      "exit_evidence": "focused 28/28 + hardening T1/T6 (60/60 cùng frontend); full suite 475/475 (49 files); tsc exit 0; build 46 files (đã loại .ts); parity client/server được test tự động",
+      "owner_answers": {
+        "Q1": "ERP chưa có trường kích thước; hướng phát triển cần dài + rộng, KHÔNG thêm dày",
+        "Q5": "Dung sai 'cùng kích thước' ≤ 5% toàn cục",
+        "Q6": "Chỉ dài × rộng",
+        "Q8": "Chấp nhận trạng thái trung tính 'chưa đủ dữ liệu để kết luận kích thước' — đã implement note trung tính",
+        "Q9": "Chốt quy ước (L, W) theo trục PCA, L ≥ W"
+      },
       "blockers": [
-        "owner trả lời Q9-Q11 và Q1-Q8",
-        "dữ liệu kích thước 545 SKU (ERP hoặc đo kẹp/thẻ chuẩn)",
-        "Gate D cho mọi thay đổi DB/re-index"
+        "Gate D + dữ liệu đo kẹp cho bảng catalogue_part_dimensions (Q7 đo chậm)",
+        "pilot P1.2 để đo size-pair precision trên ảnh thật"
       ],
       "production_writes": 0,
       "deployed": false,
@@ -699,24 +847,30 @@
       "evidence": "pipeline_moris.md §11.2-11.5, §12.2; plan.md mục đề xuất 2026-10-17",
       "scope": "Ép chuẩn 5 ảnh/mã (thumb+front+back+2 detail); index back/detail qua Vector Center; nâng probe cap 3->5 có focused test; câu hỏi phân biệt tự động từ identifying_features khi top-2 khác đặc điểm; fairness rule multi-view (chỉ vào ranking khi coverage đồng đều)",
       "exit_evidence": "focused tests probe cap; listing Vector Center xác nhận vector back/detail; ablation multi-view (front-only vs +detail vs +back) trên tập đóng băng",
+      "owner_answers": {
+        "Q12": "900 mã sẽ có đủ 5 ảnh toàn bộ (điều kiện cấu trúc để triệt tiêu bias fairness — chỉ bật multi-view vào ranking sau khi coverage đồng đều + đo ablation)",
+        "Q13": "KHÔNG nâng probe cap 3→5; giữ luồng 1 ảnh front như hiện tại (bỏ hạng mục multi-capture UI)",
+        "Q14": "Chờ kết quả pilot 20 mã trước khi index back/detail hàng loạt"
+      },
+      "p0_asset_vector_verification": "2026-10-17 (read-only production): 3421750001 = thumb+front+back+detail×2; 3421760001 = chỉ thumb+front → chốt mâu thuẫn M18 snapshot: multi-view có nhưng chưa đồng đều",
       "blockers": [
-        "owner trả lời Q12 (coverage đồng đều 900 mã) và Q14 (duyệt index back/detail)",
-        "xác minh read-only asset/vector 3421750001/3421760001 để chốt mâu thuẫn M18 snapshot",
-        "M18 acceptance chưa hoàn tất (multi-view pooling đã code, acceptance pending)"
+        "M18 acceptance chưa hoàn tất (multi-view pooling đã code, acceptance pending)",
+        "pilot 20 mã (đo dung lượng + xác nhận quy trình) trước khi index batch"
       ],
       "production_writes": 0,
       "deployed": false,
       "commit_created": false
     },
     "M30": {
-      "status": "proposed_not_authorized",
+      "status": "completed_local_verified",
       "title": "Asset Lifecycle & R2 Hygiene",
-      "evidence": "pipeline_moris.md §11.4 (B14/B15), §12.2; xác minh code 2026-10-17",
-      "scope": "Sửa B14 (upload/replace phải xoá object R2 cũ theo uploadId) và B15 (xoá 1 mã phải purge R2 đối xứng bulk-delete); audit object mồ côi; quota monitor; giữ luật mọi ảnh upload qua app (nén WebP)",
-      "exit_evidence": "focused test xoá đúng key/không xoá sai key + log R2; đối chiếu danh sách key trước/sau replace và xoá lẻ",
-      "blockers": [
-        "chủ dự án đã yêu cầu (Q15 trả lời 2026-10-17) - chờ duyệt triển khai P0",
-        "không cần Gate D (code ứng dụng, không đổi DB schema/production data)"
+      "completed_at": "2026-10-17T06:28:47Z",
+      "evidence": "task_24_m30_asset_r2_lifecycle; pipeline_moris.md §4 (B14/B15), §12.2/§12.3; xác minh code 2026-10-17",
+      "scope": "Đã sửa B14 (savePart thu object R2 cũ khi replace + endpoint mới /api/catalogue/purge-assets fail-closed theo tham chiếu DB + dọn object mới khi save lỗi) và B15 (delete-part thu r2 keys trước khi xóa + purge R2 đối xứng bulk-delete, trả r2_deleted_keys_count)",
+      "exit_evidence": "focused tests 26/26 (6 test purge-assets: 401/403/400/503/bỏ key còn tham chiếu/fail-closed; 2 test delete-part purge); full suite 414/414, tsc exit 0, build 49 files; test assert đúng key bị xoá, không xoá key đang dùng",
+      "remaining": [
+        "77 object legacy 'parts/' giữ nguyên theo quyết định purge (chờ chủ dự án quyết riêng); 376 orphan còn lại ĐÃ purge 2026-10-17 (task_26)",
+        "quota monitor R2 chưa làm; deploy khi được yêu cầu"
       ],
       "production_writes": 0,
       "deployed": false,

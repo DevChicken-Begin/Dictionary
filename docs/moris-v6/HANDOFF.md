@@ -2,7 +2,9 @@
 
 Cập nhật: 2026-10-17. Mục đích: agent tiếp theo tiếp tục đúng phạm vi, không chạy lại các lượt inference tốn tài nguyên và không nhầm mục đã code với gate đã nghiệm thu.
 
-> Bắt đầu nhanh: đọc [TECH_DEBT_ROADMAP.md](TECH_DEBT_ROADMAP.md) để nắm thứ tự xử lý và các nguồn thông tin chuẩn; roadmap là kiểm kê gate Moris đã biết, không thay cho audit toàn repository. Kế hoạch thi hành hiện hành nằm ở `pipeline_moris.md` §12; prompt bàn giao phiên mới ở [SESSION_BOOT_PROMPT.md](SESSION_BOOT_PROMPT.md).
+> Bắt đầu nhanh: đọc [TECH_DEBT_ROADMAP.md](TECH_DEBT_ROADMAP.md) để nắm thứ tự xử lý và các nguồn thông tin chuẩn; roadmap là kiểm kê gate Moris đã biết, không thay cho audit toàn repository. Sổ nợ kỹ thuật đầy đủ (kèm test backlog cho phiên sau) nằm ở [TECH_DEBT_REGISTER.md](TECH_DEBT_REGISTER.md). Kế hoạch thi hành hiện hành nằm ở `pipeline_moris.md` §12; prompt bàn giao phiên mới ở [SESSION_BOOT_PROMPT.md](SESSION_BOOT_PROMPT.md).
+>
+> Cập nhật 2026-10-17 (phiên M27→M30 + hardening): M27 (subject lock), M28 (size contract & gate), M30 (B14/B15 + purge R2 376 object theo duyệt) đã xong local; hardening T1/T6/BUILD-01/DOC-01 xong (integration test gate, loại `.ts` khỏi dist); full suite **49 files / 475 tests**, build **46 files**. Chủ dự án yêu cầu commit + push toàn bộ lên `origin/main` cuối phiên — `image 2/` (83MB) và `.env` KHÔNG push. Migration `catalogue_part_dimensions` là proposal chờ Gate D. Chi tiết tại [TECH_DEBT_REGISTER.md](TECH_DEBT_REGISTER.md) và `state.json`.
 
 ## Ràng buộc không đổi
 
@@ -14,7 +16,9 @@ Cập nhật: 2026-10-17. Mục đích: agent tiếp theo tiếp tục đúng ph
 
 ## Git và checkpoint
 
-Cập nhật 2026-10-17: toàn bộ tài liệu kế hoạch (`pipeline_moris.md`, `plan.md`, `state.json`, `SESSION_BOOT_PROMPT.md`, file này) được chủ dự án yêu cầu commit và push thẳng lên `main`; worktree sạch tại thời điểm bàn giao. Commit nền trước bàn giao: `2657b49` (trùng tip `origin/feat/moris-v6`) — dùng hash này để đọc các file đã bị xoá.
+Cập nhật 2026-10-17 (phiên M27→M30 + hardening): sau checkpoint push tài liệu (`11b63c5`), các phiên tiếp theo đã triển khai M30/M27/M28 + hardening + purge R2 và commit + push lên `origin/main` theo yêu cầu chủ dự án cuối ngày 2026-10-17 (tip: `git log -1`). Trước khi sửa luôn chạy `git status --short && git log --oneline -3` để xác nhận trạng thái thực tế.
+
+Cập nhật 2026-10-17 (bản gốc): toàn bộ tài liệu kế hoạch (`pipeline_moris.md`, `plan.md`, `state.json`, `SESSION_BOOT_PROMPT.md`, file này) được chủ dự án yêu cầu commit và push thẳng lên `main`; worktree sạch tại thời điểm bàn giao. Commit nền trước bàn giao: `2657b49` (trùng tip `origin/feat/moris-v6`) — dùng hash này để đọc các file đã bị xoá.
 
 - 3 file master plan cũ (`MORIS_V6_MASTER_PLAN.md`, `MORIS_V6_QUICK_CHECKLIST.md`, `CODEX_MORIS_V6_TASK_PROMPTS.md`) do chủ dự án xoá — KHÔNG khôi phục.
 - Không dùng `git reset --hard`, `git clean` hoặc hoàn tác hàng loạt. Nếu worktree phát sinh thay đổi mới, đó là công việc đang làm dở — không xoá.

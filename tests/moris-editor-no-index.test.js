@@ -18,7 +18,7 @@ function editor() {
     uploadToR2: vi.fn(async (_, code, type) => ({ asset_type: type, image_path: `${code}/${type}.webp` })),
     loadMorisBrowserVectorModule: embed, embedMorisImage: embed,
     toast: vi.fn(), closeEditor: vi.fn(), closeDetail: vi.fn(), loadParts: vi.fn(), readError: e => e.message,
-    freshToken: async () => 'test', isSessionExpired: () => false, isSystemAdmin: () => false,
+    freshToken: async () => 'test', freshAuth: async () => 'test', isSessionExpired: () => false, isSystemAdmin: () => false,
   };
   return { ctx, options, embed, fetch, timer };
 }
@@ -33,7 +33,10 @@ describe('M02 Editor writes metadata/images only', () => {
     expect(ctx.rpcRow.mock.calls.every(([name]) => ['app_upsert_part_metadata', 'app_replace_part_assets'].includes(name))).toBe(true);
     expect(ctx.rpcRow).toHaveBeenCalledWith('app_replace_part_assets', expect.objectContaining({ p_image_id: 'part' }));
     if (kind === 'image') expect(ctx.uploadToR2).toHaveBeenCalledTimes(2);
-    expect(embed).not.toHaveBeenCalled(); expect(fetch).not.toHaveBeenCalled();
+    expect(embed).not.toHaveBeenCalled();
+    // M30 (B14): savePart chỉ được gọi duy nhất API dọn object R2 đã thay thế,
+    // tuyệt đối không gọi API index/vector/model.
+    expect(fetch.mock.calls.every(([url]) => String(url).includes('/api/catalogue/purge-assets'))).toBe(true);
   });
   it('session restore does not schedule a legacy queue', async () => {
     const { ctx, embed, timer, fetch } = editor();

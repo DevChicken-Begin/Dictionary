@@ -40,6 +40,31 @@ export async function onRequestPost({ request, env }) {
       throw e;
     }
 
+    // 0. Thu thập object key R2 của mã TRƯỚC khi xóa (đối xứng app_bulk_delete_parts)
+    // vì app_delete_part không trả r2_keys; sau khi xóa thì không truy vấn lại được.
+    let r2Keys = [];
+    try {
+      const key = serverKey(env);
+      const base = baseUrl(env);
+      if (key && base) {
+        const enc = encodeURIComponent(imageId);
+        const [assetsRes, libRes] = await Promise.all([
+          fetch(`${base}/rest/v1/image_assets?image_id=eq.${enc}&select=image_path`, { headers: headersForKey(key) }),
+          fetch(`${base}/rest/v1/image_library?id=eq.${enc}&select=image_path`, { headers: headersForKey(key) })
+        ]);
+        const collectPaths = async (res) => {
+          if (!res.ok) return [];
+          const rows = await res.json().catch(() => []);
+          if (!Array.isArray(rows)) return [];
+          return rows.map(r => String(r?.image_path || "").trim()).filter(Boolean);
+        };
+        const [assetPaths, libPaths] = await Promise.all([collectPaths(assetsRes), collectPaths(libRes)]);
+        r2Keys = [...new Set([...assetPaths, ...libPaths])];
+      }
+    } catch (keyErr) {
+      console.warn("Không thu thập được R2 keys trước khi xóa mã:", keyErr);
+    }
+
     // 1. Gọi RPC app_delete_part để xóa bản ghi trong image_library và image_assets
     const delResult = await rpc(env, "app_delete_part", {
       p_session_token: token,
@@ -74,10 +99,26 @@ export async function onRequestPost({ request, env }) {
       console.warn("Lỗi dọn vector khi delete-part:", vecErr);
     }
 
+    // 3. Xóa object ảnh trên Cloudflare R2 (đối xứng bulk-delete) — chỉ chạy
+    // sau khi DB đã xóa thành công, tránh xóa ảnh của mã còn tồn tại.
+    let r2DeletedKeysCount = 0;
+    if (env.CATALOGUE_BUCKET && r2Keys.length > 0) {
+      try {
+        for (let i = 0; i < r2Keys.length; i += 500) {
+          const chunk = r2Keys.slice(i, i + 500);
+          await env.CATALOGUE_BUCKET.delete(chunk);
+          r2DeletedKeysCount += chunk.length;
+        }
+      } catch (r2Err) {
+        console.warn("R2 delete keys error khi delete-part:", r2Err);
+      }
+    }
+
     return json({
       ok: true,
       image_id: imageId,
       deleted_vectors_count: deletedVectorsCount,
+      r2_deleted_keys_count: r2DeletedKeysCount,
       message: `Đã xóa thành công mã linh kiện và ${deletedVectorsCount} vector AI liên quan.`
     });
   } catch (error) {

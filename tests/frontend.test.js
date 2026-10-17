@@ -16,6 +16,7 @@ describe('build-static — allowlist, không rò secret', () => {
       'dist/index.html',
       'dist/config.js',
       'dist/src/app.js',
+      'dist/src/moris/size-contract.js',
       'dist/assets/icon-book.png',
       'dist/tools/moris-vector-center.html',
       'dist/_headers'
@@ -27,7 +28,13 @@ describe('build-static — allowlist, không rò secret', () => {
     for (const forbidden of [
       'dist/.env', 'dist/.dev.vars', 'dist/functions', 'dist/supabase',
       'dist/kim-harness', 'dist/node_modules', 'dist/package.json',
-      'dist/package-lock.json', 'dist/tests'
+      'dist/package-lock.json', 'dist/tests',
+      // mã nguồn .ts gốc không được lộ trong dist (chỉ .js đã build)
+      'dist/src/moris/moris-idb.ts',
+      'dist/src/moris/moris-layer1-optical.ts',
+      'dist/src/moris/moris-layer2-embedding.ts',
+      'dist/src/moris/moris-layer3-rerank.ts',
+      'dist/src/moris/moris-worker-pipeline.ts'
     ]) {
       expect(existsSync(join(ROOT, forbidden)), `không được có ${forbidden}`).toBe(false);
     }
@@ -346,6 +353,26 @@ describe('yêu cầu mới — icon, tab Quy đổi, Vector AI, quản lý user'
     expect(js).toContain("this.morisAi.statusText = 'Lỗi nạp'");
     expect(js).toContain('DINOV2_FETCH_FAILED');
     expect(js).toContain('chưa thể tải mô hình nhận dạng DINOv2 từ CDN (Failed to fetch)');
+  });
+
+  it('M28 Size Contract: panel nhập kích thước trong camera + payload size gửi server', () => {
+    // index.html: panel cạnh dài/ngắn + nút "Không rõ kích thước" (fail-open)
+    expect(html).toContain('camera.size.length');
+    expect(html).toContain('camera.size.width');
+    expect(html).toContain('setCameraSizeUnknown(true)');
+    expect(html).toContain('cameraSizeHint');
+    expect(html).toContain('Không rõ kích thước');
+
+    // src/app.js: module hợp đồng size + đọc size + gửi kèm payload
+    expect(js).toContain('MORIS_SIZE_CONTRACT_MODULE_URL');
+    expect(js).toContain('async readCameraSize()');
+    expect(js).toContain('size:querySize || null');
+    expect(js).toContain("source: 'user'");
+
+    // build-static: module được copy vào dist
+    expect(existsSync(join(ROOT, 'dist/src/moris/size-contract.js'))).toBe(true);
+    const distApp = read('dist/src/app.js');
+    expect(distApp).toContain('size-contract.js');
   });
 });
 

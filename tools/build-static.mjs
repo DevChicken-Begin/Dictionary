@@ -24,6 +24,8 @@ const PUBLIC_CONFIG_KEYS = [
   "PUBLIC_REMOVE_BG_WORKER_URL",
   "PUBLIC_MORIS_BROWSER_VECTOR_MODULE_URL",
   "PUBLIC_MORIS_VECTOR_UPSERT_MODULE_URL",
+  "PUBLIC_MORIS_SUBJECT_LOCK_MODULE_URL",
+  "PUBLIC_MORIS_SIZE_CONTRACT_MODULE_URL",
   "PUBLIC_PAGE_LIMIT",
   "PUBLIC_LOGIN_URL",
 ];
@@ -36,6 +38,8 @@ const DEFAULT_PUBLIC_CONFIG = {
   PUBLIC_R2_MEDIA_BASE_URL: "/api/media",
   PUBLIC_MORIS_BROWSER_VECTOR_MODULE_URL: "/src/moris/vector/browserDinov2.js",
   PUBLIC_MORIS_VECTOR_UPSERT_MODULE_URL: "/src/moris/vector/chunkedUpsert.js",
+  PUBLIC_MORIS_SUBJECT_LOCK_MODULE_URL: "/src/moris/capture-subject-lock.js",
+  PUBLIC_MORIS_SIZE_CONTRACT_MODULE_URL: "/src/moris/size-contract.js",
   PUBLIC_PAGE_LIMIT: "36",
   PUBLIC_LOGIN_URL: "/api/auth/login"
 };
@@ -183,8 +187,9 @@ async function main() {
             await walk(p);
             continue;
           }
-          // Script build/dev KHÔNG được publish lên production.
-          if (e.name.endsWith(".mjs")) {
+          // Script build/dev và mã nguồn .ts KHÔNG được publish lên production
+          // (dist chỉ chứa .js đã build; .ts gốc sẽ lộ source khi mở F12).
+          if (e.name.endsWith(".mjs") || e.name.endsWith(".ts")) {
             await rm(p, { force: true });
             continue;
           }
