@@ -18,7 +18,7 @@ Bạn là agent tiếp nhận dự án **Catalogue AI (Dictionary)** — nhánh 
 
 ### 1. Trạng thái repo thực tế (đã kiểm chứng — không cần dò lại)
 
-- Worktree `/workspaces/Dictionary`; branch `main`. Checkpoint push tài liệu gần nhất: `11b63c5`; phiên M30→M27→M28 + hardening đã commit + push lên `origin/main` cuối ngày 2026-10-17 theo yêu cầu chủ dự án (tip: `git log -1`; `image 2/` 83MB và `.env` KHÔNG push).
+- Worktree `/workspaces/Dictionary`; branch `main`. Phiên M30→M27→M28 + hardening đã commit `6c360dd` và push lên main của `PQVinh99-Glory/Dictionary` (remote `upstream`) + fork Codespace (remote `origin`) theo yêu cầu chủ dự án (`image 2/` 83MB và `.env` KHÔNG push). LƯU Ý: trong Codespace, `origin` là fork tự tạo — muốn push repo chính dùng `upstream`/URL đầy đủ + token `.env` qua GIT_ASKPASS.
 - Trạng thái đã kiểm chứng cuối phiên: `npm test` **49 files / 475 tests pass**; `npx tsc --noEmit` exit 0; `npm run build` **46 files** exit 0 (đã loại `.ts` khỏi dist).
 - Purge R2 đã thực thi theo phê duyệt: 376/376 object (11.14MB), orphan còn 77 (chỉ `parts/`).
 - Commit nền để đọc file đã xoá: `2657b49` — `MORIS_V6_MASTER_PLAN.md`, `MORIS_V6_QUICK_CHECKLIST.md`, `CODEX_MORIS_V6_TASK_PROMPTS.md` do CHỦ DỰ ÁN xoá — KHÔNG khôi phục.
