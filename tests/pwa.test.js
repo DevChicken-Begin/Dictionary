@@ -26,33 +26,33 @@ describe('PWA & Versioning — Đặc tả và cấu hình', () => {
     }
   });
 
-  it('src/version.js — phiên bản hiện tại là 6.1.3 và tuân thủ quy tắc tăng phiên bản', async () => {
+  it('src/version.js — phiên bản hiện tại là 6.2.0 và tuân thủ quy tắc tăng phiên bản', async () => {
     const versionMod = await import('../src/version.js');
-    expect(versionMod.APP_VERSION).toBe('6.1.3');
+    expect(versionMod.APP_VERSION).toBe('6.2.0');
 
     // Quy tắc người dùng yêu cầu:
     // 1) Sửa lỗi nhỏ không thêm tính năng: tăng số cuối 0.0.1
-    expect(versionMod.bumpPatch('6.1.3')).toBe('6.1.4');
+    expect(versionMod.bumpPatch('6.2.0')).toBe('6.2.1');
     expect(versionMod.bumpPatch('6.1.9')).toBe('6.1.10');
 
     // 2) Thêm tính năng mới vẫn tương thích bản cũ: sửa số giữa 0.1.0
-    expect(versionMod.bumpMinor('6.1.3')).toBe('6.2.0');
+    expect(versionMod.bumpMinor('6.2.0')).toBe('6.3.0');
 
     // 3) Thay đổi lớn có thể không tương thích: thay đổi số đầu 1.0.0
-    expect(versionMod.bumpMajor('6.1.3')).toBe('7.0.0');
+    expect(versionMod.bumpMajor('6.2.0')).toBe('7.0.0');
 
     // So sánh phiên bản
-    expect(versionMod.compareVersions('6.1.4', '6.1.3')).toBeGreaterThan(0);
+    expect(versionMod.compareVersions('6.2.1', '6.2.0')).toBeGreaterThan(0);
     expect(versionMod.compareVersions('6.2.0', '6.1.5')).toBeGreaterThan(0);
-    expect(versionMod.compareVersions('6.1.3', '6.1.3')).toBe(0);
+    expect(versionMod.compareVersions('6.2.0', '6.2.0')).toBe(0);
   });
 
-  it('version.json tại root và dist khớp với phiên bản 6.1.3', () => {
+  it('version.json tại root và dist khớp với phiên bản 6.2.0', () => {
     const rootVer = JSON.parse(read('version.json'));
-    expect(rootVer.version).toBe('6.1.3');
+    expect(rootVer.version).toBe('6.2.0');
     if (existsSync(join(ROOT, 'dist/version.json'))) {
       const distVer = JSON.parse(read('dist/version.json'));
-      expect(distVer.version).toBe('6.1.3');
+      expect(distVer.version).toBe('6.2.0');
       expect(distVer.name).toBe('Catalogue');
     }
   });

@@ -107,6 +107,26 @@ describe('M28 loadCandidateDims — fail-open trước bảng proposal (Gate D)'
     expect(dims.has('b')).toBe(false);
   });
 
+  it('T5 (sau Gate D) — row thật method/confidence vào Map và gate dùng đúng cặp cạnh',async()=>{
+    vi.stubGlobal('fetch',vi.fn(async()=>Response.json([
+      {record_id:'r1',length_mm:120.5,width_mm:80,method:'user',confidence:0.9},
+      {record_id:'r2',length_mm:60,width_mm:60,method:'caliper',confidence:1}
+    ])));
+    const dims=await loadCandidateDims(env,'tok',['r1','r2']);
+    expect(dims.size).toBe(2);
+    expect(dims.get('r1')).toMatchObject({length_mm:120.5,width_mm:80,method:'user',confidence:0.9});
+    expect(dims.get('r2')).toMatchObject({length_mm:60,width_mm:60,method:'caliper',confidence:1});
+
+    const out=applySizeGate({
+      candidates:[{id:'r1',code:'A'},{id:'r2',code:'B'}],
+      querySize:{length_mm:121,width_mm:79},
+      dimsById:dims
+    });
+    expect(out.evidence.status).toBe('applied');
+    expect(out.candidates.map(c=>c.id)).toEqual(['r1']);
+    expect(out.rejected.map(c=>c.id)).toEqual(['r2']);
+  });
+
   it('bảng chưa tồn tại (404) -> null, không ném lỗi',async()=>{
     vi.stubGlobal('fetch',vi.fn(async()=>new Response(null,{status:404})));
     expect(await loadCandidateDims(env,'tok',['a'])).toBeNull();

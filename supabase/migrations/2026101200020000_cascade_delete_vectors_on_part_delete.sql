@@ -83,6 +83,9 @@ END;
 $$;
 
 -- 3. Cập nhật app_delete_part xóa trực tiếp vector
+-- Lưu ý: production từng có bản app_delete_part tạo tay trả TABLE(ok,message);
+-- CREATE OR REPLACE không đổi được kiểu trả về (42P13) nên phải DROP trước.
+DROP FUNCTION IF EXISTS public.app_delete_part(text, uuid);
 CREATE OR REPLACE FUNCTION public.app_delete_part(
   p_session_token text,
   p_image_id uuid

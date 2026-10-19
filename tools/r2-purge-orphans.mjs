@@ -1,12 +1,19 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import {
+  R2_ORPHAN_BUCKET,
+  R2_ORPHAN_KEEP_PREFIXES,
+  R2_ORPHAN_LIMITS,
+  buildKeyTypeSummary,
+  selectR2OrphanTargets
+} from './r2-orphan-selection.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const BUCKET = 'catalogue-images';
-const KEEP_PREFIXES = ['parts/'];
-const MAX_TARGETS = 500;
-const MAX_BYTES = 20 * 1024 * 1024;
+const BUCKET = R2_ORPHAN_BUCKET;
+const KEEP_PREFIXES = R2_ORPHAN_KEEP_PREFIXES;
+const MAX_TARGETS = R2_ORPHAN_LIMITS.maxTargets;
+const MAX_BYTES = R2_ORPHAN_LIMITS.maxBytes;
 
 function loadEnv(path) {
   const out = {};
@@ -127,28 +134,17 @@ async function deleteObject(accountId, key) {
   return { ok: false, http: res.status, errors: data?.errors || [] };
 }
 
-function summarize(keys) {
-  const byType = {};
-  for (const key of keys) {
-    const type = key.split('/')[0] || 'unknown';
-    byType[type] = (byType[type] || 0) + 1;
-  }
-  return byType;
-}
-
 async function main() {
   const accountId = await resolveAccountId();
   const objects = await listAllObjects(accountId);
   const referenced = await fetchReferenced();
 
-  const orphans = objects.filter(o => !referenced.has(o.key));
-  const kept = orphans.filter(o => KEEP_PREFIXES.some(p => o.key.startsWith(p)));
-  const targets = orphans.filter(o => !KEEP_PREFIXES.some(p => o.key.startsWith(p)));
+  const { orphans, kept, targets } = selectR2OrphanTargets(objects, referenced, KEEP_PREFIXES);
   const targetBytes = targets.reduce((sum, o) => sum + o.size, 0);
 
   console.log(`[purge] bucket=${BUCKET} objects=${objects.length} referenced=${referenced.size}`);
-  console.log(`[purge] orphans=${orphans.length} kept(legacy)=${kept.length} (${JSON.stringify(summarize(kept.map(o => o.key)))})`);
-  console.log(`[purge] targets=${targets.length} bytes=${targetBytes} (${(targetBytes / (1024 * 1024)).toFixed(2)}MB) by_type=${JSON.stringify(summarize(targets.map(o => o.key)))}`);
+  console.log(`[purge] orphans=${orphans.length} kept(legacy)=${kept.length} (${JSON.stringify(buildKeyTypeSummary(kept.map(o => o.key)))})`);
+  console.log(`[purge] targets=${targets.length} bytes=${targetBytes} (${(targetBytes / (1024 * 1024)).toFixed(2)}MB) by_type=${JSON.stringify(buildKeyTypeSummary(targets.map(o => o.key)))}`);
 
   if (!execute) {
     console.log('[purge] DRY-RUN — chưa xoá gì. Thêm --execute để xoá thật.');

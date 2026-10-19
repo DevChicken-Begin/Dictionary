@@ -191,7 +191,7 @@ createApp({
 
       // ---- Camera chụp ảnh cho Moris (khung căn chỉnh 1000:410 như ảnh mẫu) ----
       camera:{ open:false, ready:false, error:'', busy:false, facing:'environment', scanning:false, previewUrl:'', maskUrl:'', scanStatus:'',
-        lock:{ enabled:false, seed:null, ready:false, checks:{}, guidance:[], chips:[], stableCount:0, samples:0, agreement:0, evidence:null, evidenceSummary:'', lastError:'' },
+        lock:{ enabled:false, seed:null, ready:false, checks:{}, guidance:[], chips:[], box:null, stableCount:0, samples:0, agreement:0, evidence:null, evidenceSummary:'', lastError:'' },
         // M28: size contract — người dùng nhập cạnh dài nhất/ngắn nhất (mm), tuỳ chọn, fail-open
         size:{ length:'', width:'', unknown:true } },
       vectorCenter:{ open:false, loading:true },
@@ -251,7 +251,9 @@ createApp({
       const s = this.camera?.size || {};
       if (s.unknown) return 'Không nhập = bỏ qua lọc kích thước';
       const parse = v => {
-        const n = Number(String(v ?? '').trim().replace(',', '.'));
+        const raw = String(v ?? '').trim().replace(',', '.');
+        if (!raw) return null;
+        const n = Number(raw);
         return Number.isFinite(n) ? n : null;
       };
       const l = parse(s.length), w = parse(s.width);
@@ -262,6 +264,28 @@ createApp({
       }
       const L = Math.max(l, w), W = Math.min(l, w);
       return `Lọc theo ${Number(L.toFixed(1))} × ${Number(W.toFixed(1))} mm`;
+    },
+
+    /** M28 Gate D: hint cho 2 ô size trong editor (tùy chọn — để trống cả 2 = không lưu). */
+    editorSizeHint() {
+      const f = this.editor?.form || {};
+      const rawL = String(f.size_length ?? '').trim();
+      const rawW = String(f.size_width ?? '').trim();
+      if (!rawL && !rawW) return 'Tùy chọn — để trống nếu chưa đo kích thước';
+      const parse = v => {
+        const raw = String(v ?? '').trim().replace(',', '.');
+        if (!raw) return null;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+      };
+      const l = parse(rawL), w = parse(rawW);
+      if (l == null || w == null) return 'Nhập đủ cạnh dài và cạnh ngắn (mm)';
+      if (l <= 0 || w <= 0) return 'Số đo phải lớn hơn 0';
+      if (l > CONFIG.MORIS_SIZE_MAX_MM || w > CONFIG.MORIS_SIZE_MAX_MM) {
+        return `Số đo tối đa ${CONFIG.MORIS_SIZE_MAX_MM}mm`;
+      }
+      const L = Math.max(l, w), W = Math.min(l, w);
+      return `Lưu ${Number(L.toFixed(1))} × ${Number(W.toFixed(1))} mm`;
     },
 
     isAllCurrentPageSelected() {
@@ -412,7 +436,7 @@ createApp({
     'weightCalc.listFilter'() { this.wcResetWindow(); },
   },
   methods:{
-    emptyForm() { return { id:null, code:'', part_id:'', usage_side:'unknown', view_mode:'single_face', is_symmetric:false, identifying_features:'', confusing_note:'', image_path:'', image_name:'' }; },
+    emptyForm() { return { id:null, code:'', part_id:'', usage_side:'unknown', view_mode:'single_face', is_symmetric:false, identifying_features:'', confusing_note:'', image_path:'', image_name:'', size_length:'', size_width:'' }; },
     updateTime() { this.nowText = new Date().toLocaleString('vi-VN'); },
     renderIcons() { nextTick(() => lucide?.createIcons?.()); },
     toast(type,text) { 
@@ -1749,8 +1773,9 @@ createApp({
       this.clearEditorFiles();
       this.editor.open=true;
       if(item) {
-        this.editor.form = { id:item.id, code:item.code || '', part_id:item.part_id || '', usage_side:item.usage_side || 'unknown', view_mode:item.view_mode || 'single_face', is_symmetric:!!item.is_symmetric, identifying_features:item.identifying_features || '', confusing_note:item.confusing_note || '', image_path:item.fallback_path || '', image_name:'' };
+        this.editor.form = { id:item.id, code:item.code || '', part_id:item.part_id || '', usage_side:item.usage_side || 'unknown', view_mode:item.view_mode || 'single_face', is_symmetric:!!item.is_symmetric, identifying_features:item.identifying_features || '', confusing_note:item.confusing_note || '', image_path:item.fallback_path || '', image_name:'', size_length:'', size_width:'' };
         try { this.editor.assets = await this.rpcRows('app_get_part_assets', {p_session_token:this.session.token, p_image_id:item.id}); } catch(e) { this.editor.assets=[]; }
+        await this.loadEditorSize();
       } else {
         this.editor.form = this.emptyForm();
         this.editor.assets = [];
@@ -1761,6 +1786,61 @@ createApp({
     clearEditorFiles() {
       for (const src of Object.values(this.editor?.previews || {})) { try { URL.revokeObjectURL(src); } catch(_) {} }
       if (this.editor) { this.editor.files={}; this.editor.previews={}; }
+    },
+
+    /**
+     * M28 Gate D: nạp size đã lưu của mã đang sửa từ `catalogue_part_dimensions`.
+     * Fail-soft: chưa áp migration / lỗi RPC → để trống, không chặn mở editor.
+     */
+    async loadEditorSize() {
+      if (!this.editor?.form) return;
+      this.editor.form.size_length = '';
+      this.editor.form.size_width = '';
+      if (!this.editor.form.id) return;
+      try {
+        const row = await this.rpcRow('app_get_part_dimensions', {
+          p_session_token: this.session.token,
+          p_image_id: this.editor.form.id
+        });
+        if (Number(row?.length_mm) > 0 && Number(row?.width_mm) > 0) {
+          this.editor.form.size_length = String(row.length_mm);
+          this.editor.form.size_width = String(row.width_mm);
+        }
+      } catch (_) { /* bảng/RPC chưa sẵn sàng — coi như chưa có size */ }
+    },
+
+    /**
+     * M28 Gate D: đọc 2 ô size trong editor (mm) → payload RPC.
+     * Trả { empty:true } khi để trống cả 2 (không lưu); { error } khi nhập thiếu/sai.
+     */
+    async readEditorSize() {
+      const f = this.editor?.form || {};
+      const rawL = String(f.size_length ?? '').trim();
+      const rawW = String(f.size_width ?? '').trim();
+      if (!rawL && !rawW) return { empty: true };
+
+      const parse = v => {
+        const raw = String(v ?? '').trim().replace(',', '.');
+        if (!raw) return null;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+      };
+      const l = parse(rawL), w = parse(rawW);
+      if (l == null || w == null) return { error: 'Cần nhập đủ cạnh dài và cạnh ngắn (mm), hoặc để trống cả hai.' };
+
+      try {
+        const mod = await this.loadSizeContractModule();
+        const pair = mod.normalizeSizePair(l, w, { maxMm: CONFIG.MORIS_SIZE_MAX_MM });
+        if (!pair) return { error: `Số đo phải lớn hơn 0 và tối đa ${CONFIG.MORIS_SIZE_MAX_MM}mm.` };
+        return { length_mm: pair.length_mm, width_mm: pair.width_mm };
+      } catch (error) {
+        console.warn('Size contract module failed, dùng fallback inline:', error);
+        if (l <= 0 || w <= 0) return { error: 'Số đo phải lớn hơn 0.' };
+        if (l > CONFIG.MORIS_SIZE_MAX_MM || w > CONFIG.MORIS_SIZE_MAX_MM) {
+          return { error: `Số đo tối đa ${CONFIG.MORIS_SIZE_MAX_MM}mm.` };
+        }
+        return { length_mm: Math.max(l, w), width_mm: Math.min(l, w) };
+      }
     },
     
     async onFileChange(type, order, e) {
@@ -1969,6 +2049,10 @@ createApp({
           if(dup) throw new Error(`Mã "${code}" đã tồn tại trong hệ thống. Vui lòng nhập mã khác.`);
         }
 
+        // M28 Gate D: validate size trước khi upload để tránh dọn file thừa khi input sai.
+        const editorSize = await this.readEditorSize();
+        if(editorSize.error) throw new Error(editorSize.error);
+
         let assets = this.editor.assets.map(a => ({ asset_type:a.asset_type, storage_provider:a.storage_provider || 'r2', bucket_name:a.bucket_name || 'catalogue-images', image_path:a.image_path, image_name:a.image_name || null, sort_order:Number(a.sort_order||1) }));
 
         const collectReplacedPath = (type, order) => {
@@ -2014,6 +2098,17 @@ createApp({
           p_primary_image_name:primary.image_name || null
         });
         if(!saved?.ok) throw new Error(saved?.message || 'Không lưu được data vào Database.');
+
+        // M28 Gate D: lưu cặp kích thước (nếu có nhập) vào catalogue_part_dimensions.
+        if(!editorSize.empty) {
+          const dims = await this.rpcRow('app_upsert_part_dimensions', {
+            p_session_token:this.session.token,
+            p_image_id:saved.id,
+            p_length_mm:editorSize.length_mm,
+            p_width_mm:editorSize.width_mm
+          });
+          if(!dims?.ok) throw new Error(dims?.message || 'Không lưu được kích thước linh kiện.');
+        }
 
         const rep = await this.rpcRow('app_replace_part_assets', { p_session_token:this.session.token, p_image_id:saved.id, p_assets:assets });
         if(!rep?.ok) throw new Error(rep?.message || 'Không liên kết được hình ảnh.');
@@ -2952,6 +3047,7 @@ createApp({
       this.camera.lock.enabled = CONFIG.MORIS_CAMERA_SUBJECT_LOCK_ENABLED;
       this.camera.lock.seed = null;
       this.camera.lock.ready = false;
+      this.camera.lock.box = null;
       this.camera.lock.checks = {};
       this.camera.lock.guidance = [];
       this.camera.lock.chips = [];
@@ -2965,6 +3061,26 @@ createApp({
       this._camLockDims = null;
       this._camLockLastMask = null;
       this._camLockCanvas = null;
+    },
+
+    /**
+     * M27: đổi bbox pixel của vùng phân tích (crop 1000:410 khớp 1:1 container)
+     * sang % để vẽ khung vuông tracking — clamp biên, trả null khi thiếu dữ liệu.
+     */
+    subjectBoxToPercent(bbox, width, height) {
+      const w = Number(width || 0), h = Number(height || 0);
+      if (!bbox || w <= 0 || h <= 0) return null;
+      const x0 = Math.max(0, Math.min(w, Number(bbox.x0)));
+      const y0 = Math.max(0, Math.min(h, Number(bbox.y0)));
+      const x1 = Math.max(0, Math.min(w, Number(bbox.x1) + 1));
+      const y1 = Math.max(0, Math.min(h, Number(bbox.y1) + 1));
+      if (!Number.isFinite(x0) || !Number.isFinite(y0) || !Number.isFinite(x1) || !Number.isFinite(y1) || x1 <= x0 || y1 <= y0) return null;
+      return {
+        left: Number((x0 / w * 100).toFixed(2)),
+        top: Number((y0 / h * 100).toFixed(2)),
+        width: Number(((x1 - x0) / w * 100).toFixed(2)),
+        height: Number(((y1 - y0) / h * 100).toFixed(2))
+      };
     },
 
     // ------------------------------------------------------------------
@@ -3008,7 +3124,9 @@ createApp({
       if (s.unknown !== false) return null;
 
       const parse = v => {
-        const n = Number(String(v ?? '').trim().replace(',', '.'));
+        const raw = String(v ?? '').trim().replace(',', '.');
+        if (!raw) return null;
+        const n = Number(raw);
         return Number.isFinite(n) ? n : null;
       };
       const l = parse(s.length), w = parse(s.width);
@@ -3145,6 +3263,11 @@ createApp({
           this._camLockLastMask = null;
           this._camLockMasks = [];
         }
+
+        // M27: khung vuông tracking bám vật thể (bbox chuẩn hoá theo vùng crop).
+        this.camera.lock.box = stats.partPixels > 0
+          ? this.subjectBoxToPercent(stats.bbox, targetW, targetH)
+          : null;
 
         const readiness = mod.computeReadiness({
           ...stats,

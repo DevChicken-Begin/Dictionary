@@ -84,7 +84,9 @@ describe('index.html — cấu trúc template Vue', () => {
       'wcScrollMax',                   // bảng đơn trọng cửa sổ ảo
       'wcImgActiveUrl',                // ảnh Catalogue trong modal Quy đổi
       'v-if="canEdit"',
-      'canConvert'                     // phân quyền converter
+      'canConvert',                    // phân quyền converter
+      'camera.lock.box',               // M27: khung vuông tracking vật thể
+      'editor.form.size_length'        // M28 Gate D: 2 ô size trong editor
     ]) {
       expect(html.includes(marker), `thiếu marker: ${marker}`).toBe(true);
     }

@@ -1,4 +1,6 @@
--- M28 PROPOSAL ONLY — CHƯA ÁP DỤNG PRODUCTION (cần Gate D + owner duyệt).
+-- M28 PROPOSAL GỐC — ĐÃ ĐƯỢC CHỦ DỰ ÁN DUYỆT GATE D 2026-10-19; bản áp dụng thật là
+-- `20261019090000_catalogue_part_dimensions_gate_d.sql` (bảng + RPC + trigger dọn dims).
+-- File này giữ lại làm lịch sử; vẫn idempotent (IF NOT EXISTS) khi chạy theo thứ tự.
 -- Bảng dữ liệu kích thước catalogue theo quy ước Size Contract (pipeline_moris.md §5.3, §10.3):
 --   (length_mm, width_mm) là cặp cạnh theo trục chính PCA, length_mm >= width_mm.
 --   thickness_mm nullable (Q1: chỉ dài × rộng là bắt buộc, dày không bắt buộc).
