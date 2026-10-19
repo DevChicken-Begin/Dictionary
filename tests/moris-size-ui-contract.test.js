@@ -183,6 +183,7 @@ describe('M28 UI contract — panel nhập kích thước (hành vi thật từ 
       applyMorisSearchResults: vi.fn(),
       clearMorisImage: vi.fn(),
       morisPublicImageSearchError: (e) => String(e),
+      morisHoleFormatsPayload: methods.morisHoleFormatsPayload,
       $nextTick: (fn) => { if (typeof fn === 'function') fn(); },
       renderIcons: vi.fn()
     };

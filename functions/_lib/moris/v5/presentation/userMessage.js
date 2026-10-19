@@ -1,3 +1,5 @@
+import { HOLE_FORMAT_NAMES } from "../retrieval/holeFormatReference.js";
+
 function clean(v){ return String(v ?? "").trim(); }
 function codeOf(c){ return clean(c?.code || c?.part_id || c?.id || c?.record_id); }
 
@@ -29,6 +31,20 @@ function sizeEvidenceNote(sizeEvidence){
   return "";
 }
 
+// Từ điển mẫu lỗ (2026-10-19): ghi chú trung tính — Moris nói tên định dạng khi có cơ sở,
+// khẳng định rõ đây chỉ là tham chiếu (không loại trừ ứng viên khác định dạng).
+function holeFormatEvidenceNote(evidence){
+  if(!evidence || typeof evidence !== "object") return "";
+  const tags = Array.isArray(evidence.query_tags) ? evidence.query_tags : [];
+  if(!tags.length) return "";
+  const names = tags.map(t=>HOLE_FORMAT_NAMES[t] || t).join(", ");
+  const matched = Number(evidence.matched_count || 0);
+  if(matched > 0){
+    return `Định dạng lỗ tham chiếu: ${names}. ${matched} mã có mô tả cùng định dạng (chỉ để tham khảo).`;
+  }
+  return `Định dạng lỗ tham chiếu: ${names} — chưa có mã nào có mô tả cùng định dạng; em vẫn xếp hạng theo tương đồng ảnh.`;
+}
+
 function withNote(message,note){
   return note ? `${message}\n${note}` : message;
 }
@@ -37,7 +53,10 @@ export function buildMorisUserMessage(result){
   const rows=Array.isArray(result?.candidates) ? result.candidates : [];
   const mode=clean(result?.mode).toUpperCase();
   const decision=clean(result?.decision).toLowerCase();
-  const note=sizeEvidenceNote(result?.size_evidence);
+  const note=[
+    sizeEvidenceNote(result?.size_evidence),
+    holeFormatEvidenceNote(result?.hole_format_evidence)
+  ].filter(Boolean).join("\n");
 
   if(mode === "MORIS_UNSUPPORTED") return MORIS_PUBLIC_MESSAGES.unsupported;
 

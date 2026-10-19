@@ -28,6 +28,11 @@ import {
   applySizeGate,
   loadCandidateDims
 } from "./retrieval/sizeGate.js";
+import {
+  applyHoleFormatBoost,
+  holeFormatsFromCounts,
+  inferFormatTagsFromText
+} from "./retrieval/holeFormatReference.js";
 import { orientationWarnings } from "./guards/orientation.js";
 import { publicCandidate } from "./schemas/candidate.js";
 import {
@@ -388,11 +393,26 @@ export async function runMorisSearch(env, config, {
     };
   }
 
-  const metadataRanked = rankMetadata(
+  let metadataRanked = rankMetadata(
     sizeGate.candidates,
     query.message,
     {excludeHoleEvidence:true}
   );
+
+  // Từ điển mẫu lỗ (2026-10-19, chủ dự án): Moris tham chiếu MỀM định dạng lỗ —
+  // đối chiếu đếm định dạng từ camera (query.hole_formats) + từ khóa trong câu query
+  // với mô tả identifying_features của ứng viên. CHỈ CỘNG khi khớp, không bao giờ phạt
+  // hay loại trừ; mặc định OFF (MORIS_HOLE_FORMAT_BOOST_ENABLED) tới khi có đo lường thật.
+  let holeFormatEvidence = null;
+  if (config.features.holeFormatBoost === true) {
+    const queryTags = [...new Set([
+      ...holeFormatsFromCounts(query.hole_formats),
+      ...inferFormatTagsFromText(query.message)
+    ])];
+    const applied = applyHoleFormatBoost({ rows: metadataRanked, queryTags });
+    metadataRanked = applied.rows;
+    holeFormatEvidence = applied.evidence;
+  }
 
   const structural = analyzeStructuralEvidence({
     // Disabled image geometry must not re-enter fusion through count fallback.
@@ -477,6 +497,7 @@ export async function runMorisSearch(env, config, {
     candidates:sortedCandidates,
     warnings,
     ...sizeEvidenceAttach,
+    ...(holeFormatEvidence ? {hole_format_evidence:holeFormatEvidence} : {}),
     ai_calls:null,
     candidate_pool_hash:poolHash
   };

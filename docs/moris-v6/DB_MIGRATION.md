@@ -5,6 +5,8 @@
 > Cập nhật 2026-10-19: `supabase db push` đã áp các migration pending KHÁC (Gate D `20261019090000`, proposal `20261017090000`, cascade delete `2026101200020000`, reset flag `2026101000040000`) và repair 5 bản thiếu history. **Riêng 3 bản Moris V6 của tài liệu này (`20261016024931`, `20261016033020`, `20261016040525`) vẫn pending cố ý** — không push khi chưa mở Gate M22.
 >
 > Cập nhật 2026-10-19 (lần 2, M28 S1.1): đã push `20261019120000_size_contract_s11_optional_width.sql` (width_mm nullable + CHECK NULL-safe + RPC `app_upsert_part_dimensions` cạnh ngắn tùy chọn). Xác minh: `migration list` local=remote (trừ 3 bản V6 như trên); probe read-only `catalogue_part_dimensions` → 200; RPC tồn tại (token sai → 400 UNAUTHORIZED).
+>
+> Cập nhật 2026-10-19 (lần 3, Mẫu lỗ phổ biến): đã push `20261019180000_catalogue_hole_samples.sql` — bảng mới `moris_hole_samples` (metadata 14 mẫu lỗ tham khảo: slug/name/format_tag/r2_key/sort_order/active; RLS bật, **chỉ policy SELECT cho authenticated**, không policy ghi) + seed idempotent 14 dòng. Xác minh: service probe 14 rows đúng thứ tự; anon probe `[]` (`content-range */0`); ảnh tại R2 `catalogue-images/hole-samples/` (14 object, phục vụ qua `/api/media` cần session). Bảng này KHÔNG thay đổi 3 migration Moris V6 vẫn pending cố ý.
 
 ## Schema and permissions
 

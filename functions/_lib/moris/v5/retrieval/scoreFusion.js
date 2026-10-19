@@ -14,6 +14,8 @@ export function fuseCandidateScore(candidate) {
   add('patch',geometry.patch?.similarity,.15,geometry.patch?.available===true,geometry.patch?.reliability??0);
   add('contour',geometry.contour?.similarity,.15,geometry.contour?.available===true,geometry.contour?.reliability??0);
   add('metadata',candidate.metadata_score,.10,candidate.metadata_available===true,candidate.metadata_reliability??.5);
+  // Từ điển mẫu lỗ (2026-10-19): chỉ CỘNG khi khớp định dạng (boost-only, không phạt).
+  add('hole_format',candidate.hole_format_score,.05,candidate.hole_format_available===true,1);
   // Count comparison is already represented by holes; never include it twice.
   add('structural',candidate.structural_score,.20,geometry.s_holes==null && candidate.structural_available===true,candidate.structural_reliability??.25);
   const totalWeight=signals.reduce((s,x)=>s+x.weight,0);

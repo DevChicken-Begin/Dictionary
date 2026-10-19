@@ -12,7 +12,10 @@ export function readMorisConfig(env) {
       spatialVerification:false,
       vectorSearch:boolEnv(env.MORIS_VECTOR_SEARCH_ENABLED, false),
       // M28 Size Gate (S1): chỉ tác động khi query có size; fail-open khi thiếu dims.
-      sizeGate:boolEnv(env.MORIS_SIZE_GATE_ENABLED, true)
+      sizeGate:boolEnv(env.MORIS_SIZE_GATE_ENABLED, true),
+      // Từ điển mẫu lỗ (2026-10-19): boost MỀM khi định dạng lỗ query khớp mô tả
+      // identifying_features. Mặc định OFF — chỉ bật sau khi đo trên dữ liệu thật.
+      holeFormatBoost:boolEnv(env.MORIS_HOLE_FORMAT_BOOST_ENABLED, false)
     },
 
     vector:{

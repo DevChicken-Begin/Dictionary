@@ -1,5 +1,23 @@
 import { normalizeGeometry } from "./geometry.js";
 import { normalizeQuerySize } from "../retrieval/sizeGate.js";
+import { HOLE_FORMAT_TAGS } from "../retrieval/holeFormatReference.js";
+
+const HOLE_FORMAT_TAG_SET = new Set(HOLE_FORMAT_TAGS);
+
+// Từ điển mẫu lỗ (2026-10-19): đếm định dạng lỗ phía client -> { tag: count }.
+// Fail-open: payload sai/không nhận dạng được -> null (không boost).
+function normalizeHoleFormats(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const out = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (!HOLE_FORMAT_TAG_SET.has(key)) continue;
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 0 || n > 9999) continue;
+    out[key] = n;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 function assertEmbedding(vector,dimension,label){
   if(!Array.isArray(vector) || vector.length!==dimension){
     const e=new Error(`${label} phải đúng ${dimension} chiều.`);
@@ -69,6 +87,8 @@ export function validateMorisQuery(body, config) {
     hints:body?.hints || {},
     geometry:body?.geometry ? normalizeGeometry(body.geometry) : null,
     // M28 Size Contract (S1): fail-open — payload size không hợp lệ trở thành null.
-    size:normalizeQuerySize(body?.size)
+    size:normalizeQuerySize(body?.size),
+    // Từ điển mẫu lỗ: đếm định dạng lỗ (tròn/vuông/oval/dài) từ phân tích camera.
+    hole_formats:normalizeHoleFormats(body?.hole_formats)
   };
 }

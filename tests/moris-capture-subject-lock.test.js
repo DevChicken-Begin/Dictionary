@@ -546,5 +546,78 @@ describe('capture-subject-lock — utilities & guardrails', () => {
     expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.specularRatioMax).toBe(0.18);
     expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.mergeGapFrac).toBe(0.04);
     expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.mergeGapMaxPx).toBe(14);
+    expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.slotMinAspect).toBe(1.7);
+    expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.slotMinFill).toBe(0.88);
+  });
+});
+
+describe('capture-subject-lock — lỗ dài/slot (từ điển mẫu lỗ, 2026-10-19)', () => {
+  const W = 100;
+
+  function stadiumPixels() {
+    const px = [];
+    for (let y = 30; y <= 49; y++) {
+      for (let x = 20; x <= 59; x++) {
+        const inRect = x >= 30 && x <= 50;
+        const dL = Math.hypot(x - 30, y - 39.5);
+        const dR = Math.hypot(x - 50, y - 39.5);
+        if (inRect || dL <= 10 || dR <= 10) px.push(y * W + x);
+      }
+    }
+    return px;
+  }
+
+  it('classifyHoleShape: stadium dài → slot; ellipse 2:1 → oval; đĩa tròn → circle', () => {
+    const stadium = stadiumPixels();
+    const s = classifyHoleShape({ area: stadium.length, cx: 40, cy: 39.5, pixels: stadium }, W);
+    expect(s.shape).toBe('slot');
+    expect(s.aspect).toBeGreaterThanOrEqual(1.7);
+    expect(s.confidence).toBeGreaterThanOrEqual(0);
+
+    const ellipse = [];
+    for (let y = 20; y <= 59; y++) {
+      for (let x = 20; x <= 59; x++) {
+        if (((x - 40) / 20) ** 2 + ((y - 40) / 10) ** 2 <= 1) ellipse.push(y * W + x);
+      }
+    }
+    const e = classifyHoleShape({ area: ellipse.length, cx: 40, cy: 40, pixels: ellipse }, W);
+    expect(e.shape).toBe('oval');
+
+    const disc = [];
+    for (let y = 25; y <= 54; y++) {
+      for (let x = 25; x <= 54; x++) {
+        if (Math.hypot(x - 40, y - 40) <= 15) disc.push(y * W + x);
+      }
+    }
+    const c = classifyHoleShape({ area: disc.length, cx: 40, cy: 40, pixels: disc }, W);
+    expect(c.shape).toBe('circle');
+
+    const square = [];
+    for (let y = 30; y <= 59; y++) {
+      for (let x = 30; x <= 59; x++) square.push(y * W + x);
+    }
+    const q = classifyHoleShape({ area: square.length, cx: 44.5, cy: 44.5, pixels: square }, W);
+    expect(q.shape).toBe('square');
+  });
+
+  it('analyzeHoles đếm slot riêng vào counts.slot', () => {
+    const w = 200, h = 200;
+    const mask = new Uint8Array(w * h).fill(1);
+    const stadium = [];
+    for (let y = 90; y <= 109; y++) {
+      for (let x = 60; x <= 119; x++) {
+        const inRect = x >= 70 && x <= 110;
+        const dL = Math.hypot(x - 70, y - 99.5);
+        const dR = Math.hypot(x - 110, y - 99.5);
+        if (inRect || dL <= 10 || dR <= 10) {
+          stadium.push(y * w + x);
+          mask[y * w + x] = 0;
+        }
+      }
+    }
+    const analysis = analyzeHoles(mask, w, h);
+    expect(analysis.total).toBe(1);
+    expect(analysis.counts.slot).toBe(1);
+    expect(analysis.counts.circle + analysis.counts.square + analysis.counts.oval + analysis.counts.unknown).toBe(0);
   });
 });

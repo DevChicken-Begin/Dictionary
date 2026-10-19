@@ -54,6 +54,13 @@ export const DEFAULT_SUBJECT_LOCK_THRESHOLDS = {
   squareMinA4: 0.06,
   squareMaxA4: 0.55,
   squareMaxRadiusCV: 0.50,
+  // Lỗ dài (slot/stadium — mẫu "Lỗ dài", 2026-10-19): dài theo trục chính, thân
+  // gần song song nên fill cao hơn ellipse (ellipse ~0.70-0.85 sau closing),
+  // A4 không trội như chữ nhật.
+  slotMinAspect: 1.7,
+  slotMinFill: 0.88,
+  slotMaxA4Ratio: 1.25,
+  slotMaxRadiusCV: 0.45,
   ovalMinA2: 0.08,
   ovalMaxA2: 0.55,
   ovalMaxRadiusCV: 0.40
@@ -651,12 +658,20 @@ export function classifyHoleShape(hole, width, options = {}) {
 
   const A2 = dftMagnitude(2);
   const A4 = dftMagnitude(4);
+  const aspect = Math.max(bw, bh) / Math.max(1, Math.min(bw, bh));
 
-  const metrics = { area, fill: Number(fill.toFixed(4)), radiusCV: Number(radiusCV.toFixed(4)), A2: Number(A2.toFixed(4)), A4: Number(A4.toFixed(4)) };
+  const metrics = { area, fill: Number(fill.toFixed(4)), aspect: Number(aspect.toFixed(3)), radiusCV: Number(radiusCV.toFixed(4)), A2: Number(A2.toFixed(4)), A4: Number(A4.toFixed(4)) };
 
   if (A4 >= t.squareMinA4 && A4 >= A2 * 1.2 && A4 <= t.squareMaxA4 && radiusCV <= t.squareMaxRadiusCV) {
     const margin = Math.min((A4 - t.squareMinA4) / t.squareMinA4, (A4 - A2 * 1.2) / Math.max(1e-6, A4));
     return { shape: 'square', confidence: Number(Math.max(0, Math.min(1, margin)).toFixed(3)), ...metrics };
+  }
+  if (aspect >= t.slotMinAspect && fill >= t.slotMinFill && A4 <= A2 * t.slotMaxA4Ratio && radiusCV <= t.slotMaxRadiusCV) {
+    const margin = Math.min(
+      (aspect - t.slotMinAspect) / t.slotMinAspect,
+      (fill - t.slotMinFill) / Math.max(1e-6, t.slotMinFill)
+    );
+    return { shape: 'slot', confidence: Number(Math.max(0, Math.min(1, margin)).toFixed(3)), ...metrics };
   }
   if (A2 >= t.ovalMinA2 && A2 >= A4 * 1.3 && A2 <= t.ovalMaxA2 && radiusCV <= t.ovalMaxRadiusCV) {
     const margin = Math.min((A2 - t.ovalMinA2) / t.ovalMinA2, (A2 - A4 * 1.3) / Math.max(1e-6, A2));
@@ -692,7 +707,7 @@ export function analyzeHoles(mask, width, height, options = {}) {
     };
   });
 
-  const counts = { circle: 0, square: 0, oval: 0, unknown: 0 };
+  const counts = { circle: 0, square: 0, oval: 0, slot: 0, unknown: 0 };
   for (const h of classified) counts[h.shape] = (counts[h.shape] || 0) + 1;
 
   return { holes: classified, counts, total: classified.length };

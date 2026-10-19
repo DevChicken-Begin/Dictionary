@@ -501,26 +501,42 @@
       "completed_at": "2026-10-19T06:10:00Z",
       "scope": "contract v1_1 client+server mirror; normalizeSizePair partial; match_partial trong gate/orchestrator evidence; editor/camera UI partial; migration 20261019120000; version 6.3.0",
       "evidence": "focused size 5 file 65/65; full 55 files/537 pass 100%; npx tsc --noEmit exit 0; npm run build 46 files; production writes 0; chưa deploy; chưa commit",
-      "pending": "commit+push git S1.1 (chủ dự án đã duyệt, đang thực hiện)",
+      "pending": "đã commit 75bc8ec (S1.1) + cc004b8 (docs state) và push cả origin/upstream lúc 2026-10-19",
       "production_writes": 0,
       "deployed": false,
-      "commit_created": false,
+      "commit_created": true,
       "production_evidence": "2026-10-19: npx supabase db push --yes áp 20261019120000; migration list synced; dims GET 200; app_upsert_part_dimensions token sai -> 400 UNAUTHORIZED"
+    },
+    {
+      "id": "task_34_hole_samples_menu_and_moris_hole_format_reference",
+      "title": "Mẫu lỗ phổ biến: 14 ảnh mẫu lên R2 + bảng moris_hole_samples (RLS read-only) + menu full-screen; Moris Phase 1 tham chiếu định dạng lỗ (boost-only, flag OFF)",
+      "status": "applied_production_local_verified",
+      "completed_at": "2026-10-19T07:00:00Z",
+      "diagnostics": {
+        "owner_decisions": "Menu mọi user đăng nhập; gom biến thể (1)/(2) về tên chuẩn, 'Lỗ oval cong' riêng; thứ tự tròn→vuông→oval→oval cong→dài→chữ nhật→chữ L→tam giác→răng cưa→gài móc; tag RAG = nhãn + boost mềm trước (vector tham chiếu chỉ khi đo còn lệch); Moris nói tên định dạng khi đủ cơ sở; mẫu mới qua migration/script; UI full-screen không modal, chỉ ảnh + tên",
+        "constraint": "Boost mặc định OFF (MORIS_HOLE_FORMAT_BOOST_ENABLED=false) — chờ nhãn người EVAL-01 mới đo được trên ảnh thật; không train model"
+      },
+      "solution": "1) R2: 14 PNG Simple/ -> catalogue-images/hole-samples/<slug>.png (verify list 14). 2) Migration supabase/migrations/20261019180000_catalogue_hole_samples.sql: bảng moris_hole_samples (slug check, r2_key unique, sort_order, active, trigger updated_at, RLS select authenticated, không policy ghi) + seed 14 dòng idempotent. 3) UI index.html: nút menu 'Mẫu lỗ phổ biến' sau Quản lý người dùng + trang full-screen v-if holeSamples.open (z-87, header + back, list img+tên); app.js data/methods (query moris_hole_samples active order sort_order, holeSamplesUrl qua /api/media). 4) Moris Phase 1: functions/_lib/moris/v5/retrieval/holeFormatReference.js (10 tag, FORMAT_PATTERNS có ngữ cảnh 'lỗ dài', holeFormatsFromCounts, applyHoleFormatBoost boost-only + evidence hole_format_ref_v1); config.features.holeFormatBoost; scoreFusion signal hole_format w.05; schemas/query.js normalizeHoleFormats; orchestrator wire (flag ON: query.hole_formats + suy từ message -> boost + hole_format_evidence); userMessage note tên định dạng trung tính; capture-subject-lock.js bin slot (aspect>=1.7, fill>=0.88, A4<=A2*1.25, radiusCV<=0.45 — phân biệt stadium vs ellipse sau closing) + counts.slot; app.js evidenceSummary 'n dài' + morisHoleFormatsPayload() + body hole_formats. 5) Tests mới: moris-hole-samples (menu/trang/migration), moris-hole-format-reference (15), moris-hole-format-orchestrator (5, near-tie .938/.94 flip khi ON), moris-hole-format-ui-contract (4); capture-subject-lock +2 (slot vs oval/circle/square, counts.slot) — eval tổng hợp M27 IoU 0.9996 / shape 100% (10/10).",
+      "evidence": "Focused: hole-format-reference 15/15; orchestrator 5/5; ui-contract 4/4; capture-subject-lock 25/25 (eval M27 100%). Full npm test 59 files/569 pass 100%; npx tsc --noEmit exit 0; npm run build 46 files; version 6.4.0. Production: db push áp 20261019180000 OK; probe service 14 rows đúng thứ tự, anon [] (content-range */0).",
+      "production_writes": "1 migration áp production (20261019180000, bảng mới + seed 14 metadata); 14 object R2 upload prefix hole-samples/; không sửa dữ liệu catalogue; app chưa deploy",
+      "deployed": false,
+      "commit_created": false,
+      "pending": "commit+push git đợt mẫu lỗ (kèm dọn 3 PNG root cũ + Simple/); bật flag boost chỉ sau khi có nhãn EVAL-01"
     }
   ],
   "verification": {
-    "total_unit_tests": 537,
-    "passing_tests": 537,
+    "total_unit_tests": 569,
+    "passing_tests": 569,
     "failing_tests": 0,
     "typescript_exit_code": 0,
     "build_exit_code": 0,
-    "unit_files": 55,
+    "unit_files": 59,
     "build_files": 46,
     "local_e2e_passed": 12,
     "staging": "skipped_by_owner",
-    "evidence": "npm test 2026-10-19 sau Gate D + tracking box (55 files/525 tests pass 100%); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_30_gate_d_size_editor_and_tracking_box, task_29_test_backlog_t2_t7_profile01_r2_02, task_28_m28_hardening_tests_and_push Phiên 2026-10-19 (push DB): 4 migration áp production + 5 repair history + version 6.2.0; probe production OK (xem task_31_gate_d_applied_production). Phiên tracking upgrade 2026-10-19: component merge + 600ms + 60fps overlay + viền 1.5px; full 55 files/530 pass (xem task_32_tracking_upgrade_merge_600ms_60fps). Phiên S1.1 2026-10-19: full 55 files/537 pass; migration 20261019120000 chờ push.",
-    "app_version": "6.2.0",
-    "production_migrations_applied": 4,
+    "evidence": "npm test 2026-10-19 sau Gate D + tracking box (55 files/525 tests pass 100%); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_30_gate_d_size_editor_and_tracking_box, task_29_test_backlog_t2_t7_profile01_r2_02, task_28_m28_hardening_tests_and_push Phiên 2026-10-19 (push DB): 4 migration áp production + 5 repair history + version 6.2.0; probe production OK (xem task_31_gate_d_applied_production). Phiên tracking upgrade 2026-10-19: component merge + 600ms + 60fps overlay + viền 1.5px; full 55 files/530 pass (xem task_32_tracking_upgrade_merge_600ms_60fps). Phiên S1.1 2026-10-19: full 55 files/537 pass; migration 20261019120000 đã push + commit 75bc8ec. Phiên mẫu lỗ 2026-10-19: full 59 files/569 pass; migration 20261019180000 + 14 ảnh R2; version 6.4.0 (xem task_34_hole_samples_menu_and_moris_hole_format_reference).",
+    "app_version": "6.4.0",
+    "production_migrations_applied": 6,
     "migration_history_repaired": 5,
     "production_migrations_pending_by_design": [
       "20261016024931",
@@ -962,6 +978,21 @@
         "migration_status": "applied_production_2026-10-19 (db push OK; migration list local=remote trừ 3 bản V6 pending cố ý; probe read-only 200/400)",
         "app_version": "6.3.0",
         "evidence": "full npm test 55 files/537 pass; tsc 0; build 46 files"
+      },
+      "hole_samples_2026_10_19": {
+        "decision": "Từ điển mẫu lỗ tham khảo (không khắc khe): 14 ảnh mẫu -> R2 + bảng moris_hole_samples; tag RAG = nhãn + boost mềm trước, vector tham chiếu chỉ khi đo còn lệch; Moris được nói tên định dạng khi đủ cơ sở; không train model",
+        "db_migration": "supabase/migrations/20261019180000_catalogue_hole_samples.sql — moris_hole_samples (RLS select authenticated, không policy ghi) + seed 14 dòng; status applied_production_2026-10-19",
+        "r2_assets": "catalogue-images/hole-samples/ 14 object (tron, vuong, vuong-1, oval, oval-1, oval-cong, dai, dai-1, dai-2, chu-nhat, chu-l, tam-giac, rang-cua, gai-moc)",
+        "ui": "index.html menu 'Mẫu lỗ phổ biến' (mọi user đăng nhập) + trang full-screen không modal (ảnh + tên); src/app.js holeSamples/loadHoleSamples/holeSamplesUrl",
+        "moris_phase1": {
+          "flag": "MORIS_HOLE_FORMAT_BOOST_ENABLED (default false — chưa bật, chờ nhãn người EVAL-01)",
+          "module": "functions/_lib/moris/v5/retrieval/holeFormatReference.js (hole_format_ref_v1)",
+          "wiring": "scoreFusion signal hole_format w.05 boost-only; query.hole_formats normalize fail-open; orchestrator gắn hole_format_evidence; userMessage nêu tên định dạng trung tính",
+          "camera": "capture-subject-lock.js bin slot (aspect>=1.7, fill>=0.88, A4<=A2*1.25, radiusCV<=0.45) + counts.slot -> payload hole_formats {tron/vuong/oval/dai}",
+          "measurement_pending": "chưa đo trên ảnh thật (eval-m27-real-photos chỉ có nhãn circle/square/oval; EVAL-01 nợ nhãn người)"
+        },
+        "app_version": "6.4.0",
+        "evidence": "full npm test 59 files/569 pass; tsc 0; build 46 files"
       }
     },
     "M29": {

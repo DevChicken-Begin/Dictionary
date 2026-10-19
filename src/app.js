@@ -133,6 +133,9 @@ createApp({
       users:{ open:false, loading:false, saving:false, list:[], blockedIps:[], unlockIpInput:'', tempPw:'', actionId:null,
               creating:false, form:{ username:'', password:'', role:'viewer' },
               createdInfo:null, totpModal:{ open:false, user:null, secret:'' } },
+      // Mẫu lỗ phổ biến — từ điển tra cứu (moris_hole_samples + ảnh R2 hole-samples/).
+      // Mọi user đã đăng nhập xem được; trang đầy đủ, không modal (chủ dự án chốt 2026-10-19).
+      holeSamples:{ open:false, loading:false, error:'', items:[] },
       pwChange:{ open:false, saving:false, new:'', confirm:'', error:'' },
       loginForm:{ username:'', password:'' },
       filters:{ search:'', target:'all', usage:'all', viewMode:'all' },
@@ -2454,6 +2457,42 @@ createApp({
       this.users.createdInfo = null;
       this.users.totpModal = { open: false, user: null, secret: '', qrUrl: '' };
     },
+
+    // ------------------------------------------------------------------
+    // MẪU LỖ PHỔ BIẾN — tra cứu định dạng lỗ theo ảnh mẫu
+    // Nguồn: bảng moris_hole_samples (RLS authenticated đọc) + ảnh R2 hole-samples/.
+    // Trang đầy đủ (không modal); chỉ hiển thị ảnh + tên lỗ theo chủ dự án chốt.
+    // ------------------------------------------------------------------
+    openHoleSamples() {
+      this.holeSamples.open = true;
+      this.$nextTick(() => this.renderIcons());
+      this.loadHoleSamples();
+    },
+    closeHoleSamples() {
+      this.holeSamples.open = false;
+    },
+    async loadHoleSamples() {
+      const s = this.holeSamples;
+      if (s.loading) return;
+      s.loading = true;
+      s.error = '';
+      try {
+        const { data, error } = await this.sb
+          .from('moris_hole_samples')
+          .select('id,slug,name,format_tag,r2_key,sort_order')
+          .eq('active', true)
+          .order('sort_order', { ascending: true });
+        if (error) throw error;
+        s.items = Array.isArray(data) ? data : [];
+      } catch (e) {
+        s.error = this.readError(e) || 'Không tải được danh sách mẫu lỗ. Vui lòng thử lại.';
+      } finally {
+        s.loading = false;
+      }
+    },
+    holeSamplesUrl(sample) {
+      return this.assetPathUrl(sample?.r2_key, 'r2');
+    },
     /** Tài khoản admin hệ thống: khoá đổi role / bật-tắt / cấp lại MK / xóa / đổi 2FA. */
     isSystemAdmin(u) {
       const raw = String(u?.username || u?.display_name || u?.email || '').trim().toLowerCase();
@@ -2774,6 +2813,23 @@ createApp({
     closeMoris() {
       if (this.camera.open) this.closeCamera();   // không bỏ chạy camera mồi pin
       this.moris.open = false;
+    },
+
+    /**
+     * Từ điển mẫu lỗ (2026-10-19): đếm định dạng lỗ từ phân tích camera gần nhất
+     * → payload { tag: count } cho Moris tham chiếu mềm (tròn/vuông/oval/dài).
+     * Không có bằng chứng camera → null (server bỏ qua, không boost).
+     */
+    morisHoleFormatsPayload() {
+      const counts = this.moris.captureEvidence?.holes?.counts || null;
+      if (!counts) return null;
+      const map = { circle: 'tron', square: 'vuong', oval: 'oval', slot: 'dai' };
+      const out = {};
+      for (const [key, tag] of Object.entries(map)) {
+        const n = Number(counts[key] || 0);
+        if (n > 0) out[tag] = n;
+      }
+      return Object.keys(out).length ? out : null;
     },
 
     useMorisSuggestion(text) {
@@ -3411,6 +3467,7 @@ createApp({
         if (counts.circle) parts.push(`${counts.circle} tròn`);
         if (counts.square) parts.push(`${counts.square} vuông`);
         if (counts.oval) parts.push(`${counts.oval} oval`);
+        if (counts.slot) parts.push(`${counts.slot} dài`);
         if (counts.unknown) parts.push(`${counts.unknown} chưa rõ`);
         this.camera.lock.evidenceSummary = parts.length ? parts.join(' • ') : '';
 
@@ -4169,6 +4226,7 @@ createApp({
               embedding_profile:embeddingProfile,
               geometry:vectorResult?.geometry || null,
               size:querySize || null,
+              hole_formats:this.morisHoleFormatsPayload(),
               hints:{
                 query_vector_source:
                   queryEmbedding
