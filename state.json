@@ -520,8 +520,8 @@
       "evidence": "Focused: hole-format-reference 15/15; orchestrator 5/5; ui-contract 4/4; capture-subject-lock 25/25 (eval M27 100%). Full npm test 59 files/569 pass 100%; npx tsc --noEmit exit 0; npm run build 46 files; version 6.4.0. Production: db push áp 20261019180000 OK; probe service 14 rows đúng thứ tự, anon [] (content-range */0).",
       "production_writes": "1 migration áp production (20261019180000, bảng mới + seed 14 metadata); 14 object R2 upload prefix hole-samples/; không sửa dữ liệu catalogue; app chưa deploy",
       "deployed": false,
-      "commit_created": false,
-      "pending": "commit+push git đợt mẫu lỗ (kèm dọn 3 PNG root cũ + Simple/); bật flag boost chỉ sau khi có nhãn EVAL-01"
+      "commit_created": true,
+      "pending": "đã commit 4e13b02 + push cả origin/upstream (kèm dọn 3 PNG root cũ + Simple/); bật flag boost chỉ sau khi có nhãn EVAL-01"
     }
   ],
   "verification": {
