@@ -336,3 +336,29 @@ Before continuing, read [docs/moris-v6/HANDOFF.md](docs/moris-v6/HANDOFF.md). It
   - `npx tsc --noEmit` exit 0.
   - `npm run build` → 46 files sạch sẽ.
   - Version: **6.5.0**.
+
+## Khai báo cặp dễ nhầm lẫn (@mention) trong Ghi chú chống nhầm lẫn & Hard-Negative Moris (2026-10-19)
+
+- [x] **Trích xuất & đối sánh cặp dễ nhầm lẫn (confusingPairs.js):**
+  - Tạo `functions/_lib/moris/v5/retrieval/confusingPairs.js` và `src/moris/retrieval/confusingPairs.js`.
+  - Hàm `extractConfusingSkus(text)`: Trích xuất danh sách SKU sau ký tự `@` theo regex `/@([0-9a-zA-Z_-]{4,20})/g`.
+  - Hàm `arePartsConfusingPair(partA, partB)`: Kiểm tra quan hệ dễ nhầm lẫn đối xứng hai chiều (A nhắc @B hoặc B nhắc @A).
+  - Hàm `evaluateHardNegativeCondition({ partA, partB, dimsA, dimsB, tolerance, floorMm })`: Đánh giá điều kiện kích thước tương đồng (dung sai 5% hoặc sàn 3mm) nhưng khác biệt chi tiết lỗ; fail-open nếu thiếu số đo kích thước.
+  - Hàm `detectConfusingPairInTopCandidates(candidates, topN)`: Quét Top 3 ứng viên trong kết quả xếp hạng Moris để phát hiện cặp dễ nhầm lẫn.
+- [x] **Cảnh báo chuyên gia trong Moris (userMessage.js, publicResult.js & orchestrator.js):**
+  - Tích hợp `detectConfusingPairInTopCandidates` vào `functions/_lib/moris/v5/orchestrator.js`.
+  - Đính kèm `confusing_pair_evidence` vào kết quả tìm kiếm và danh sách cảnh báo `warnings`.
+  - Hàm `confusingPairEvidenceNote` trong `userMessage.js`: Thêm ghi chú cảnh báo thân thiện `"⚠️ Lưu ý: Mã ... và ... là cặp dễ nhầm lẫn (kích thước tương đương, khác chi tiết lỗ). Anh kiểm tra kỹ vị trí/kích thước lỗ nhé."`
+  - Truyền `confusing_pair_evidence` qua `publicResult.js` cho client và debug payload.
+- [x] **Giao diện Editor Autocomplete @mention (index.html & src/app.js):**
+  - `src/app.js`: Thêm `catalogueCodes: []`, `mention: { active: false, query: '', highlightIndex: 0, suggestions: [], matchStart: -1, matchEnd: -1 }` trong `editor` data.
+  - Hàm `loadEditorCatalogueCodes()`: Tự động tải và cache danh sách mã catalogue từ Supabase (phân trang an toàn đến 5.000 mã).
+  - Hàm `filterMentionSuggestions(query)`: Lọc mã theo thứ tự từ trái sang phải: ưu tiên `startsWith(query)`, sau đó đến `includes(query)`, loại trừ mã hiện tại đang sửa. Khi query rỗng (@) hiển thị 8 mã đầu tiên.
+  - Các hàm điều khiển `onConfusingNoteInput`, `onConfusingNoteKeydown` (ArrowUp/Down, Enter/Tab, Escape), `onConfusingNoteBlur`, `selectMention(item)` chèn `@<MÃ> ` vào đúng vị trí con trỏ và đưa focus trở lại.
+  - `index.html`: Thêm badge "Gõ @ để gắn mã dễ nhầm" và dropdown gợi ý nổi (floating menu) với giao diện bo tròn, bóng đổ, hiển thị icon `@`, mã SKU và đặc điểm nhận dạng.
+- [x] **Kiểm thử & Xác minh toàn diện:**
+  - Viết `tests/moris-confusing-pairs.test.js` (19 test cases) kiểm tra trích xuất mention, đối xứng quan hệ, dung sai kích thước, phát hiện trong top candidates, format tin nhắn.
+  - Viết `tests/moris-confusing-note-mention.test.js` (11 test cases) kiểm tra regex trigger, ưu tiên khớp từ trái sang phải, loại trừ self-code, mô phỏng chèn tại con trỏ.
+  - Toàn bộ test suite: **62 test files / 608 tests PASS 100%** (tăng thêm 30 test mới).
+  - `npx tsc --noEmit` exit 0 (không lỗi TypeScript).
+  - `npm run build` thành công: 47 file build static vào `dist/`.

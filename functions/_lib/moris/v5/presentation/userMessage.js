@@ -45,6 +45,12 @@ function holeFormatEvidenceNote(evidence){
   return `Định dạng lỗ tham chiếu: ${names} — chưa có mã nào có mô tả cùng định dạng; em vẫn xếp hạng theo tương đồng ảnh.`;
 }
 
+// Cặp dễ nhầm lẫn (Hard-Negative Pair): cảnh báo chuyên gia khi Top ứng viên chứa cặp dễ nhầm
+function confusingPairEvidenceNote(pairEvidence){
+  if (!pairEvidence || !pairEvidence.active) return "";
+  return `⚠️ Lưu ý: Mã ${pairEvidence.skuA} và ${pairEvidence.skuB} là cặp dễ nhầm lẫn (kích thước tương đương, khác chi tiết lỗ). Anh kiểm tra kỹ vị trí/kích thước lỗ nhé.`;
+}
+
 function withNote(message,note){
   return note ? `${message}\n${note}` : message;
 }
@@ -55,7 +61,8 @@ export function buildMorisUserMessage(result){
   const decision=clean(result?.decision).toLowerCase();
   const note=[
     sizeEvidenceNote(result?.size_evidence),
-    holeFormatEvidenceNote(result?.hole_format_evidence)
+    holeFormatEvidenceNote(result?.hole_format_evidence),
+    confusingPairEvidenceNote(result?.confusing_pair_evidence)
   ].filter(Boolean).join("\n");
 
   if(mode === "MORIS_UNSUPPORTED") return MORIS_PUBLIC_MESSAGES.unsupported;

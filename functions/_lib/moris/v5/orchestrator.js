@@ -39,6 +39,7 @@ import {
   filterCatalogueByQueryFeatures,
   filterCatalogueByTargetQuery
 } from "./retrieval/featureMatcher.js";
+import { detectConfusingPairInTopCandidates } from "./retrieval/confusingPairs.js";
 import { trace } from "./runtime/trace.js";
 
 function dedupeRows(rows) {
@@ -488,6 +489,11 @@ export async function runMorisSearch(env, config, {
     })
     .slice(0, 10);
 
+  const confusingPairNotice = detectConfusingPairInTopCandidates(sortedCandidates, 3);
+  if (confusingPairNotice?.active) {
+    warnings.push(`Cặp dễ nhầm lẫn trong top kết quả: ${confusingPairNotice.skuA} và ${confusingPairNotice.skuB}. Cần đối chiếu kỹ vị trí và kích thước lỗ.`);
+  }
+
   const decision=assessImageResult(sortedCandidates,{quality:query.geometry?.quality,
     orientationAmbiguous:orientationWarnings(query.message,resolverPool).length>0});
   return {
@@ -498,6 +504,7 @@ export async function runMorisSearch(env, config, {
     warnings,
     ...sizeEvidenceAttach,
     ...(holeFormatEvidence ? {hole_format_evidence:holeFormatEvidence} : {}),
+    ...(confusingPairNotice ? {confusing_pair_evidence:confusingPairNotice} : {}),
     ai_calls:null,
     candidate_pool_hash:poolHash
   };

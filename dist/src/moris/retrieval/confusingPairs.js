@@ -1,0 +1,1 @@
+export{extractConfusingSkus,arePartsConfusingPair,evaluateHardNegativeCondition,detectConfusingPairInTopCandidates}from"../../../functions/_lib/moris/v5/retrieval/confusingPairs.js";

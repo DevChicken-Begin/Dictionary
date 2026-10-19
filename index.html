@@ -986,9 +986,42 @@
             <textarea v-model.trim="editor.form.identifying_features" class="input min-h-[100px] resize-y" placeholder="Mô tả hình dáng, ngàm, lỗ, kích thước..."></textarea>
           </div>
           
-          <div>
-            <label class="block text-xs font-black tracking-widest text-slate-500 uppercase mb-1.5 ml-1">Ghi chú chống nhầm lẫn</label>
-            <textarea v-model.trim="editor.form.confusing_note" class="input min-h-[80px] resize-y border-amber-200 bg-amber-50 focus:border-amber-400 focus:ring-amber-200" placeholder="Hay nhầm với mã nào? Điểm khác biệt là gì?"></textarea>
+          <div class="relative">
+            <div class="flex items-center justify-between mb-1.5 ml-1">
+              <label class="block text-xs font-black tracking-widest text-slate-500 uppercase">Ghi chú chống nhầm lẫn</label>
+              <span class="text-[11px] font-medium text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full">Gõ @ để gắn mã dễ nhầm</span>
+            </div>
+            <textarea
+              ref="confusingNoteTextarea"
+              v-model="editor.form.confusing_note"
+              @input="onConfusingNoteInput"
+              @keydown="onConfusingNoteKeydown"
+              @blur="onConfusingNoteBlur"
+              class="input min-h-[80px] resize-y border-amber-200 bg-amber-50 focus:border-amber-400 focus:ring-amber-200"
+              placeholder="Gõ @ để chọn mã dễ nhầm (VD: @3440010001), ghi chú khác biệt vị trí/kích thước lỗ..."></textarea>
+
+            <!-- Gợi ý mã linh kiện khi gõ @ -->
+            <div
+              v-if="editor.mention && editor.mention.active && editor.mention.suggestions.length > 0"
+              class="absolute z-50 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-2xl border border-amber-200 divide-y divide-slate-100 py-1">
+              <div class="px-3 py-1.5 text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50/80 flex items-center justify-between">
+                <span>Gợi ý mã linh kiện ({{ editor.mention.suggestions.length }})</span>
+                <span class="text-[9px] font-normal text-slate-400 lowercase">↑↓ chọn • enter để chèn</span>
+              </div>
+              <button
+                type="button"
+                v-for="(item, idx) in editor.mention.suggestions"
+                :key="item.code"
+                @mousedown.prevent="selectMention(item)"
+                class="w-full text-left px-3 py-2 flex items-center justify-between text-xs transition-colors hover:bg-amber-50"
+                :class="idx === editor.mention.highlightIndex ? 'bg-amber-100/70 font-bold text-amber-900' : 'text-slate-700'">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-amber-200 text-amber-800 text-[10px] font-black">@</span>
+                  <span class="font-mono font-bold">{{ item.code }}</span>
+                </div>
+                <span v-if="item.identifying_features" class="text-[11px] text-slate-400 truncate max-w-[180px] ml-2">{{ item.identifying_features }}</span>
+              </button>
+            </div>
           </div>
 
           <div class="mt-auto pt-6 flex flex-col sm:flex-row gap-3 border-t border-slate-200/60">

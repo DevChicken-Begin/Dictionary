@@ -141,7 +141,7 @@ createApp({
       filters:{ search:'', target:'all', usage:'all', viewMode:'all' },
       parts:[], page:0, hasMore:false, pageJump:'',
       detail:{ open:false, item:null, assets:[], tab:'front', activeAsset:null, flipped:false, zoom:1, panX:0, panY:0, rotX:-8, rotY:18, dragging:false, pointerId:null, startX:0, startY:0, startPanX:0, startPanY:0, startRotX:-8, startRotY:18, pinchStartDistance:0, pinchStartZoom:1 },
-      editor:{ open:false, form:this.emptyForm(), assets:[], files:{}, previews:{}, vectorStatus:'', vectorBusy:false },
+      editor:{ open:false, form:this.emptyForm(), assets:[], files:{}, previews:{}, vectorStatus:'', vectorBusy:false, catalogueCodes:[], mention:{ active:false, query:'', highlightIndex:0, suggestions:[], matchStart:-1, matchEnd:-1 } },
       bulkImport: { open: false, files: [], groups: [], uploading: false, progress: 0, current: 0, total: 0, successCount: 0, errorCount: 0, statusText: '' },
       
       // Cache lựa chọn đường upload để không health-check lặp lại mỗi ảnh.
@@ -1810,6 +1810,10 @@ createApp({
       if(!this.canEdit) return this.toast('error','Bạn chưa được cấp quyền, liên hệ admin.');
       this.clearEditorFiles();
       this.editor.open=true;
+      this.editor.mention = { active: false, query: '', highlightIndex: 0, suggestions: [], matchStart: -1, matchEnd: -1 };
+      if (typeof this.loadEditorCatalogueCodes === 'function') {
+        this.loadEditorCatalogueCodes();
+      }
       if(item) {
         this.editor.form = { id:item.id, code:item.code || '', part_id:item.part_id || '', usage_side:item.usage_side || 'unknown', view_mode:item.view_mode || 'single_face', is_symmetric:!!item.is_symmetric, identifying_features:item.identifying_features || '', confusing_note:item.confusing_note || '', image_path:item.fallback_path || '', image_name:'', size_length:'', size_width:'' };
         try { this.editor.assets = await this.rpcRows('app_get_part_assets', {p_session_token:this.session.token, p_image_id:item.id}); } catch(e) { this.editor.assets=[]; }
@@ -1820,7 +1824,14 @@ createApp({
       }
       this.renderIcons();
     },
-    closeEditor() { this.editor.open=false; this.clearEditorFiles(); },
+    closeEditor() {
+      this.editor.open=false;
+      if (this.editor?.mention) {
+        this.editor.mention.active = false;
+        this.editor.mention.suggestions = [];
+      }
+      this.clearEditorFiles();
+    },
     clearEditorFiles() {
       for (const src of Object.values(this.editor?.previews || {})) { try { URL.revokeObjectURL(src); } catch(_) {} }
       if (this.editor) { this.editor.files={}; this.editor.previews={}; }
@@ -1884,6 +1895,169 @@ createApp({
         if (w == null) return { length_mm: l, width_mm: null };
         return { length_mm: Math.max(l, w), width_mm: Math.min(l, w) };
       }
+    },
+
+    /**
+     * Tải danh sách mã linh kiện catalogue để hỗ trợ gợi ý autocomplete @mention.
+     * Cache lại trong this.editor.catalogueCodes.
+     */
+    async loadEditorCatalogueCodes() {
+      if (Array.isArray(this.editor.catalogueCodes) && this.editor.catalogueCodes.length > 0) return;
+      try {
+        const rows = [];
+        const pageSize = 500;
+        for (let offset = 0; offset < 5000; offset += pageSize) {
+          const page = await this.rpcRows('app_search_catalogue', {
+            p_session_token: this.session.token,
+            p_search: '',
+            p_usage_side: 'all',
+            p_view_mode: 'all',
+            p_limit: pageSize,
+            p_offset: offset
+          });
+          if (!Array.isArray(page) || page.length === 0) break;
+          rows.push(...page);
+          if (page.length < pageSize) break;
+        }
+        const codes = [];
+        const seen = new Set();
+        for (const r of rows) {
+          const code = String(r.code || '').trim();
+          if (code && !seen.has(code)) {
+            seen.add(code);
+            codes.push({
+              code,
+              part_id: r.part_id || '',
+              identifying_features: r.identifying_features || ''
+            });
+          }
+        }
+        codes.sort((a, b) => a.code.localeCompare(b.code));
+        this.editor.catalogueCodes = codes;
+      } catch (e) {
+        console.warn('Failed to load catalogue codes for editor mentions:', e);
+      }
+    },
+
+    /**
+     * Lọc gợi ý mã linh kiện khi người dùng gõ sau '@'.
+     * Ưu tiên khớp từ trái sang phải (startsWith), sau đó đến khớp chuỗi con (includes).
+     * Loại trừ mã linh kiện đang được chỉnh sửa.
+     */
+    filterMentionSuggestions(query) {
+      const q = String(query || '').trim().toLowerCase();
+      const currentCode = String(this.editor.form?.code || '').trim().toLowerCase();
+      const all = this.editor.catalogueCodes || [];
+
+      const candidates = all.filter(c => {
+        const code = String(c.code || '').trim().toLowerCase();
+        return code && code !== currentCode;
+      });
+
+      if (!q) {
+        return candidates.slice(0, 8);
+      }
+
+      const starts = [];
+      const contains = [];
+
+      for (const item of candidates) {
+        const code = String(item.code || '').trim().toLowerCase();
+        if (code.startsWith(q)) {
+          starts.push(item);
+        } else if (code.includes(q)) {
+          contains.push(item);
+        }
+      }
+
+      return [...starts, ...contains].slice(0, 10);
+    },
+
+    /** Xử lý khi gõ vào ô 'Ghi chú chống nhầm lẫn' để nhận diện '@' */
+    onConfusingNoteInput(event) {
+      const textarea = event?.target || this.$refs.confusingNoteTextarea;
+      if (!textarea) return;
+
+      const text = textarea.value || '';
+      const cursorPos = textarea.selectionStart ?? text.length;
+      const textBeforeCursor = text.slice(0, cursorPos);
+
+      const match = textBeforeCursor.match(/(?:^|\s)@([0-9a-zA-Z_-]*)$/);
+      if (match) {
+        const query = match[1] || '';
+        const atIndex = textBeforeCursor.lastIndexOf('@');
+        this.editor.mention = {
+          active: true,
+          query,
+          highlightIndex: 0,
+          suggestions: this.filterMentionSuggestions(query),
+          matchStart: atIndex,
+          matchEnd: cursorPos
+        };
+      } else if (this.editor?.mention) {
+        this.editor.mention.active = false;
+      }
+    },
+
+    /** Phím điều hướng Up/Down, Enter/Tab để chọn mã trong dropdown */
+    onConfusingNoteKeydown(event) {
+      if (!this.editor?.mention?.active || !this.editor.mention.suggestions.length) {
+        return;
+      }
+
+      const { suggestions, highlightIndex } = this.editor.mention;
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        this.editor.mention.highlightIndex = (highlightIndex + 1) % suggestions.length;
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        this.editor.mention.highlightIndex = (highlightIndex - 1 + suggestions.length) % suggestions.length;
+      } else if (event.key === 'Enter' || event.key === 'Tab') {
+        event.preventDefault();
+        const selected = suggestions[highlightIndex];
+        if (selected) {
+          this.selectMention(selected);
+        }
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        this.editor.mention.active = false;
+      }
+    },
+
+    /** Đóng dropdown khi rời khỏi textarea (delay nhẹ để kịp nhận mousedown) */
+    onConfusingNoteBlur() {
+      setTimeout(() => {
+        if (this.editor?.mention) {
+          this.editor.mention.active = false;
+        }
+      }, 200);
+    },
+
+    /** Chèn mã đã chọn vào ô ghi chú theo cú pháp '@<MÃ> ' */
+    selectMention(item) {
+      if (!item || !item.code) return;
+      const textarea = this.$refs.confusingNoteTextarea;
+      const currentText = this.editor.form.confusing_note || '';
+      const { matchStart, matchEnd } = this.editor.mention || { matchStart: -1, matchEnd: -1 };
+
+      const before = currentText.slice(0, matchStart >= 0 ? matchStart : 0);
+      const after = currentText.slice(matchEnd >= 0 ? matchEnd : before.length);
+      const insert = `@${item.code} `;
+
+      this.editor.form.confusing_note = before + insert + after;
+      if (this.editor?.mention) {
+        this.editor.mention.active = false;
+        this.editor.mention.suggestions = [];
+      }
+
+      this.$nextTick(() => {
+        if (textarea) {
+          textarea.focus();
+          const newCursorPos = before.length + insert.length;
+          textarea.setSelectionRange?.(newCursorPos, newCursorPos);
+        }
+      });
     },
     
     async onFileChange(type, order, e) {

@@ -31,6 +31,8 @@ export function toPublicMorisResult(result,{debug=false}={}){
   };
 
   if(result?.size_evidence) out.size_evidence = result.size_evidence;
+  if(result?.hole_format_evidence) out.hole_format_evidence = result.hole_format_evidence;
+  if(result?.confusing_pair_evidence) out.confusing_pair_evidence = result.confusing_pair_evidence;
 
   if(debug){
     out.debug = {
@@ -39,7 +41,9 @@ export function toPublicMorisResult(result,{debug=false}={}){
       warnings:result?.warnings || [],
       ai_calls:result?.ai_calls ?? null,
       candidate_pool_hash:result?.candidate_pool_hash || null,
-      size_evidence:result?.size_evidence || null
+      size_evidence:result?.size_evidence || null,
+      hole_format_evidence:result?.hole_format_evidence || null,
+      confusing_pair_evidence:result?.confusing_pair_evidence || null
     };
   }
   return out;
