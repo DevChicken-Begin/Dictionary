@@ -66,8 +66,11 @@ const CONFIG = {
   MORIS_CAMERA_SUBJECT_LOCK_ENABLED: true,
   MORIS_SUBJECT_LOCK_MODULE_URL: PC.PUBLIC_MORIS_SUBJECT_LOCK_MODULE_URL || '/src/moris/capture-subject-lock.js',
   MORIS_CAMERA_LOCK_SAMPLE_WIDTH: 500,
-  MORIS_CAMERA_LOCK_SAMPLE_MS: 450,
+  // 2026-10-19 (owner): rà soát chậm hơn 1 chút (600ms) để mask bắt trọn vật thể
+  // trên nền sáng trước khi tracking; khung vẽ vẫn nội suy 60fps qua rAF.
+  MORIS_CAMERA_LOCK_SAMPLE_MS: 600,
   MORIS_CAMERA_LOCK_MAX_SAMPLES: 4,
+  MORIS_CAMERA_LOCK_SMOOTH_TAU_MS: 150,
 
   // M28 — Size Contract (S1, query-side only; fail-open khi thiếu dữ liệu)
   MORIS_SIZE_GATE_ENABLED: true,
@@ -3061,6 +3064,9 @@ createApp({
       this._camLockDims = null;
       this._camLockLastMask = null;
       this._camLockCanvas = null;
+      this._camLockViewBox = null;
+      this._camLockLastTs = 0;
+      this._camLockAnimFrame = null;
     },
 
     /**
@@ -3158,6 +3164,17 @@ createApp({
       this.stopCameraLockLoop();
       if (!CONFIG.MORIS_CAMERA_SUBJECT_LOCK_ENABLED) return;
       this._camLockTimer = setInterval(() => { this._sampleCameraLockFrame(); }, CONFIG.MORIS_CAMERA_LOCK_SAMPLE_MS);
+
+      // M27 (2026-10-19): khung tracking vẽ 60fps bằng rAF nội suy giữa các mẫu 600ms.
+      this._camLockLastTs = 0;
+      if (typeof requestAnimationFrame === 'function') {
+        const tick = (ts) => {
+          if (!this._camLockTimer) return;
+          this._camLockAnimTick(ts);
+          this._camLockAnimFrame = requestAnimationFrame(tick);
+        };
+        this._camLockAnimFrame = requestAnimationFrame(tick);
+      }
     },
 
     stopCameraLockLoop() {
@@ -3165,6 +3182,51 @@ createApp({
         clearInterval(this._camLockTimer);
         this._camLockTimer = null;
       }
+      if (this._camLockAnimFrame && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(this._camLockAnimFrame);
+      }
+      this._camLockAnimFrame = null;
+    },
+
+    /**
+     * Nội suy khung tracking theo thời gian (EMA): prev -> target với hằng số tau.
+     * Thuần, trả % đã làm tròn 2 chữ số; target null -> null (ẩn khung).
+     */
+    smoothBoxView(prev, target, dtMs, tauMs) {
+      if (!target) return null;
+      if (!prev) return { ...target };
+      const dt = Number.isFinite(dtMs) && dtMs > 0 ? dtMs : 0;
+      const tau = Number.isFinite(tauMs) && tauMs > 0 ? tauMs : 0;
+      const k = tau > 0 ? 1 - Math.exp(-dt / tau) : 1;
+      const mix = (a, b) => Math.round((Number(a || 0) + (Number(b || 0) - Number(a || 0)) * k) * 100) / 100;
+      return {
+        left: mix(prev.left, target.left),
+        top: mix(prev.top, target.top),
+        width: mix(prev.width, target.width),
+        height: mix(prev.height, target.height)
+      };
+    },
+
+    /** Tick rAF: nội suy khung render từ target (camera.lock.box) và ghi trực tiếp
+     *  vào DOM (không qua Vue reactivity để tránh re-render 60fps toàn modal). */
+    _camLockAnimTick(ts) {
+      const target = (this.camera && this.camera.lock && this.camera.lock.box) || null;
+      const dt = this._camLockLastTs ? ts - this._camLockLastTs : 0;
+      this._camLockLastTs = ts;
+      if (!target) { this._camLockViewBox = null; return; }
+      this._camLockViewBox = this.smoothBoxView(
+        this._camLockViewBox,
+        target,
+        dt,
+        CONFIG.MORIS_CAMERA_LOCK_SMOOTH_TAU_MS
+      );
+      const el = this.$refs && this.$refs.camLockBox;
+      if (!el || !this._camLockViewBox) return;
+      const view = this._camLockViewBox;
+      el.style.left = view.left + '%';
+      el.style.top = view.top + '%';
+      el.style.width = view.width + '%';
+      el.style.height = view.height + '%';
     },
 
     /** Chạm vào linh kiện = seed point-prompt; lưu theo toạ độ chuẩn hoá vùng crop 1000:410. */

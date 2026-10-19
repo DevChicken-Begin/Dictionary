@@ -239,11 +239,40 @@ describe('capture-subject-lock — mask purity (M27)', () => {
 
     const noSeed = analyzeFrame({ data, width: w, height: h });
     expect(noSeed.selected.x0).toBe(20);
+    expect(noSeed.selected.merged).toBe(false);
 
     const seeded = analyzeFrame({ data, width: w, height: h, seed: { x: 250, y: 70 } });
     expect(seeded.selected.x0).toBe(200);
     expect(seeded.stats.otherComponents.length).toBe(1);
     expect(seeded.stats.otherComponents[0].x0).toBe(20);
+  });
+
+  it('nối mảnh vỡ: vật bị chói tách bởi dải nền hẹp vẫn bắt trọn (component merge)', () => {
+    const w = 320, h = 140;
+    const data = makeBuffer(w, h);
+    fillRect(data, w, h, 20, 30, 120, 110, [60, 60, 60]);
+    fillRect(data, w, h, 125, 30, 260, 110, [60, 60, 60]);
+
+    const res = analyzeFrame({ data, width: w, height: h });
+    expect(res.selected.merged).toBe(true);
+    expect(res.selected.x0).toBe(20);
+    expect(res.selected.x1).toBe(260);
+    expect(res.stats.bbox.x0).toBe(20);
+    expect(res.stats.bbox.x1).toBe(260);
+    expect(res.mask[70 * w + 40]).toBe(1);
+    expect(res.mask[70 * w + 200]).toBe(1);
+    expect(res.stats.mergedComponents).toBe(2);
+  });
+
+  it('không nối hai vật ở xa nhau dù cùng khung (khe hở lớn hơn ngưỡng merge)', () => {
+    const w = 320, h = 140;
+    const data = makeBuffer(w, h);
+    fillRect(data, w, h, 20, 30, 120, 110, [60, 60, 60]);
+    fillRect(data, w, h, 200, 30, 300, 110, [60, 60, 60]);
+
+    const res = analyzeFrame({ data, width: w, height: h });
+    expect(res.selected.merged).toBe(false);
+    expect(res.stats.otherComponents.length).toBe(1);
   });
 });
 
@@ -515,5 +544,7 @@ describe('capture-subject-lock — utilities & guardrails', () => {
     expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.marginFrac).toBe(0.10);
     expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.stableFrames).toBe(3);
     expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.specularRatioMax).toBe(0.18);
+    expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.mergeGapFrac).toBe(0.04);
+    expect(DEFAULT_SUBJECT_LOCK_THRESHOLDS.mergeGapMaxPx).toBe(14);
   });
 });

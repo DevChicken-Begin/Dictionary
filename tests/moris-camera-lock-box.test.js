@@ -36,6 +36,23 @@ describe('M27 tracking box — subjectBoxToPercent', () => {
     expect(methods.subjectBoxToPercent.call({}, { x0: 50, y0: 10, x1: 40, y1: 90 }, 100, 200)).toBeNull();
   });
 
+  it('smoothBoxView: target null -> null; chưa có prev -> snap đúng target', () => {
+    expect(methods.smoothBoxView.call({}, null, null, 16, 150)).toBeNull();
+    const target = { left: 10, top: 5, width: 20.5, height: 30 };
+    expect(methods.smoothBoxView.call({}, null, target, 16, 150)).toEqual(target);
+  });
+
+  it('smoothBoxView: EMA hội tụ dần về target, làm tròn 2 chữ số, dt=0 giữ nguyên', () => {
+    const prev = { left: 0, top: 0, width: 0, height: 0 };
+    const target = { left: 100, top: 100, width: 100, height: 100 };
+    const mid = methods.smoothBoxView.call({}, prev, target, 150, 150);
+    expect(mid.left).toBeCloseTo(63.21, 2);
+    expect(mid.width).toBeCloseTo(63.21, 2);
+    expect(methods.smoothBoxView.call({}, prev, target, 0, 150)).toEqual(prev);
+    const near = methods.smoothBoxView.call({}, { left: 99.9, top: 99.9, width: 99.9, height: 99.9 }, target, 600, 150);
+    expect(near.left).toBeCloseTo(100, 1);
+  });
+
   it('resetCameraLock xoá box cùng toàn bộ trạng thái lock', () => {
     const ctx = {
       camera: {
@@ -65,5 +82,13 @@ describe('index.html — overlay khung vuông tracking', () => {
     const idx = html.indexOf('camera.lock.box');
     const block = html.slice(Math.max(0, idx - 200), idx + 700);
     expect(block).toContain('pointer-events-none');
+  });
+
+  it('overlay dùng ref cho vòng rAF 60fps, viền mảnh 1.5px, không transition layout', () => {
+    const idx = html.indexOf('camera.lock.box');
+    const block = html.slice(Math.max(0, idx - 200), idx + 700);
+    expect(block).toContain('ref="camLockBox"');
+    expect(block).toContain('border-[1.5px]');
+    expect(block).not.toContain('transition-all');
   });
 });

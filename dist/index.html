@@ -2091,9 +2091,8 @@
           </div>
 
           <!-- M27: khung vuông tracking nhận diện vật thể (live, bám theo chủ thể) -->
-          <div v-if="camera.lock.box" class="absolute z-10 pointer-events-none rounded-lg border-2 transition-all duration-200"
-            :class="camera.lock.ready ? 'border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,.5)]' : 'border-amber-300/90'"
-            :style="{ left: camera.lock.box.left + '%', top: camera.lock.box.top + '%', width: camera.lock.box.width + '%', height: camera.lock.box.height + '%' }">
+          <div v-if="camera.lock.box" ref="camLockBox" class="absolute z-10 pointer-events-none rounded-lg border-[1.5px]"
+            :class="camera.lock.ready ? 'border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,.5)]' : 'border-amber-300/90'">
             <span class="absolute left-1/2 -top-1 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-wide"
               :class="camera.lock.ready ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">
               {{ camera.lock.ready ? 'Đã nhận diện' : 'Đang bám vật thể' }}

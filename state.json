@@ -2,14 +2,14 @@
   "system": {
     "project": "Catalogue AI (Dictionary)",
     "stack": "Vue 3 CDN + Cloudflare Pages Functions + Supabase (pgvector) + Cloudflare R2",
-    "updated_at": "2026-10-19T02:05:00Z",
-    "memory_version": "2.7.0",
+    "updated_at": "2026-10-19T03:55:00Z",
+    "memory_version": "2.8.0",
     "status": "in_progress"
   },
   "current_session": {
-    "active_task": "gate_d_applied_production",
-    "last_checkpoint": "Phiên 2026-10-19 (tiếp): CHỦ DỰ ÁN ỦY QUYỀN agent tự chạy push migration. ĐÃ LÀM: (1) Dump schema remote read-only đối chiếu 12 migration pending — 5 bản đã áp thủ công từ trước nhưng thiếu history (1000030000,1000050000,1000060000,1000070000,1000130000 — xác minh object tồn tại) -> migration repair --status applied; (2) push thật 4 bản: 1000040000 (reset is_symmetric, vô hại), 1000120000 (cascade delete vectors — gặp 42P13 do app_delete_part remote cũ tạo tay kiểu TABLE, đã thêm DROP FUNCTION IF EXISTS vào migration trước CREATE), 17090000 (proposal), 190000 (Gate D); 3 bản Moris V6 (16024931/16033020/16040525) GIỮ NGUYÊN chưa áp theo DB_MIGRATION.md (M22 NO-GO, callers chưa deploy); (3) verify read-only production: catalogue_part_dimensions 200 [], app_get/upsert_part_dimensions tồn tại (token sai -> UNAUTHORIZED); migration list local=remote (trừ 3 bản V6 cố ý); (4) CHỦ DỰ ÁN QUYẾT: BỎ pilot 20 mã/4 marker (test-only) — nghiệm thu bằng vận hành thật trên production, không đo/không bịa số; (5) bump APP_VERSION 6.1.3 -> 6.2.0 (minor: Gate D size editor + tracking box); full npm test 55 files/525 pass 100%; tsc exit 0; build 46 files; dist/version.json 6.2.0. Chưa deploy app, chưa commit.",
-    "resumption_prompt": "Bước kế: (1) CHỦ DỰ ÁN nghiệm thu thật trên production: editor nhập size -> lưu -> mở lại thấy size (DB Gate D đã áp + verify 2026-10-19; pilot 20 mã ĐÃ BỎ theo quyết định chủ dự án); kiểm tra size gate Moris dùng dims khi tra (fail-open giữ nếu chưa có dữ liệu); (2) quyết định 77 object legacy parts/ (1.40MB) purge/giữ; (3) EVAL-01 (nhãn người 57 hard-negative + holdout mới), M29/M18/M22 chờ dữ liệu thật; (4) DEPLOY-01 chờ lệnh deploy app (DB đã lên production, app/frontend chưa); (5) SEC-01: token GitHub từng bị echo ra log khi đọc .env — khuyến nghị xoay token; (6) nhắc lại: 3 migration Moris V6 vẫn pending cố ý, không push khi chưa mở Gate M22.",
+    "active_task": "tracking_upgrade_merge_600ms_60fps",
+    "last_checkpoint": "Nâng cấp tracking theo phản hồi production 2026-10-19 (chủ dự án duyệt): (1) nhịp mẫu 450->600ms (MORIS_CAMERA_LOCK_SAMPLE_MS) để mask rà kỹ nền sáng trước khi bám; (2) capture-subject-lock.selectSubject gom cụm component (union-find, khe hở bbox <= max(3,min(14,4%*minDim)) px) -> hàng dài/chói bị tách mảnh vẫn bắt trọn, hết 'bám một phần thân'; stats.mergedComponents/selected.merged; (3) khung tracking vẽ 60fps: rAF nội suy EMA tau=150ms (smoothBoxView + _camLockAnimTick), ghi style DOM trực tiếp qua ref=camLockBox, bỏ transition-all/:style để không re-render Vue 60fps; (4) viền 2px->1.5px giữ hình vuông + màu emerald/amber + nhãn. UI/index.html chỉ đổi viền + ref; màu giữ nguyên. Bằng chứng: focused 4 file 78/78; full npm test 55 files/530 pass (+5 test mới); tsc exit 0; build 46 files; chưa commit/deploy. Size audit S1.1 (chờ chủ dự án chốt): cạnh dài bắt buộc + cạnh ngắn tùy chọn; dung sai nhập tay (xem task_32).",
+    "resumption_prompt": "Bước kế: (1) CHỦ DỰ ÁN test tracking mới trên production (600ms + merge + 60fps; viền 1.5px) và chốt Size Contract S1.1: cạnh dài bắt buộc/cạnh ngắn tùy chọn + ngưỡng dung sai dữ liệu nhập tay (đề xuất: user 10%/sàn 3mm, verified 5%/2mm, thiếu cạnh ngắn chỉ khớp cạnh dài); (2) nếu duyệt S1.1 -> làm migration width nullable + RPC + sizeGate + contract + UI + tests; (3) commit/push khi chủ dự án yêu cầu (phiên này chưa commit); (4) còn nợ: EVAL-01, M18/M22/M29 chờ dữ liệu thật, 77 object parts/, DEPLOY-01, SEC-01 xoay token.",
     "tech_debt_register": "docs/moris-v6/TECH_DEBT_REGISTER.md"
   },
   "tasks": [
@@ -481,11 +481,23 @@
       "production_writes": "4 migrations applied (1000040000 data reset no-op; 1000120000 trigger + RPC cascade vector; 17090000 proposal; 190000 Gate D) + 5 history entries repaired; không sửa dữ liệu catalogue; app chưa deploy",
       "deployed": false,
       "commit_created": false
+    },
+    {
+      "id": "task_32_tracking_upgrade_merge_600ms_60fps",
+      "title": "Tracking upgrade: component merge chống bám một phần thân, nhịp 600ms, khung vẽ nội suy 60fps, viền 1.5px",
+      "status": "completed_local_verified",
+      "completed_at": "2026-10-19T03:55:00Z",
+      "diagnostics": "Prod: hàng dài/chói bị tách component nên khung bám một phần thân; khung nhảy mỗi 450ms + transition-all gây giật; yêu cầu owner: chậm hơn, 60fps, viền mảnh hơn, giữ hình vuông + màu.",
+      "solution": "1) selectSubject gom cụm component bằng union-find theo khe hở bbox; 2) MORIS_CAMERA_LOCK_SAMPLE_MS 450->600; 3) smoothBoxView + _camLockAnimTick rAF EMA tau 150ms ghi style trực tiếp; 4) index.html ref=camLockBox, border-[1.5px], bỏ transition/:style.",
+      "evidence": "focused 4 file 78/78; full npm test 55 files/530 pass 100% (+5 test mới); npx tsc --noEmit exit 0; npm run build 46 files; focused eval tổng hợp trong tests/moris-capture-subject-lock.test.js pass (không merge 2 vật xa nhau; merge mảnh khe hở 4px).",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false
     }
   ],
   "verification": {
-    "total_unit_tests": 525,
-    "passing_tests": 525,
+    "total_unit_tests": 530,
+    "passing_tests": 530,
     "failing_tests": 0,
     "typescript_exit_code": 0,
     "build_exit_code": 0,
@@ -493,7 +505,7 @@
     "build_files": 46,
     "local_e2e_passed": 12,
     "staging": "skipped_by_owner",
-    "evidence": "npm test 2026-10-19 sau Gate D + tracking box (55 files/525 tests pass 100%); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_30_gate_d_size_editor_and_tracking_box, task_29_test_backlog_t2_t7_profile01_r2_02, task_28_m28_hardening_tests_and_push Phiên 2026-10-19 (push DB): 4 migration áp production + 5 repair history + version 6.2.0; probe production OK (xem task_31_gate_d_applied_production).",
+    "evidence": "npm test 2026-10-19 sau Gate D + tracking box (55 files/525 tests pass 100%); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_30_gate_d_size_editor_and_tracking_box, task_29_test_backlog_t2_t7_profile01_r2_02, task_28_m28_hardening_tests_and_push Phiên 2026-10-19 (push DB): 4 migration áp production + 5 repair history + version 6.2.0; probe production OK (xem task_31_gate_d_applied_production). Phiên tracking upgrade 2026-10-19: component merge + 600ms + 60fps overlay + viền 1.5px; full 55 files/530 pass (xem task_32_tracking_upgrade_merge_600ms_60fps).",
     "app_version": "6.2.0",
     "production_migrations_applied": 4,
     "migration_history_repaired": 5,
@@ -871,7 +883,14 @@
       "production_writes": 0,
       "deployed": false,
       "commit_created": false,
-      "tracking_box_2026_10_19": "Khung vuông tracking bám vật thể (camera.lock.box từ bbox analyzeFrame, overlay % 1:1 crop 1000:410) trong camera modal; tap-to-lock giữ nguyên; tests/moris-camera-lock-box.test.js 5/5"
+      "tracking_box_2026_10_19": "Khung vuông tracking bám vật thể (camera.lock.box từ bbox analyzeFrame, overlay % 1:1 crop 1000:410) trong camera modal; tap-to-lock giữ nguyên; tests/moris-camera-lock-box.test.js 5/5",
+      "tracking_upgrade_2026_10_19": {
+        "sample_ms": "450 -> 600 (rà nền sáng trước khi bám)",
+        "component_merge": "union-find theo khe hở bbox <= clamp(minDim*4%, 3, 14) px; selected.merged/mergedComponents trong stats",
+        "overlay_60fps": "rAF + EMA tau 150ms, ghi style trực tiếp (ref camLockBox), bỏ transition-all/:style",
+        "border": "2px -> 1.5px, giữ hình vuông/màu/nhãn",
+        "evidence": "tests/moris-capture-subject-lock.test.js (+3 test merge), tests/moris-camera-lock-box.test.js (+3 test smooth/ref); full 55 files/530 pass"
+      }
     },
     "M28": {
       "status": "completed_local_verified",

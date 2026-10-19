@@ -37,6 +37,11 @@ export const DEFAULT_SUBJECT_LOCK_THRESHOLDS = {
   stableFrames: 3,
   otherComponentFrac: 0.08,
   otherComponentMinPx: 200,
+  // Nối mảnh vỡ của cùng một vật (chói/lóa tách thân thành nhiều component):
+  // hai component có khe hở bbox <= gap (px, theo minDim) được gom về một chủ thể.
+  mergeGapFrac: 0.04,
+  mergeGapMinPx: 3,
+  mergeGapMaxPx: 14,
   holeMinArea: 8,
   holeMinAreaFrac: 0.0004,
   holeClassifyMinArea: 12,
@@ -297,24 +302,75 @@ export function labelComponents(mask, width, height) {
   return { componentIds, components };
 }
 
+/** Khe hở Chebyshev giữa 2 bbox (0 = chồng/chạm nhau). */
+function bboxGap(a, b) {
+  const dx = Math.max(0, Math.max(b.x0 - a.x1, a.x0 - b.x1) - 1);
+  const dy = Math.max(0, Math.max(b.y0 - a.y1, a.y0 - b.y1) - 1);
+  return Math.max(dx, dy);
+}
+
+/** Gom các component có khe hở <= gapPx thành cụm (union-find), trả cụm + bbox hợp nhất. */
+function clusterComponents(components, gapPx) {
+  const parent = components.map((_, i) => i);
+  const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  const union = (a, b) => {
+    const ra = find(a), rb = find(b);
+    if (ra !== rb) parent[rb] = ra;
+  };
+  for (let i = 0; i < components.length; i++) {
+    for (let j = i + 1; j < components.length; j++) {
+      if (bboxGap(components[i], components[j]) <= gapPx) union(i, j);
+    }
+  }
+  const byRoot = new Map();
+  components.forEach((c, i) => {
+    const root = find(i);
+    let cluster = byRoot.get(root);
+    if (!cluster) {
+      cluster = {
+        ids: [], size: 0, touchesBorder: false,
+        x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1
+      };
+      byRoot.set(root, cluster);
+    }
+    cluster.ids.push(c.id);
+    cluster.size += c.size;
+    cluster.x0 = Math.min(cluster.x0, c.x0);
+    cluster.y0 = Math.min(cluster.y0, c.y0);
+    cluster.x1 = Math.max(cluster.x1, c.x1);
+    cluster.y1 = Math.max(cluster.y1, c.y1);
+    cluster.touchesBorder = cluster.touchesBorder || c.touchesBorder;
+  });
+  return [...byRoot.values()];
+}
+
 /**
- * Select the subject component: seed tap wins, otherwise the largest component.
+ * Select the subject cluster: seed tap wins, otherwise the largest cluster.
+ * Các component bị tách bởi chói/lóa nhưng gần nhau được nối lại thành một
+ * chủ thể trọn vẹn (M27 — fix "tracking bám một phần thân").
  * Returns the binary mask (0/1) and purity stats used by readiness + evidence.
  */
 export function selectSubject(mask, width, height, seed, options = {}) {
   const t = { ...DEFAULT_SUBJECT_LOCK_THRESHOLDS, ...options };
   const { componentIds, components } = labelComponents(mask, width, height);
 
+  const minDim = Math.min(width, height);
+  const gapPx = Math.max(
+    t.mergeGapMinPx,
+    Math.min(t.mergeGapMaxPx, Math.round(minDim * t.mergeGapFrac))
+  );
+  const clusters = clusterComponents(components, gapPx);
+
   let selected = null;
   if (seed && Number.isFinite(seed.x) && Number.isFinite(seed.y)) {
     const sx = Math.max(0, Math.min(width - 1, Math.floor(seed.x)));
     const sy = Math.max(0, Math.min(height - 1, Math.floor(seed.y)));
     const id = componentIds[sy * width + sx];
-    if (id >= 0) selected = components[id];
+    if (id >= 0) selected = clusters.find((cluster) => cluster.ids.includes(id)) || null;
   }
   if (!selected) {
-    for (const c of components) {
-      if (!selected || c.size > selected.size) selected = c;
+    for (const cluster of clusters) {
+      if (!selected || cluster.size > selected.size) selected = cluster;
     }
   }
 
@@ -331,21 +387,33 @@ export function selectSubject(mask, width, height, seed, options = {}) {
     };
   }
 
+  const selectedIds = new Set(selected.ids);
   for (let i = 0; i < out.length; i++) {
-    if (componentIds[i] === selected.id) out[i] = 1;
+    if (componentIds[i] >= 0 && selectedIds.has(componentIds[i])) out[i] = 1;
   }
 
-  const minDim = Math.min(width, height);
   const marginPx = Math.min(selected.x0, selected.y0, width - 1 - selected.x1, height - 1 - selected.y1);
   const otherComponents = components
-    .filter(c => c.id !== selected.id &&
+    .filter(c => !selectedIds.has(c.id) &&
       c.size >= t.otherComponentMinPx &&
       c.size >= selected.size * t.otherComponentFrac)
     .map(c => ({ id: c.id, size: c.size, x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1 }));
 
+  const selectedSubject = {
+    id: selected.ids[0],
+    ids: selected.ids,
+    merged: selected.ids.length > 1,
+    size: selected.size,
+    touchesBorder: selected.touchesBorder,
+    x0: selected.x0,
+    y0: selected.y0,
+    x1: selected.x1,
+    y1: selected.y1
+  };
+
   return {
     mask: out,
-    selected,
+    selected: selectedSubject,
     components,
     stats: {
       partPixels: selected.size,
@@ -354,7 +422,8 @@ export function selectSubject(mask, width, height, seed, options = {}) {
       touchesBorder: selected.touchesBorder,
       bbox: { x0: selected.x0, y0: selected.y0, x1: selected.x1, y1: selected.y1 },
       otherComponents,
-      componentCount: components.length
+      componentCount: components.length,
+      mergedComponents: selected.ids.length
     }
   };
 }
