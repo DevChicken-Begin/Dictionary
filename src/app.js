@@ -139,7 +139,7 @@ createApp({
       pwChange:{ open:false, saving:false, new:'', confirm:'', error:'' },
       loginForm:{ username:'', password:'' },
       filters:{ search:'', target:'all', usage:'all', viewMode:'all' },
-      parts:[], page:0, hasMore:false,
+      parts:[], page:0, hasMore:false, pageJump:'',
       detail:{ open:false, item:null, assets:[], tab:'front', activeAsset:null, flipped:false, zoom:1, panX:0, panY:0, rotX:-8, rotY:18, dragging:false, pointerId:null, startX:0, startY:0, startPanX:0, startPanY:0, startRotX:-8, startRotY:18, pinchStartDistance:0, pinchStartZoom:1 },
       editor:{ open:false, form:this.emptyForm(), assets:[], files:{}, previews:{}, vectorStatus:'', vectorBusy:false },
       bulkImport: { open: false, files: [], groups: [], uploading: false, progress: 0, current: 0, total: 0, successCount: 0, errorCount: 0, statusText: '' },
@@ -250,6 +250,16 @@ createApp({
       if (this.filters.target === 'part_id') return 'Nhập ID linh kiện chính xác (ví dụ: 8363)...';
       if (this.filters.target === 'code') return 'Nhập mã linh kiện (ví dụ: 368701)...';
       return 'Tìm mã hàng, ID, đặc điểm...';
+    },
+
+    // Item 9 (2026-10-19): tag đỏ nhắc nhập size trong camera — hiện khi size CHƯA dùng được
+    // (unknown hoặc thiếu cạnh dài); nhập đủ cạnh dài là biến mất. Không chặn chụp.
+    cameraSizeNeedsInput() {
+      const s = this.camera?.size || {};
+      if (s.unknown) return true;
+      const raw = String(s.length ?? '').trim().replace(',', '.');
+      const n = raw ? Number(raw) : null;
+      return !(Number.isFinite(n) && n > 0);
     },
 
     // M28 S1.1: gợi ý trạng thái nhập kích thước trong modal camera.
@@ -1676,6 +1686,24 @@ createApp({
       await this.loadParts(false);
 
       const appTop = document.querySelector('main');
+      appTop?.scrollIntoView?.({behavior:'smooth', block:'start'});
+    },
+    /** Nhảy nhanh tới trang bất kỳ (ô "Tới trang..." cạnh Trang trước/Sau). */
+    async jumpToPage() {
+      if (this.loadingImages || this.morisSearch.active) return;
+
+      const target = Math.floor(Number(String(this.pageJump ?? '').trim()));
+      if (!Number.isFinite(target) || target < 1) {
+        this.toast('info', 'Nhập số trang hợp lệ (từ 1 trở lên).');
+        return;
+      }
+      this.pageJump = '';
+      if (target - 1 === this.page) return;
+
+      this.page = target - 1;
+      await this.loadParts(false);
+
+      const appTop = globalThis.document?.querySelector?.('main');
       appTop?.scrollIntoView?.({behavior:'smooth', block:'start'});
     },
     async loadMore() {
@@ -3749,13 +3777,13 @@ createApp({
       const unsubscribe = mod.onDinov2Progress?.(progress => {
         if (progress?.status === 'progress' && Number.isFinite(progress?.progress)) {
           const pct = Math.max(0, Math.min(100, Math.round(Number(progress.progress))));
-          this.moris.status = `Đang tải mô hình DINOv2: ${pct}%...`;
-          this.morisAi.statusText = `Tải DINOv2: ${pct}%`;
+          this.moris.status = `Đang dựng Harness: ${pct}%...`;
+          this.morisAi.statusText = `Dựng Harness: ${pct}%`;
           if (this.camera?.scanning) {
-            this.camera.scanStatus = `Đang tải mô hình DINOv2: ${pct}% (85MB)...`;
+            this.camera.scanStatus = `Đang dựng Harness: ${pct}% (85MB)...`;
           }
           if (this.morisScan.active) {
-            this.setMorisScanStep(Math.round(pct * 0.4), 'KHỞI TẠO MÔ HÌNH', `ĐANG TẢI DINOV2: ${pct}% (85MB)...`);
+            this.setMorisScanStep(Math.round(pct * 0.4), 'KHỞI TẠO MÔ HÌNH', `DỰNG HARNESS: ${pct}% (85MB)...`);
           }
         }
       }) || (() => {});
@@ -3883,7 +3911,7 @@ createApp({
               0,
               Math.min(100, Math.round(Number(progress.progress)))
             );
-            this.moris.status = `Đang tải mô hình nhận dạng ${pct}%...`;
+            this.moris.status = `Đang dựng Harness: ${pct}%...`;
           }
         }) || (() => {});
 

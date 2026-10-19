@@ -522,20 +522,53 @@
       "deployed": false,
       "commit_created": true,
       "pending": "đã commit 4e13b02 + push cả origin/upstream (kèm dọn 3 PNG root cũ + Simple/); bật flag boost chỉ sau khi có nhãn EVAL-01"
+    },
+    {
+      "id": "task_35_ui_jump_page_camera_texts_size_tag",
+      "title": "UI vận hành theo yêu cầu chủ dự án #7–#9: nhảy nhanh số trang catalogue; sửa 8 chuỗi hướng dẫn modal camera (dựng Harness, khung tracking, nền TRẮNG...); fix không nhập được size trong camera + tag đỏ nhắc nhập size",
+      "status": "completed_local_verified",
+      "completed_at": "2026-10-19T08:30:00Z",
+      "diagnostics": {
+        "root_cause_size": "Ô size camera có :disabled=\"camera.size.unknown\" trong khi mặc định unknown=true → khóa cứng không gõ được (bug thật chủ dự án phát hiện)",
+        "constraint": "KHÔNG bắt buộc nhập size — chỉ cảnh báo tag đỏ để người dùng thấy lợi ích sàng lọc"
+      },
+      "solution": "1) Pagination: index.html thêm ô \"Tới trang...\" + nút Đi giữa Trang trước/Sau; app.js data.pageJump + jumpToPage() (guard loading/morisSearch, parse số nguyên >=1, sai → toast info giữ nguyên trang, trùng trang → no-op, scroll main). 2) Camera texts: index.html 2059 hint mới; 2194 nhãn quét mới; 4 bullet mới; app.js 4 biến thể tiến trình đổi sang \"Dựng Harness\". 3) Size: gỡ disabled 2 ô camera (setCameraSizeUnknown(false) khi input), computed cameraSizeNeedsInput (true khi unknown hoặc thiếu cạnh dài hợp lệ) + tag đỏ \"Nhập size để tăng tỷ lệ sàng lọc\". 4) Tests: paging +3 (nhảy đúng cửa sổ 36 mã/xoá ô; 5 giá trị sai; trùng trang no-op), camera-lock-box +2 (marker text mới + ô size không disabled/tag đỏ), size-ui +1 (7 trường hợp cameraSizeNeedsInput).",
+      "evidence": "focused 4 file 42/42 (paging 12, camera-lock-box 7, size-ui 13, pwa 10); full npm test 59 files/575 pass 100%; npx tsc --noEmit exit 0; npm run build 46 files; version 6.5.0.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false,
+      "pending": "chưa commit — chờ chủ dự án test production (#6)"
+    },
+    {
+      "id": "task_36_restore_ses_eae5_profile01_eval01_simple_audit",
+      "title": "Khôi phục tiến trình gián đoạn ses_eae5: PROFILE-01 kiểm tra read-only production vector; EVAL-01(a) công cụ review 57 hard-negative trực quan qua ảnh R2; EVAL-01(c) xóa an toàn image 2/ bảo mật; EVAL-01(d) audit Simple/ và khuyến nghị vector; R2-01 đóng giữ nguyên asset",
+      "status": "completed_local_verified",
+      "completed_at": "2026-10-19T09:30:00Z",
+      "diagnostics": {
+        "profile_mismatch_check": "Production DB có 2.180 vector (1.089 cls_l2_v1 + 1.091 hybrid_gem3_edge_55_45_pseudorgb_u8_v1). Code mặc định hybrid; .env đặt cls_l2_v1. Fallback sang cls_l2_v1 tự động hoạt động khi profile hybrid không có kết quả.",
+        "eval01a_blocker": "HTML review cũ tham chiếu ảnh private local bị thiếu. Khắc phục bằng cách nạp trực tiếp qua public R2 URL của catalogue và xây dựng UI tương tác lưu localStorage + tải JSON.",
+        "image2_security": "image 2/ chứa 125 ảnh camera thật (78MB) đã bị xóa an toàn khỏi git tracking và disk sau khi chuyển fixture test sang Simple/lỗ chữ L.png."
+      },
+      "solution": "1) PROFILE-01: Query read-only production DB PostgREST xác định chính xác 2.180 vector, đo độ phủ text 13.2% trên 544 mã. 2) EVAL-01(a): Cập nhật tools/review-moris-hard-negatives.mjs với R2 URL, giao diện HTML có 3 nút bấm (Dễ nhầm/Khác biệt/Bỏ qua) lưu localStorage, server localhost:3333, cờ --apply-labels, test unit 3/3. 3) EVAL-01(c): Xóa image 2/ (125 file), sửa tests/png-decode.test.js dùng Simple/lỗ chữ L.png, thêm existsSync trong eval tools, thêm image 2/ vào .gitignore. 4) EVAL-01(d): Tạo tools/audit-moris-hole-samples.mjs đo 14/14 text pass, 0/9 geometry pass do ảnh mẫu là crop miệng lỗ; khuyến nghị giữ visual reference và không ghi vector index ngoài catalogue. 5) R2-01: Đóng theo quyết định giữ nguyên của chủ dự án.",
+      "evidence": "Full npm test 60 files / 578 tests pass 100%; npx tsc --noEmit exit 0; npm run build 46 files exit 0; version 6.5.0.",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false,
+      "pending": "chờ commit và push lên main theo yêu cầu #6 của chủ dự án"
     }
   ],
   "verification": {
-    "total_unit_tests": 569,
-    "passing_tests": 569,
+    "total_unit_tests": 578,
+    "passing_tests": 578,
     "failing_tests": 0,
     "typescript_exit_code": 0,
     "build_exit_code": 0,
-    "unit_files": 59,
+    "unit_files": 60,
     "build_files": 46,
     "local_e2e_passed": 12,
     "staging": "skipped_by_owner",
-    "evidence": "npm test 2026-10-19 sau Gate D + tracking box (55 files/525 tests pass 100%); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_30_gate_d_size_editor_and_tracking_box, task_29_test_backlog_t2_t7_profile01_r2_02, task_28_m28_hardening_tests_and_push Phiên 2026-10-19 (push DB): 4 migration áp production + 5 repair history + version 6.2.0; probe production OK (xem task_31_gate_d_applied_production). Phiên tracking upgrade 2026-10-19: component merge + 600ms + 60fps overlay + viền 1.5px; full 55 files/530 pass (xem task_32_tracking_upgrade_merge_600ms_60fps). Phiên S1.1 2026-10-19: full 55 files/537 pass; migration 20261019120000 đã push + commit 75bc8ec. Phiên mẫu lỗ 2026-10-19: full 59 files/569 pass; migration 20261019180000 + 14 ảnh R2; version 6.4.0 (xem task_34_hole_samples_menu_and_moris_hole_format_reference).",
-    "app_version": "6.4.0",
+    "evidence": "npm test 2026-10-19 sau Gate D + tracking box (55 files/525 tests pass 100%); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_30_gate_d_size_editor_and_tracking_box, task_29_test_backlog_t2_t7_profile01_r2_02, task_28_m28_hardening_tests_and_push Phiên 2026-10-19 (push DB): 4 migration áp production + 5 repair history + version 6.2.0; probe production OK (xem task_31_gate_d_applied_production). Phiên tracking upgrade 2026-10-19: component merge + 600ms + 60fps overlay + viền 1.5px; full 55 files/530 pass (xem task_32_tracking_upgrade_merge_600ms_60fps). Phiên S1.1 2026-10-19: full 55 files/537 pass; migration 20261019120000 đã push + commit 75bc8ec. Phiên mẫu lỗ 2026-10-19: full 59 files/569 pass; migration 20261019180000 + 14 ảnh R2; commit 4e13b02 + e63e99a. Phiên UI #7–#9 2026-10-19: full 59 files/575 pass. Phiên khôi phục ses_eae5 (PROFILE-01, EVAL-01, Simple audit, xóa image 2/): full 60 files/578 pass 100%; version 6.5.0 (xem task_36).",
+    "app_version": "6.5.0",
     "production_migrations_applied": 6,
     "migration_history_repaired": 5,
     "production_migrations_pending_by_design": [

@@ -56,6 +56,17 @@ describe('M28 UI contract — panel nhập kích thước (hành vi thật từ 
     expect(hint({ unknown: false, length: '80,5', width: '120' })).toBe('Lọc theo 120 × 80.5 mm');
   });
 
+  it('cameraSizeNeedsInput: tag đỏ bật khi chưa có size dùng được, tắt khi đủ cạnh dài', () => {
+    const flag = (size) => computed.cameraSizeNeedsInput.call(sizeCtx(size));
+    expect(flag({ unknown: true })).toBe(true);
+    expect(flag({ unknown: false, length: '', width: '' })).toBe(true);
+    expect(flag({ unknown: false, length: 'abc', width: '' })).toBe(true);
+    expect(flag({ unknown: false, length: '-5', width: '' })).toBe(true);
+    expect(flag({ unknown: false, length: '120', width: '' })).toBe(false);
+    expect(flag({ unknown: false, length: '120', width: '80' })).toBe(false);
+    expect(flag({ unknown: false, length: '80,5', width: '' })).toBe(false);
+  });
+
   it('readCameraSize: unknown/thiếu cạnh dài/sai/âm/quá cỡ -> null (server bỏ qua gate)', async () => {
     const cases = [
       { unknown: true },

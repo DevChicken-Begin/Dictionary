@@ -92,3 +92,29 @@ describe('index.html — overlay khung vuông tracking', () => {
     expect(block).not.toContain('transition-all');
   });
 });
+
+describe('index.html — text hướng dẫn camera mới (2026-10-19, chủ dự án yêu cầu)', () => {
+  const html = readFileSync('index.html', 'utf8');
+
+  it('câu hướng dẫn + nhãn tiến trình mới thay thế câu cũ', () => {
+    expect(html).toContain('Điều chỉnh camera sao cho khung tracking vừa khớp chủ thể');
+    expect(html).toContain('Đang quét, tái tạo vector và nhận diện vật thể...');
+    expect(html).toContain('đặt vật thể vừa khung trên nền TRẮNG');
+    expect(html).toContain('Chờ tracking khóa chủ thể trong khung vàng rồi chụp.');
+    expect(html).toContain('nếu không tìm ra bằng tracking hãy bấm "Tải ảnh từ máy"');
+    expect(html).toContain('Nhập chiều dài để Harness sàng lọc chuẩn hơn');
+    expect(html).not.toContain('Căn vật thể vừa khung tròn nét');
+    expect(html).not.toContain('phân tích AI 3 lớp');
+    expect(html).not.toContain('Đang nhận diện AI... Chuyển vào chat Moris');
+  });
+
+  it('ô size camera nhập được (bỏ disabled) + tag đỏ cảnh báo nhập size', () => {
+    expect(html).toContain('@input="setCameraSizeUnknown(false)"');
+    expect(html).not.toContain(':disabled="camera.size.unknown"');
+    expect(html).toContain('Nhập size để tăng tỷ lệ sàng lọc');
+    const idx = html.indexOf('cameraSizeNeedsInput');
+    expect(idx).toBeGreaterThan(-1);
+    const block = html.slice(idx, idx + 400);
+    expect(block).toContain('bg-red-50');
+  });
+});

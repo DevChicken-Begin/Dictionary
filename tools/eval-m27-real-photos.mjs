@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, join, basename, extname } from 'node:path';
 import { decodePng } from './png-decode.mjs';
 import {
@@ -24,6 +24,11 @@ const labelsArg = process.argv.indexOf('--labels');
 const labels = labelsArg >= 0
   ? new Map(JSON.parse(readFileSync(process.argv[labelsArg + 1], 'utf8')).map(row => [row.code, row]))
   : null;
+
+if (!existsSync(inputDir)) {
+  console.log(`eval-m27-real-photos: thư mục '${inputDir}' không tồn tại. Bỏ qua.`);
+  process.exit(0);
+}
 
 const files = readdirSync(inputDir)
   .filter(f => /^[0-9]{10}\.png$/.test(f))

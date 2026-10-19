@@ -24,7 +24,9 @@
         "supa:diff": "supabase db diff",
         "supa:reset": "supabase db reset",
         "test": "vitest run",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "moris:review": "node tools/review-moris-hard-negatives.mjs --serve",
+        "moris:review:html": "node tools/review-moris-hard-negatives.mjs --export-html"
     },
     "devDependencies": {
         "@playwright/test": "1.56.1",

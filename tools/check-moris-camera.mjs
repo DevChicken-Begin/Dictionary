@@ -2,6 +2,7 @@
 import { chromium } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile, readdir, writeFile, rename } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { resolve, extname, basename } from 'node:path';
 import { createHash } from 'node:crypto';
 const root=resolve(import.meta.dirname,'..');
@@ -12,7 +13,8 @@ const manifestArg=process.argv.indexOf('--manifest');
 const manifest=manifestArg<0?null:(await readFile(process.argv[manifestArg+1],'utf8')).trim().split('\n').map(JSON.parse);
 if(manifest?.some(r=>r.split==='holdout') && !process.argv.includes('--final-holdout'))throw Error('Holdout requires explicit final evaluation flag after config freeze');
 const input=resolve(process.argv[3] || resolve(root,"image 2"));
-if(!output) throw new Error('Usage: node tools/check-moris-camera.mjs /tmp/moris-camera-results.json');
+if(!output) throw new Error('Usage: node tools/check-moris-camera.mjs /tmp/moris-camera-results.json [input_dir]');
+if(!existsSync(input)) throw new Error(`Input directory not found: ${input}`);
 const server=createServer(async(req,res)=>{
  try {
   if(req.method!=='GET') {res.writeHead(405).end();return;}

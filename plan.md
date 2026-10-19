@@ -296,3 +296,43 @@ Before continuing, read [docs/moris-v6/HANDOFF.md](docs/moris-v6/HANDOFF.md). It
 - [x] **Moris Phase 1 (`hole_format_ref_v1`, boost-only, flag OFF mặc định):** module `functions/_lib/moris/v5/retrieval/holeFormatReference.js` (10 tag + tên Việt; `FORMAT_PATTERNS` — "dài" **bắt buộc ngữ cảnh "lỗ"** tránh nhầm "thân dài 20mm"; `holeFormatsFromCounts`; `applyHoleFormatBoost` chỉ gắn `hole_format_score:1/hole_format_available/hole_format_match` lên ứng viên khớp, **không phạt** ứng viên khác); `scoreFusion` signal `hole_format` w.05; `query.js` `normalizeHoleFormats` fail-open; `orchestrator` gắn `hole_format_evidence` khi `MORIS_HOLE_FORMAT_BOOST_ENABLED=true`; `userMessage` note trung tính nêu tên định dạng; camera bin `slot` (aspect ≥ 1.7, fill ≥ 0.88, A4 ≤ A2×1.25, radiusCV ≤ 0.45 — phân biệt stadium vs ellipse sau closing) + `counts.slot`; app.js tóm tắt "n dài" + payload `hole_formats` từ `captureEvidence`.
 - [x] **Bằng chứng kiểm thử:** focused mới `tests/moris-hole-format-reference.test.js` 15/15, `tests/moris-hole-format-orchestrator.test.js` 5/5 (boost lật near-tie .938/.94 khi ON, OFF không đổi), `tests/moris-hole-format-ui-contract.test.js` 4/4; `tests/moris-capture-subject-lock.test.js` **25/25** — eval tổng hợp M27 **IoU 0.9996 / shape accuracy 100% (10/10)**; full `npm test` **59 files / 569 tests pass 100%**; `npx tsc --noEmit` exit 0; `npm run build` 46 files; production writes: 1 migration + 14 object R2.
 - [ ] **Còn lại:** bật flag `MORIS_HOLE_FORMAT_BOOST_ENABLED` **chỉ sau khi đo trên ảnh thật** (blocked bởi EVAL-01 — `tools/eval-m27-real-photos.mjs` hiện chỉ có nhãn circle/square/oval, chưa có nhãn người cho "dài"); chủ dự án test production menu Mẫu lỗ + size 1 cạnh.
+
+## Cải tiến UI vận hành — yêu cầu chủ dự án #7–#9 (2026-10-19)
+
+- [x] **#7 Nhảy nhanh số trang catalogue:** ô "Tới trang..." + nút "Đi" ngay cạnh Trang trước/Sau (`jumpToPage()`): số nguyên ≥ 1, sai → cảnh báo giữ nguyên trang, trùng trang hiện tại → không gọi lại dữ liệu, render đúng cửa sổ 36 mã; cuộn về đầu danh sách sau khi nhảy.
+- [x] **#8 Sửa chuỗi hướng dẫn modal camera:** (1) hint đầu → "Điều chỉnh camera sao cho khung tracking vừa khớp chủ thể"; (2) nhãn quét → "Đang quét, tái tạo vector và nhận diện vật thể..."; (3) tiến trình tải → "Đang dựng Harness: n% (85MB)..." (4 biến thể: moris.status, statusText, scanStatus, step "DỰNG HARNESS"); (4) bullet khung → "nền TRẮNG"; (5) bullet khóa chủ thể → "Chờ tracking khóa chủ thể trong khung vàng rồi chụp."; (6) bullet ảnh lớn → thêm "nếu không tìm ra bằng tracking hãy bấm..."; (7) bullet 3 lớp → "Nhập chiều dài để Harness sàng lọc chuẩn hơn".
+- [x] **#9 Fix nhập size trong modal camera + tag đỏ:** nguyên nhân gốc — ô size `:disabled="camera.size.unknown"` mà mặc định `unknown=true` → khóa cứng, không gõ được. Đã gỡ disabled (gõ tự `setCameraSizeUnknown(false)`, giữ tính tùy chọn — không bắt buộc); thêm tag đỏ "Nhập size để tăng tỷ lệ sàng lọc" (computed `cameraSizeNeedsInput`) hiện khi chưa có cạnh dài hợp lệ, tự biến mất khi nhập đủ (kể cả partial 1 cạnh vẫn lọc được).
+- [x] **Bằng chứng:** focused 42/42 (paging +3 test jumpToPage; camera-lock-box +2 test text mới + ô size/tag đỏ; size-ui +1 test `cameraSizeNeedsInput` 7 trường hợp); full `npm test` **59 files / 575 tests pass 100%**; `npx tsc --noEmit` exit 0; `npm run build` 46 files; version **6.5.0**. Production writes 0; chưa deploy; **chưa commit** (chờ chủ dự án).
+
+## Khôi phục tiến trình làm việc dang dở (ses_eae5) — 2026-10-19
+
+- [x] **PROFILE-01 (Đọc read-only production vector theo profile):**
+  - Xác minh trực tiếp DB production qua PostgREST service key: Bảng `catalogue_image_vectors` có **2.180 vector active**, 100% `canon_rgb_v2`:
+    - 1.089 rows: profile legacy `cls_l2_v1` (`onnx-community/dinov2-small` ef1fb10, `kim_canon_v2`).
+    - 1.091 rows: profile `hybrid_gem3_edge_55_45_pseudorgb_u8_v1` (`onnx-community/dinov2-small` ef1fb10, `kim_canon_v3_letterbox`).
+  - Code mặc định `config.js` và `browserDinov2.js` là profile hybrid; local `.env` đặt `cls_l2_v1`.
+  - Fallback an toàn: `functions/_lib/moris/v5/vector/search.js` tự động fallback sang `cls_l2_v1` nếu profile cấu hình trả 0 kết quả (7 test `tests/moris-vector-search-fallback.test.js`).
+  - API `/api/moris/search` từ chối query embedding profile mismatch (HTTP 400).
+  - Độ phủ text: Bảng `image_library` có 544 mã, 72 mã (13.2%) có mô tả lỗ trong `identifying_features`, riêng "dài" chỉ có đúng 1 mã duy nhất.
+- [x] **EVAL-01(a) (Giải pháp review 57 hard-negative đơn giản, hiệu quả):**
+  - Nâng cấp `tools/review-moris-hard-negatives.mjs` tải ảnh trực tiếp từ R2 công khai (`pub-fe997ecbd0714682b10cba684d175ac8.r2.dev`) thay vì phụ thuộc thư mục private local bị thiếu.
+  - Tạo trang review HTML trực quan `evaluation/moris-v6/hard-negative-review-sheet.html`: hỗ trợ mở offline trực tiếp trên trình duyệt, có 3 nút bấm (🟢 Dễ nhầm / 🔴 Khác biệt / ⚪ Bỏ qua) + ghi chú, tự lưu `localStorage` thời gian thực, có nút tải file JSON kết quả.
+  - Tích hợp server nội bộ `npm run moris:review` (`node tools/review-moris-hard-negatives.mjs --serve`) chạy tại `http://localhost:3333` có API lưu trực tiếp về file `hard-negative-labels.json`.
+  - Bổ sung lệnh CLI `--apply-labels` nạp nhãn người vào queue. Đã viết 3 test trong `tests/moris-review-tool.test.js` pass 100%.
+- [x] **EVAL-01(c) (Xóa an toàn `image 2/` bảo mật + ghi nhận skip holdout):**
+  - Chuyển fixture test `tests/png-decode.test.js` sang dùng `Simple/lỗ chữ L.png` (1086x1448).
+  - Bổ sung guard an toàn `existsSync` trong `tools/eval-m27-real-photos.mjs` và `tools/check-moris-camera.mjs`.
+  - Thêm `image 2/` vào `.gitignore`.
+  - Dùng `git rm -r "image 2"` dọn dẹp sạch sẽ 125 file (78MB) khỏi git tracking và disk.
+  - Ghi nhận quyết định chủ dự án: Tạm thời SKIP holdout đóng băng mới cho đến khi có bộ ảnh chụp chuẩn (mục b: chủ dự án sẽ bổ sung ảnh chuẩn cho catalogue, hiện mới có 3421750001 là đủ 5 ảnh).
+- [x] **EVAL-01(d) (Audit thật Simple/ làm tham chiếu harness):**
+  - Tạo và chạy công cụ thực tế `tools/audit-moris-hole-samples.mjs`.
+  - Kết quả từ điển text: 14/14 (100% PASS) định dạng khớp từ điển `holeFormatReference.js`.
+  - Kết quả hình học camera: 0/9 PASS vì ảnh `Simple/` là ảnh crop trực tiếp miệng lỗ trên nền, không phải linh kiện kim khí chứa lỗ bên trong (`extractEnclosedHoles` tìm inner holes trong vật thể).
+  - Đánh giá kiến trúc & vector: Tuân thủ Hiến pháp `AGENTS.md` (chỉ Vector Center ghi index, không chèn vector ngoài vào DB); giữ 14 mẫu làm visual reference và regression fixtures; cờ boost Phase 1 giữ OFF an toàn.
+- [x] **R2-01 (Đóng theo quyết định giữ nguyên):** Giữ nguyên các asset R2 theo quyết định của chủ dự án ("2. không cần xóa skip việc này").
+- [x] **Bằng chứng kiểm thử tổng thể:**
+  - Full `npm test` → **60 files / 578 tests pass 100%**.
+  - `npx tsc --noEmit` exit 0.
+  - `npm run build` → 46 files sạch sẽ.
+  - Version: **6.5.0**.

@@ -118,8 +118,8 @@ describe('png-decode (M27 real-photo harness)', () => {
     expect(() => decodePng(truncated)).toThrow();
   });
 
-  it('đọc được ảnh camera thật trong "image 2"', () => {
-    const file = readFileSync('image 2/3440010001.png');
+  it('đọc được ảnh PNG kích thước lớn trong repo ("Simple/lỗ chữ L.png")', () => {
+    const file = readFileSync('Simple/lỗ chữ L.png');
     const decoded = decodePng(file);
     expect(decoded.width).toBeGreaterThan(1000);
     expect(decoded.height).toBeGreaterThan(300);

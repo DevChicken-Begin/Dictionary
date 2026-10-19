@@ -40,3 +40,43 @@ describe('M10 bounded complete catalogue scan',()=>{
   await expect(scanCatalogue({SUPABASE_URL:'https://fixture.invalid',SUPABASE_ANON_KEY:'x'},'a.b.c',{maxRows:300})).rejects.toThrow(/budget/);
  });
 });
+
+describe('Item 7 — nhảy nhanh số trang (jumpToPage)',()=>{
+ const ctxAll=()=>{const {ctx,rows}=app(545);ctx.filters={target:'all',search:'',usage:'all',viewMode:'all'};ctx.morisSearch={active:false};return {ctx,rows};};
+
+ it('nhập số trang → đặt page = số-1, render đúng cửa sổ 36 mã, xoá ô nhập',async()=>{
+  const {ctx,rows}=ctxAll();
+  await ctx.loadParts();
+  ctx.rpcRows.mockClear();
+  ctx.pageJump='12';
+  await ctx.jumpToPage();
+  expect(ctx.page).toBe(11);
+  expect(ctx.pageJump).toBe('');
+  expect(ctx.parts.map(x=>x.id)).toEqual(rows.slice(11*36,12*36).map(r=>r.id));
+  expect(ctx.rpcRows).toHaveBeenCalledTimes(1);
+ });
+
+ it('số trang không hợp lệ (chữ, 0, âm, rỗng, thập phân ngoài khoảng) → cảnh báo, giữ nguyên trang',async()=>{
+  const {ctx}=ctxAll();
+  await ctx.loadParts();
+  ctx.rpcRows.mockClear();
+  for(const bad of ['abc','0','-3','','2.9x']){
+   ctx.pageJump=bad;
+   await ctx.jumpToPage();
+   expect(ctx.page).toBe(0);
+   expect(ctx.toast).toHaveBeenCalledWith('info',expect.stringContaining('hợp lệ'));
+   ctx.toast.mockClear();
+  }
+  expect(ctx.rpcRows).not.toHaveBeenCalled();
+ });
+
+ it('nhập đúng trang hiện tại → không gọi lại dữ liệu',async()=>{
+  const {ctx}=ctxAll();
+  await ctx.loadParts();
+  ctx.rpcRows.mockClear();
+  ctx.pageJump='1';
+  await ctx.jumpToPage();
+  expect(ctx.page).toBe(0);
+  expect(ctx.rpcRows).not.toHaveBeenCalled();
+ });
+});
