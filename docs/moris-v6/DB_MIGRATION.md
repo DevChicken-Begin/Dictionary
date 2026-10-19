@@ -2,6 +2,8 @@
 
 **Not applied to production. Gate D and the M22 NO-GO remain in force.** Apply order: proposed M04 manual writer, M10 stable catalogue paging, then `20261016040525_moris_v6_nullable_provenance.sql`. Do not deploy callers before their RPCs exist and matching-profile vectors are manually indexed.
 
+> Cập nhật 2026-10-19: `supabase db push` đã áp các migration pending KHÁC (Gate D `20261019090000`, proposal `20261017090000`, cascade delete `2026101200020000`, reset flag `2026101000040000`) và repair 5 bản thiếu history. **Riêng 3 bản Moris V6 của tài liệu này (`20261016024931`, `20261016033020`, `20261016040525`) vẫn pending cố ý** — không push khi chưa mở Gate M22.
+
 ## Schema and permissions
 
 Adds nullable `embedding_signature_version`, `geometry_evidence` and `geometry_processed_at`; no old-row backfill or vector relabelling. Source digest uses existing M04 `source_etag`. New service-only `SECURITY INVOKER` read/write RPCs preserve nullable count/aspect/centroids. Writer delegates identity locking/replacement to the reviewed M04 service-only writer. Public/anon/authenticated execution is revoked, search path pinned. API keeps session/editor checks and source ETag verification. Dense patch/experimental contour payloads are excluded from persistence; geometry JSON capped16KiB. Existing legacy RPCs remain for rollback.
