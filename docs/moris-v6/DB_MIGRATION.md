@@ -3,6 +3,8 @@
 **Not applied to production. Gate D and the M22 NO-GO remain in force.** Apply order: proposed M04 manual writer, M10 stable catalogue paging, then `20261016040525_moris_v6_nullable_provenance.sql`. Do not deploy callers before their RPCs exist and matching-profile vectors are manually indexed.
 
 > Cập nhật 2026-10-19: `supabase db push` đã áp các migration pending KHÁC (Gate D `20261019090000`, proposal `20261017090000`, cascade delete `2026101200020000`, reset flag `2026101000040000`) và repair 5 bản thiếu history. **Riêng 3 bản Moris V6 của tài liệu này (`20261016024931`, `20261016033020`, `20261016040525`) vẫn pending cố ý** — không push khi chưa mở Gate M22.
+>
+> Cập nhật 2026-10-19 (lần 2, M28 S1.1): đã push `20261019120000_size_contract_s11_optional_width.sql` (width_mm nullable + CHECK NULL-safe + RPC `app_upsert_part_dimensions` cạnh ngắn tùy chọn). Xác minh: `migration list` local=remote (trừ 3 bản V6 như trên); probe read-only `catalogue_part_dimensions` → 200; RPC tồn tại (token sai → 400 UNAUTHORIZED).
 
 ## Schema and permissions
 

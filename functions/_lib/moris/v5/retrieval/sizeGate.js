@@ -1,10 +1,14 @@
 /**
  * sizeGate.js
  * ============================================================================
- * MORIS M28 — SIZE CONTRACT & SIZE GATE (S1, query-side only, fail-open)
+ * MORIS M28 — SIZE CONTRACT & SIZE GATE (S1.1, query-side only, fail-open)
  *
  * Phần hợp đồng kích thước mirror 1:1 với src/moris/size-contract.js
- * (quy ước §10.3, dung sai 2 tầng §5.4, Q5/Q8/Q9 của chủ dự án).
+ * (quy ước §10.3, dung sai theo nguồn S1.1 2026-10-19, Q5/Q8/Q9 chủ dự án):
+ *  - cạnh dài bắt buộc, cạnh ngắn tùy chọn; thiếu cạnh ngắn -> 'match_partial'
+ *    (chỉ đối chiếu cạnh dài, KHÔNG loại trừ).
+ *  - dung sai: nhập tay 10%/sàn 3mm; kiểm chuẩn (caliper/marker_photo/erp/
+ *    camera_measured, cả 2 bên) 5%/sàn 2mm.
  *
  * Gate được chèn sau hydrate ANN, trước rankMetadata/structural/fusion (§5.5-5):
  *  - query thiếu size           -> status 'not_provided', không lọc (fail-open)
@@ -14,12 +18,21 @@
  * ============================================================================
  */
 
-export const SIZE_CONTRACT_VERSION = 'size_contract_v1';
+export const SIZE_CONTRACT_VERSION = 'size_contract_v1_1';
 
 export const DEFAULT_SIZE_TOLERANCE = Object.freeze({
   relative: 0.05,
   floorMm: 2
 });
+
+/** Dung sai theo nguồn đo (S1.1): nhập tay rộng hơn số đo kiểm chuẩn. */
+export const SIZE_TOLERANCE_BY_SOURCE = Object.freeze({
+  verified: Object.freeze({ relative: 0.05, floorMm: 2 }),
+  manual: Object.freeze({ relative: 0.10, floorMm: 3 })
+});
+
+export const SIZE_VERIFIED_METHODS = Object.freeze(['caliper', 'marker_photo', 'erp']);
+export const SIZE_VERIFIED_SOURCES = Object.freeze(['caliper', 'marker_photo', 'erp', 'camera_measured']);
 
 export const SIZE_SQUARE_CLASS_MAX_DIFF = 0.05;
 
@@ -64,15 +77,21 @@ function sanitizeTolerance(tolerance) {
 
 /**
  * Chuẩn hoá cặp kích thước về quy ước (L >= W).
- * Trả về null nếu thiếu/không hợp lệ (fail-open phía gọi).
+ * S1.1: cạnh dài bắt buộc, cạnh ngắn tùy chọn — chỉ truyền 1 số thì số đó là
+ * cạnh dài (width_mm = null). Trả về null nếu thiếu cả hai / không hợp lệ.
  */
 export function normalizeSizePair(length, width, { maxMm = SIZE_MAX_MM } = {}) {
   const l = toFiniteNumber(length);
   const w = toFiniteNumber(width);
-  if (l == null || w == null) return null;
-  if (l <= 0 || w <= 0) return null;
+  if (l == null && w == null) return null;
   const cap = toFiniteNumber(maxMm) ?? SIZE_MAX_MM;
-  if (l > cap || w > cap) return null;
+  if (l == null) {
+    if (w <= 0 || w > cap) return null;
+    return { length_mm: w, width_mm: null };
+  }
+  if (l <= 0 || l > cap) return null;
+  if (w == null) return { length_mm: l, width_mm: null };
+  if (w <= 0 || w > cap) return null;
   return l >= w
     ? { length_mm: l, width_mm: w }
     : { length_mm: w, width_mm: l };
@@ -80,12 +99,12 @@ export function normalizeSizePair(length, width, { maxMm = SIZE_MAX_MM } = {}) {
 
 export function shapeClass(lengthMm, widthMm) {
   const pair = normalizeSizePair(lengthMm, widthMm);
-  if (!pair) return null;
+  if (!pair || pair.width_mm == null) return null;
   const diff = Math.abs(pair.length_mm - pair.width_mm) / pair.length_mm;
   return diff <= SIZE_SQUARE_CLASS_MAX_DIFF ? 'square' : 'rect';
 }
 
-/** Dung sai 2 tầng: tầng tương đối (5%) hoặc sàn tuyệt đối (2mm), lấy giá trị lớn hơn. */
+/** Dung sai 2 tầng: tầng tương đối hoặc sàn tuyệt đối, lấy giá trị lớn hơn. */
 export function toleranceForEdge(refMm, tolerance = DEFAULT_SIZE_TOLERANCE) {
   const ref = toFiniteNumber(refMm);
   if (ref == null || ref <= 0) return null;
@@ -93,9 +112,34 @@ export function toleranceForEdge(refMm, tolerance = DEFAULT_SIZE_TOLERANCE) {
   return Math.max(tol.relative * ref, tol.floorMm);
 }
 
+/** Bên đo có phải số đo kiểm chuẩn (không phải nhập tay) không. */
+export function isVerifiedMeasurement(side) {
+  if (!side || typeof side !== 'object') return false;
+  const method = String(side.method || '').trim().toLowerCase();
+  const source = String(side.source || '').trim().toLowerCase();
+  return SIZE_VERIFIED_METHODS.includes(method) || SIZE_VERIFIED_SOURCES.includes(source);
+}
+
+/**
+ * Chọn dung sai cho một phép so khớp (S1.1).
+ * - explicit (tham số tolerance truyền thẳng) luôn thắng (test/override).
+ * - Chỉ khi CẢ HAI bên là số đo kiểm chuẩn mới dùng mức chặt 5%/2mm;
+ *   còn lại (nhập tay/không rõ) dùng mức rộng 10%/3mm.
+ */
+export function resolveSizeTolerance(querySide, candidateSide, explicit) {
+  const relative = toFiniteNumber(explicit?.relative);
+  const floorMm = toFiniteNumber(explicit?.floorMm);
+  if (relative != null || floorMm != null) return sanitizeTolerance(explicit);
+  const verified = isVerifiedMeasurement(querySide) && isVerifiedMeasurement(candidateSide);
+  const chosen = verified ? SIZE_TOLERANCE_BY_SOURCE.verified : SIZE_TOLERANCE_BY_SOURCE.manual;
+  return { relative: chosen.relative, floorMm: chosen.floorMm };
+}
+
 function compareEdges(queryPair, candidatePair, tolerance) {
   const tol = sanitizeTolerance(tolerance);
-  const edges = ['length_mm', 'width_mm'].map((key) => {
+  const hasWidth = queryPair.width_mm != null && candidatePair.width_mm != null;
+  const keys = hasWidth ? ['length_mm', 'width_mm'] : ['length_mm'];
+  const edges = keys.map((key) => {
     const q = queryPair[key];
     const c = candidatePair[key];
     const delta = Math.abs(q - c);
@@ -109,13 +153,14 @@ function compareEdges(queryPair, candidatePair, tolerance) {
     };
   });
   const dMax = Math.max(
-    ...edges.map((edge, index) => {
-      const key = index === 0 ? 'length_mm' : 'width_mm';
-      return round(edge.delta) / Math.max(queryPair[key], candidatePair[key]);
-    })
+    ...edges.map((edge) => round(edge.delta) / Math.max(
+      queryPair[edge.key],
+      candidatePair[edge.key]
+    ))
   );
   return {
     ok: edges.every((edge) => edge.ok),
+    partial: !hasWidth,
     d_max: round(dMax),
     edges
   };
@@ -123,6 +168,7 @@ function compareEdges(queryPair, candidatePair, tolerance) {
 
 /**
  * Khoảng cách chuẩn hoá d_max với hoán vị (L,W) <-> (W,L) (§10.3).
+ * Thiếu cạnh ngắn -> chỉ tính trên cạnh dài.
  * Trả về null nếu một trong hai cặp không hợp lệ.
  */
 export function sizeDistance(queryPair, candidatePair) {
@@ -136,6 +182,7 @@ export function sizeDistance(queryPair, candidatePair) {
   );
   if (!q || !c) return null;
   const identity = compareEdges(q, c, DEFAULT_SIZE_TOLERANCE);
+  if (identity.partial) return identity.d_max;
   const swapped = compareEdges(
     q,
     { length_mm: c.width_mm, width_mm: c.length_mm },
@@ -146,13 +193,13 @@ export function sizeDistance(queryPair, candidatePair) {
 
 /**
  * So khớp 1 ứng viên với size query.
- * status: 'match' | 'mismatch' | 'unknown' (thiếu dữ liệu -> trung tính, giữ nguyên ứng viên).
+ * status: 'match' | 'match_partial' | 'mismatch' | 'unknown'
+ *  - 'match'         : đủ 2 cạnh và nằm trong dung sai.
+ *  - 'match_partial' : thiếu cạnh ngắn (1 trong 2 bên) — chỉ đối chiếu cạnh dài,
+ *                      giữ nguyên ứng viên (S1.1, không loại trừ oan).
+ *  - 'unknown'       : thiếu cạnh dài/không hợp lệ -> trung tính, giữ nguyên.
  */
-export function evaluateSizeMatch(
-  queryPair,
-  candidatePair,
-  tolerance = DEFAULT_SIZE_TOLERANCE
-) {
+export function evaluateSizeMatch(queryPair, candidatePair, tolerance) {
   const q = normalizeSizePair(
     queryPair?.length_mm ?? queryPair?.lengthMm,
     queryPair?.width_mm ?? queryPair?.widthMm
@@ -166,36 +213,42 @@ export function evaluateSizeMatch(
       status: 'unknown',
       permutation: null,
       d_max: null,
-      edges: []
+      edges: [],
+      tolerance: null
     };
   }
 
-  const identity = compareEdges(q, c, tolerance);
-  const swappedPair = { length_mm: c.width_mm, width_mm: c.length_mm };
-  const swapped = compareEdges(q, swappedPair, tolerance);
+  const tol = resolveSizeTolerance(queryPair, candidatePair, tolerance);
+  const identity = compareEdges(q, c, tol);
 
   let chosen = identity;
   let permutation = 'identity';
 
-  if (!identity.ok && swapped.ok) {
-    chosen = swapped;
-    permutation = 'swapped';
-  } else if (!identity.ok && !swapped.ok && swapped.d_max < identity.d_max) {
-    chosen = swapped;
-    permutation = 'swapped';
+  if (!identity.partial) {
+    const swappedPair = { length_mm: c.width_mm, width_mm: c.length_mm };
+    const swapped = compareEdges(q, swappedPair, tol);
+    if (!identity.ok && swapped.ok) {
+      chosen = swapped;
+      permutation = 'swapped';
+    } else if (!identity.ok && !swapped.ok && swapped.d_max < identity.d_max) {
+      chosen = swapped;
+      permutation = 'swapped';
+    }
   }
 
   return {
-    status: chosen.ok ? 'match' : 'mismatch',
+    status: chosen.ok ? (chosen.partial ? 'match_partial' : 'match') : 'mismatch',
     permutation,
     d_max: chosen.d_max,
-    edges: chosen.edges
+    edges: chosen.edges,
+    tolerance: tol
   };
 }
 
 /**
  * Chuẩn hoá payload size từ query (`body.size`) — fail-open: trả null nếu không hợp lệ.
- * Chấp nhận { length_mm, width_mm, source?, confidence? }.
+ * Chấp nhận { length_mm, width_mm?, source?, confidence? } — cạnh dài bắt buộc,
+ * cạnh ngắn tùy chọn (S1.1).
  */
 export function normalizeQuerySize(input) {
   if (!input || typeof input !== 'object') return null;
@@ -236,6 +289,7 @@ export function formatSizePair(pair) {
     const rounded = Math.round(value * 10) / 10;
     return String(rounded);
   };
+  if (normalized.width_mm == null) return `${fmt(normalized.length_mm)} mm`;
   return `${fmt(normalized.length_mm)} × ${fmt(normalized.width_mm)} mm`;
 }
 
@@ -291,14 +345,14 @@ export async function loadCandidateDims(env, token, recordIds) {
  * @param {object} args
  * @param {Array} args.candidates  - pool sau hydrate (mỗi row có id/record_id + code)
  * @param {object|null} args.querySize - size query đã chuẩn hoá (hoặc raw, sẽ chuẩn hoá lại)
- * @param {Map|object|null} args.dimsById - map record_id -> {length_mm,width_mm}; null = không đọc được
- * @param {object} [args.tolerance] - { relative, floorMm }
+ * @param {Map|object|null} args.dimsById - map record_id -> {length_mm,width_mm,method}; null = không đọc được
+ * @param {object} [args.tolerance] - { relative, floorMm } override; mặc định chọn theo nguồn đo (S1.1)
  */
 export function applySizeGate({
   candidates,
   querySize,
   dimsById,
-  tolerance = DEFAULT_SIZE_TOLERANCE
+  tolerance = null
 } = {}) {
   const list = Array.isArray(candidates) ? candidates : [];
   const queryPair = normalizeQuerySize(querySize);
@@ -319,16 +373,17 @@ export function applySizeGate({
       evidence: {
         status: 'dims_unavailable',
         measured: queryPair,
-        tolerance: sanitizeTolerance(tolerance)
+        tolerance: resolveSizeTolerance(queryPair, null, tolerance)
       },
       warnings: [SIZE_GATE_MESSAGES.dimsUnavailable]
     };
   }
 
-  const tol = sanitizeTolerance(tolerance);
+  const tol = resolveSizeTolerance(queryPair, null, tolerance);
   const kept = [];
   const rejected = [];
   let unknownCount = 0;
+  let partialCount = 0;
 
   for (const row of list) {
     const id = String(row?.record_id ?? row?.id ?? '');
@@ -341,15 +396,21 @@ export function applySizeGate({
       continue;
     }
 
-    const verdict = evaluateSizeMatch(queryPair, candidatePair, tol);
+    const verdict = evaluateSizeMatch(
+      queryPair,
+      { ...candidatePair, method: dims?.method },
+      tolerance
+    );
 
-    if (verdict.status === 'match') {
+    if (verdict.status === 'match' || verdict.status === 'match_partial') {
+      if (verdict.status === 'match_partial') partialCount += 1;
       kept.push({
         ...row,
-        size_status: 'match',
+        size_status: verdict.status,
         size_evidence: {
           d_max: verdict.d_max,
           permutation: verdict.permutation,
+          partial: verdict.status === 'match_partial',
           candidate: { ...candidatePair }
         }
       });
@@ -380,6 +441,7 @@ export function applySizeGate({
       measured: queryPair,
       tolerance: tol,
       matched_count: kept.filter((row) => row.size_status === 'match').length,
+      partial_count: partialCount,
       unknown_count: unknownCount,
       rejected_count: rejected.length,
       rejected: rejected.slice(0, 10)

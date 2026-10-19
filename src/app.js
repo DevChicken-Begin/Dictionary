@@ -249,7 +249,8 @@ createApp({
       return 'Tìm mã hàng, ID, đặc điểm...';
     },
 
-    // M28: gợi ý trạng thái nhập kích thước trong modal camera (fail-open khi để trống).
+    // M28 S1.1: gợi ý trạng thái nhập kích thước trong modal camera.
+    // Cạnh dài bắt buộc, cạnh ngắn tùy chọn; để trống cả hai = bỏ qua lọc (fail-open).
     cameraSizeHint() {
       const s = this.camera?.size || {};
       if (s.unknown) return 'Không nhập = bỏ qua lọc kích thước';
@@ -260,34 +261,37 @@ createApp({
         return Number.isFinite(n) ? n : null;
       };
       const l = parse(s.length), w = parse(s.width);
-      if (l == null || w == null) return 'Nhập đủ cạnh dài nhất và ngắn nhất (mm)';
-      if (l <= 0 || w <= 0) return 'Số đo phải lớn hơn 0';
-      if (l > CONFIG.MORIS_SIZE_MAX_MM || w > CONFIG.MORIS_SIZE_MAX_MM) {
+      if (l == null && w == null) return 'Nhập cạnh dài nhất (mm) — cạnh ngắn có thể để trống';
+      if (l == null) return 'Cần nhập cạnh dài nhất (mm) — cạnh ngắn có thể để trống';
+      if (l <= 0 || (w != null && w <= 0)) return 'Số đo phải lớn hơn 0';
+      if (l > CONFIG.MORIS_SIZE_MAX_MM || (w != null && w > CONFIG.MORIS_SIZE_MAX_MM)) {
         return `Số đo tối đa ${CONFIG.MORIS_SIZE_MAX_MM}mm`;
       }
+      if (w == null) return `Lọc theo cạnh dài ${Number(l.toFixed(1))} mm (chưa có cạnh ngắn)`;
       const L = Math.max(l, w), W = Math.min(l, w);
       return `Lọc theo ${Number(L.toFixed(1))} × ${Number(W.toFixed(1))} mm`;
     },
 
-    /** M28 Gate D: hint cho 2 ô size trong editor (tùy chọn — để trống cả 2 = không lưu). */
+    /** M28 S1.1: hint cho 2 ô size trong editor — cạnh dài bắt buộc, cạnh ngắn tùy chọn. */
     editorSizeHint() {
       const f = this.editor?.form || {};
       const rawL = String(f.size_length ?? '').trim();
       const rawW = String(f.size_width ?? '').trim();
       if (!rawL && !rawW) return 'Tùy chọn — để trống nếu chưa đo kích thước';
+      if (!rawL) return 'Cần nhập cạnh dài (mm) — cạnh ngắn có thể để trống';
       const parse = v => {
         const raw = String(v ?? '').trim().replace(',', '.');
         if (!raw) return null;
         const n = Number(raw);
         return Number.isFinite(n) ? n : null;
       };
-      const l = parse(rawL), w = parse(rawW);
-      if (l == null || w == null) return 'Nhập đủ cạnh dài và cạnh ngắn (mm)';
-      if (l <= 0 || w <= 0) return 'Số đo phải lớn hơn 0';
-      if (l > CONFIG.MORIS_SIZE_MAX_MM || w > CONFIG.MORIS_SIZE_MAX_MM) {
+      const l = parse(rawL), w = rawW ? parse(rawW) : null;
+      if (l == null || l <= 0 || (w != null && w <= 0)) return 'Số đo phải lớn hơn 0';
+      if (l > CONFIG.MORIS_SIZE_MAX_MM || (w != null && w > CONFIG.MORIS_SIZE_MAX_MM)) {
         return `Số đo tối đa ${CONFIG.MORIS_SIZE_MAX_MM}mm`;
       }
-      const L = Math.max(l, w), W = Math.min(l, w);
+      const L = Math.max(l, w ?? l), W = Math.min(l, w ?? l);
+      if (w == null) return `Lưu cạnh dài ${Number(l.toFixed(1))} mm — nhập thêm cạnh ngắn để lọc chính xác hơn`;
       return `Lưu ${Number(L.toFixed(1))} × ${Number(W.toFixed(1))} mm`;
     },
 
@@ -1805,22 +1809,26 @@ createApp({
           p_session_token: this.session.token,
           p_image_id: this.editor.form.id
         });
-        if (Number(row?.length_mm) > 0 && Number(row?.width_mm) > 0) {
-          this.editor.form.size_length = String(row.length_mm);
-          this.editor.form.size_width = String(row.width_mm);
+        const rowLength = Number(row?.length_mm);
+        const rowWidth = row?.width_mm == null ? null : Number(row.width_mm);
+        if (Number.isFinite(rowLength) && rowLength > 0) {
+          this.editor.form.size_length = String(rowLength);
+          this.editor.form.size_width = Number.isFinite(rowWidth) && rowWidth > 0 ? String(rowWidth) : '';
         }
       } catch (_) { /* bảng/RPC chưa sẵn sàng — coi như chưa có size */ }
     },
 
     /**
-     * M28 Gate D: đọc 2 ô size trong editor (mm) → payload RPC.
-     * Trả { empty:true } khi để trống cả 2 (không lưu); { error } khi nhập thiếu/sai.
+     * M28 S1.1: đọc 2 ô size trong editor (mm) → payload RPC.
+     * Cạnh dài bắt buộc, cạnh ngắn tùy chọn (thiếu -> width_mm = null, vẫn lưu).
+     * Trả { empty:true } khi để trống cả 2 (không lưu); { error } khi nhập sai.
      */
     async readEditorSize() {
       const f = this.editor?.form || {};
       const rawL = String(f.size_length ?? '').trim();
       const rawW = String(f.size_width ?? '').trim();
       if (!rawL && !rawW) return { empty: true };
+      if (!rawL) return { error: 'Cần nhập cạnh dài (mm) — cạnh ngắn có thể để trống.' };
 
       const parse = v => {
         const raw = String(v ?? '').trim().replace(',', '.');
@@ -1828,8 +1836,8 @@ createApp({
         const n = Number(raw);
         return Number.isFinite(n) ? n : null;
       };
-      const l = parse(rawL), w = parse(rawW);
-      if (l == null || w == null) return { error: 'Cần nhập đủ cạnh dài và cạnh ngắn (mm), hoặc để trống cả hai.' };
+      const l = parse(rawL), w = rawW ? parse(rawW) : null;
+      if (l == null) return { error: 'Cạnh dài phải là một số (mm).' };
 
       try {
         const mod = await this.loadSizeContractModule();
@@ -1838,10 +1846,11 @@ createApp({
         return { length_mm: pair.length_mm, width_mm: pair.width_mm };
       } catch (error) {
         console.warn('Size contract module failed, dùng fallback inline:', error);
-        if (l <= 0 || w <= 0) return { error: 'Số đo phải lớn hơn 0.' };
-        if (l > CONFIG.MORIS_SIZE_MAX_MM || w > CONFIG.MORIS_SIZE_MAX_MM) {
+        if (l <= 0 || (w != null && w <= 0)) return { error: 'Số đo phải lớn hơn 0.' };
+        if (l > CONFIG.MORIS_SIZE_MAX_MM || (w != null && w > CONFIG.MORIS_SIZE_MAX_MM)) {
           return { error: `Số đo tối đa ${CONFIG.MORIS_SIZE_MAX_MM}mm.` };
         }
+        if (w == null) return { length_mm: l, width_mm: null };
         return { length_mm: Math.max(l, w), width_mm: Math.min(l, w) };
       }
     },
@@ -3123,7 +3132,9 @@ createApp({
 
     /**
      * Đọc cặp kích thước người dùng nhập (mm) → payload size cho /api/moris/search.
-     * Fail-open: không nhập / không hợp lệ → null (server bỏ qua gate).
+     * S1.1: cạnh dài bắt buộc, cạnh ngắn tùy chọn (thiếu -> width_mm = null,
+     * server chỉ đối chiếu cạnh dài — 'match_partial').
+     * Fail-open: thiếu cạnh dài / không hợp lệ → null (server bỏ qua gate).
      */
     async readCameraSize() {
       const s = this.camera?.size || {};
@@ -3136,7 +3147,7 @@ createApp({
         return Number.isFinite(n) ? n : null;
       };
       const l = parse(s.length), w = parse(s.width);
-      if (l == null || w == null) return null;
+      if (l == null) return null;
 
       try {
         const mod = await this.loadSizeContractModule();
@@ -3150,7 +3161,9 @@ createApp({
         };
       } catch (error) {
         console.warn('Size contract module failed, dùng fallback inline:', error);
-        if (l <= 0 || w <= 0 || l > CONFIG.MORIS_SIZE_MAX_MM || w > CONFIG.MORIS_SIZE_MAX_MM) return null;
+        if (l <= 0 || l > CONFIG.MORIS_SIZE_MAX_MM) return null;
+        if (w != null && (w <= 0 || w > CONFIG.MORIS_SIZE_MAX_MM)) return null;
+        if (w == null) return { length_mm: l, width_mm: null, source: 'user', confidence: 0.6 };
         return {
           length_mm: Math.max(l, w),
           width_mm: Math.min(l, w),

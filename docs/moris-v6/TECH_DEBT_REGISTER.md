@@ -6,7 +6,8 @@ Tài liệu này bổ sung cho `docs/moris-v6/TECH_DEBT_ROADMAP.md` (thứ tự 
 
 **Trạng thái nền hiện tại (đã kiểm chứng 2026-10-19):**
 
-- `npm test` → **55 files / 530 tests pass 100%**; `npx tsc --noEmit` exit 0; `npm run build` **46 files** exit 0 (đã loại `.ts` khỏi dist — BUILD-01).
+- `npm test` → **55 files / 537 tests pass 100%**; `npx tsc --noEmit` exit 0; `npm run build` **46 files** exit 0 (đã loại `.ts` khỏi dist — BUILD-01).
+- Migration `20261019120000_size_contract_s11_optional_width.sql` (S1.1 width nullable) **pending production — chờ chủ dự án duyệt `supabase db push`** (đã verify local qua full suite).
 - M27 (subject lock + khung vuông tracking) + M28 (size contract/gate + Gate D migration/RPC + size editor) + M30 (B14/B15 + purge R2) đã xong **local**; chưa deploy, chưa commit (trừ khi chủ dự án yêu cầu).
 - R2 purge đã thực thi theo phê duyệt: **376/376 object (11.14MB)**; monitor read-only 2026-10-19 xác nhận bucket còn **1170 objects/32.22MB**; orphan còn **77 (chỉ `parts/`)**; missing 0.
 - Gate D (M28) **ĐÃ ÁP PRODUCTION 2026-10-19** (chủ dự án ủy quyền agent chạy `npx supabase db push` sau review SQL): `20261019090000_catalogue_part_dimensions_gate_d.sql` (bảng + RPC `app_upsert_part_dimensions`/`app_get_part_dimensions` + trigger dọn dims) + proposal `20261017090000` + cascade delete `2026101200020000` + reset flag `2026101000040000` đã lên DB; verify read-only: bảng `catalogue_part_dimensions` 200, 2 RPC tồn tại (token sai → UNAUTHORIZED). **App/frontend vẫn chưa deploy**; version app bump **6.2.0**.
@@ -66,5 +67,5 @@ Tài liệu này bổ sung cho `docs/moris-v6/TECH_DEBT_ROADMAP.md` (thứ tự 
 1. Không tạo vector/ghi index từ Editor; chỉ Trung tâm Vector AI khi người dùng xác nhận.
 2. Không sửa database production / apply migration nếu chưa chủ dự án duyệt — Gate D đã duyệt 2026-10-19 nhưng **agent vẫn không tự chạy** `db push`; chủ dự án áp.
 3. Không deploy, không commit khi chưa được yêu cầu.
-4. Không bịa số liệu đo lường — mọi số phải từ log/harness thật (ghim 2026-10-19: full 55 files/530 tests, tsc exit 0, build 46 files, monitor read-only 1170 objects/32.22MB; purge 376/376 ngày 2026-10-17).
+4. Không bịa số liệu đo lường — mọi số phải từ log/harness thật (ghim 2026-10-19: full 55 files/537 tests, tsc exit 0, build 46 files, monitor read-only 1170 objects/32.22MB; purge 376/376 ngày 2026-10-17).
 5. Giữ nguyên auth/2FA/RLS/CSRF/anti-bot; không mở policy anon cho bảng dims.

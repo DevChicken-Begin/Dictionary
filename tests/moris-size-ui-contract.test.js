@@ -43,24 +43,25 @@ describe('M28 UI contract — panel nhập kích thước (hành vi thật từ 
     expect(ctx.camera.size.unknown).toBe(false);
   });
 
-  it('cameraSizeHint đổi trạng thái theo dữ liệu nhập (trống/sai/quá cỡ/hợp lệ)', () => {
+  it('cameraSizeHint đổi trạng thái theo dữ liệu nhập (trống/sai/quá cỡ/hợp lệ/partial)', () => {
     const hint = (size) => computed.cameraSizeHint.call(sizeCtx(size));
 
     expect(hint({ unknown: true })).toBe('Không nhập = bỏ qua lọc kích thước');
-    expect(hint({ unknown: false })).toBe('Nhập đủ cạnh dài nhất và ngắn nhất (mm)');
-    expect(hint({ unknown: false, length: '120' })).toBe('Nhập đủ cạnh dài nhất và ngắn nhất (mm)');
+    expect(hint({ unknown: false })).toBe('Nhập cạnh dài nhất (mm) — cạnh ngắn có thể để trống');
+    expect(hint({ unknown: false, width: '80' })).toBe('Cần nhập cạnh dài nhất (mm) — cạnh ngắn có thể để trống');
+    expect(hint({ unknown: false, length: '120' })).toBe('Lọc theo cạnh dài 120 mm (chưa có cạnh ngắn)');
     expect(hint({ unknown: false, length: '0', width: '80' })).toBe('Số đo phải lớn hơn 0');
     expect(hint({ unknown: false, length: '6000', width: '80' })).toBe('Số đo tối đa 5000mm');
     expect(hint({ unknown: false, length: '80', width: '120' })).toBe('Lọc theo 120 × 80 mm');
     expect(hint({ unknown: false, length: '80,5', width: '120' })).toBe('Lọc theo 120 × 80.5 mm');
   });
 
-  it('readCameraSize: unknown/thiếu/sai/âm/quá cỡ -> null (server bỏ qua gate)', async () => {
+  it('readCameraSize: unknown/thiếu cạnh dài/sai/âm/quá cỡ -> null (server bỏ qua gate)', async () => {
     const cases = [
       { unknown: true },
       { unknown: false },
+      { unknown: false, width: '80' },
       { unknown: false, length: 'abc', width: '80' },
-      { unknown: false, length: '120', width: '' },
       { unknown: false, length: '-5', width: '80' },
       { unknown: false, length: '6000', width: '80' }
     ];
@@ -68,6 +69,21 @@ describe('M28 UI contract — panel nhập kích thước (hành vi thật từ 
       const ctx = { ...sizeCtx(size), loadSizeContractModule: async () => sizeContract };
       expect(await methods.readCameraSize.call(ctx), JSON.stringify(size)).toBeNull();
     }
+  });
+
+  it('readCameraSize S1.1: chỉ cạnh dài -> payload partial (width_mm null), cạnh ngắn bỏ qua', async () => {
+    const ctx = {
+      ...sizeCtx({ unknown: false, length: '120', width: '' }),
+      loadSizeContractModule: async () => sizeContract
+    };
+    expect(await methods.readCameraSize.call(ctx))
+      .toEqual({ length_mm: 120, width_mm: null, source: 'user', confidence: 0.6 });
+
+    const invalidWidth = {
+      ...sizeCtx({ unknown: false, length: '120', width: '-5' }),
+      loadSizeContractModule: async () => sizeContract
+    };
+    expect(await methods.readCameraSize.call(invalidWidth)).toBeNull();
   });
 
   it('readCameraSize: dùng module hợp đồng thật, tự hoán vị (L >= W) + payload chuẩn', async () => {

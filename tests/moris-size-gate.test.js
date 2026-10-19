@@ -63,18 +63,65 @@ describe('M28 Size Gate — fail-open & lọc theo dung sai',()=>{
     expect(out.candidates[0].size_status).toBe('match');
   });
 
-  it('biên sàn 2mm: khớp đúng 2.0mm, lệch 2.1mm bị loại (linh kiện nhỏ)',()=>{
+  it('S1.1: dims thiếu cạnh ngắn -> match_partial (chỉ so cạnh dài), KHÔNG loại oan',()=>{
+    const out=applySizeGate({
+      candidates:[{id:'a',code:'A'}],
+      querySize:{length_mm:100,width_mm:60,source:'user'},
+      dimsById:new Map([['a',{length_mm:102,width_mm:null,method:'user'}]])
+    });
+    expect(out.candidates).toHaveLength(1);
+    expect(out.candidates[0].size_status).toBe('match_partial');
+    expect(out.candidates[0].size_evidence.partial).toBe(true);
+    expect(out.evidence).toMatchObject({matched_count:0,partial_count:1,rejected_count:0});
+
+    const queryPartial=applySizeGate({
+      candidates:[{id:'a',code:'A'}],
+      querySize:{length_mm:100,source:'user'},
+      dimsById:new Map([['a',{length_mm:102,width_mm:60,method:'user'}]])
+    });
+    expect(queryPartial.candidates[0].size_status).toBe('match_partial');
+
+    const partialReject=applySizeGate({
+      candidates:[{id:'a',code:'A'}],
+      querySize:{length_mm:100,source:'user'},
+      dimsById:new Map([['a',{length_mm:70,width_mm:60,method:'user'}]])
+    });
+    expect(partialReject.candidates).toHaveLength(0);
+    expect(partialReject.rejected).toHaveLength(1);
+  });
+
+  it('dung sai nhập tay: 20cm vs 18cm (lệch 10%) vẫn khớp; verified giữ mức chặt',()=>{
+    const manualMatch=applySizeGate({
+      candidates:[{id:'a'},{id:'b'}],
+      querySize:{length_mm:200,width_mm:100,source:'user'},
+      dimsById:new Map([
+        ['a',{length_mm:180,width_mm:100,method:'user'}],
+        ['b',{length_mm:180,width_mm:100,method:'caliper'}]
+      ])
+    });
+    expect(manualMatch.candidates.map(c=>c.id)).toEqual(['a','b']);
+
+    const verifiedStrict=applySizeGate({
+      candidates:[{id:'a'}],
+      querySize:{length_mm:200,width_mm:100,source:'camera_measured'},
+      dimsById:new Map([['a',{length_mm:180,width_mm:100,method:'caliper'}]])
+    });
+    expect(verifiedStrict.candidates).toHaveLength(0);
+    expect(verifiedStrict.rejected).toHaveLength(1);
+  });
+
+  it('biên sàn nhập tay 3mm: khớp đúng 3.0mm, lệch 3.1mm bị loại (linh kiện nhỏ)',()=>{
     const inRange=applySizeGate({
       candidates:[{id:'a'}],
       querySize:{length_mm:20,width_mm:20},
-      dimsById:new Map([['a',{length_mm:22,width_mm:22}]])
+      dimsById:new Map([['a',{length_mm:23,width_mm:23}]])
     });
     expect(inRange.candidates[0].size_status).toBe('match');
 
     const outRange=applySizeGate({
       candidates:[{id:'a'}],
       querySize:{length_mm:20,width_mm:20},
-      dimsById:new Map([['a',{length_mm:22.1,width_mm:22}]])
+      dimsById:new Map([['a',{length_mm:23.1,width_mm:23}]])
     });
     expect(outRange.candidates).toHaveLength(0);
     expect(outRange.rejected).toHaveLength(1);
@@ -219,9 +266,9 @@ describe('M28 tích hợp schema/config/presentation',()=>{
       mode:'MORIS_VECTOR_SUGGESTIONS',
       candidates:[{code:'A'}],
       decision:{reasons:[]},
-      size_evidence:{status:'applied',rejected_count:3,tolerance:{relative:0.05,floorMm:2}}
+      size_evidence:{status:'applied',rejected_count:3,tolerance:{relative:0.10,floorMm:3}}
     });
     expect(filtered).toContain('loại 3 mã');
-    expect(filtered).toContain('±5%');
+    expect(filtered).toContain('±10%');
   });
 });

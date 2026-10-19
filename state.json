@@ -2,14 +2,14 @@
   "system": {
     "project": "Catalogue AI (Dictionary)",
     "stack": "Vue 3 CDN + Cloudflare Pages Functions + Supabase (pgvector) + Cloudflare R2",
-    "updated_at": "2026-10-19T03:55:00Z",
-    "memory_version": "2.8.0",
+    "updated_at": "2026-10-19T06:35:00Z",
+    "memory_version": "2.9.0",
     "status": "in_progress"
   },
   "current_session": {
-    "active_task": "tracking_upgrade_merge_600ms_60fps",
-    "last_checkpoint": "Nâng cấp tracking theo phản hồi production 2026-10-19 (chủ dự án duyệt): (1) nhịp mẫu 450->600ms (MORIS_CAMERA_LOCK_SAMPLE_MS) để mask rà kỹ nền sáng trước khi bám; (2) capture-subject-lock.selectSubject gom cụm component (union-find, khe hở bbox <= max(3,min(14,4%*minDim)) px) -> hàng dài/chói bị tách mảnh vẫn bắt trọn, hết 'bám một phần thân'; stats.mergedComponents/selected.merged; (3) khung tracking vẽ 60fps: rAF nội suy EMA tau=150ms (smoothBoxView + _camLockAnimTick), ghi style DOM trực tiếp qua ref=camLockBox, bỏ transition-all/:style để không re-render Vue 60fps; (4) viền 2px->1.5px giữ hình vuông + màu emerald/amber + nhãn. UI/index.html chỉ đổi viền + ref; màu giữ nguyên. Bằng chứng: focused 4 file 78/78; full npm test 55 files/530 pass (+5 test mới); tsc exit 0; build 46 files; chưa commit/deploy. Size audit S1.1 (chờ chủ dự án chốt): cạnh dài bắt buộc + cạnh ngắn tùy chọn; dung sai nhập tay (xem task_32).",
-    "resumption_prompt": "Bước kế: (1) CHỦ DỰ ÁN test tracking mới trên production (600ms + merge + 60fps; viền 1.5px) và chốt Size Contract S1.1: cạnh dài bắt buộc/cạnh ngắn tùy chọn + ngưỡng dung sai dữ liệu nhập tay (đề xuất: user 10%/sàn 3mm, verified 5%/2mm, thiếu cạnh ngắn chỉ khớp cạnh dài); (2) nếu duyệt S1.1 -> làm migration width nullable + RPC + sizeGate + contract + UI + tests; (3) commit/push khi chủ dự án yêu cầu (phiên này chưa commit); (4) còn nợ: EVAL-01, M18/M22/M29 chờ dữ liệu thật, 77 object parts/, DEPLOY-01, SEC-01 xoay token.",
+    "active_task": "size_contract_s11_optional_width",
+    "last_checkpoint": "M28 S1.1 (chủ dự án chốt 2026-10-19): cạnh dài BẮT BUỘC, cạnh ngắn TÙY CHỌN; dung sai theo nguồn đo (nhập tay 10%/sàn 3mm; verified caliper/marker_photo/erp/camera_measured cả 2 bên 5%/2mm). Đã sửa: size-contract v1_1 + mirror sizeGate (match_partial, resolveSizeTolerance, compareEdges partial); applySizeGate partial_count; RPC/migration mới supabase/migrations/20261019120000_size_contract_s11_optional_width.sql (width_mm nullable + CHECK NULL-safe + RPC width optional) — CHƯA push production, chờ chủ dự án; app.js readEditorSize/readCameraSize/loadEditorSize/hints; index.html placeholder cạnh dài * / cạnh ngắn (tùy chọn); version 6.3.0 (src/version.js, version.json, tests/pwa.test.js); tests cập nhật 5 file size + rewrite contract test: full npm test 55 files/537 pass (+7 mới); tsc 0; build 46 files. Chưa commit (chờ chủ dự án). ĐÃ PUSH PRODUCTION migration 20261019120000 (db push OK, migration list synced, probe read-only dims 200/RPC 400). DB_MIGRATION.md cập nhật lần 2. Bước cuối còn lại: commit+push git gói S1.1.",
+    "resumption_prompt": "Bước kế: (1) CHỜ chủ dự án duyệt push migration 20261019120000 (S1.1 width nullable) lên production bằng npx supabase db push (theo quy trình Gate D) + commit tầng S1.1; (2) chủ dự án test production: lưu size chỉ cạnh dài -> mở lại thấy cạnh dài; Moris nhập 1 cạnh -> lọc cạnh dài (match_partial); nhập 20/18cm -> vẫn khớp; (3) AUDIT RAG lỗ theo yêu cầu mới: mẫu ảnh định dạng lỗ (lỗ dài.png) -> so khớp identifying_features + boost ranking (hạ tầng sẵn: featureMatcher vocab tron/vuong/oval/chu nhat, holeMatcher, geometricReranker recovery, structuralEvidence; geometryVerification OFF theo M22 — cần gated boost + đo trên EVAL); (4) còn nợ: EVAL-01, M18/M22/M29, 77 object parts/, DEPLOY-01, SEC-01 xoay token.",
     "tech_debt_register": "docs/moris-v6/TECH_DEBT_REGISTER.md"
   },
   "tasks": [
@@ -493,11 +493,24 @@
       "production_writes": 0,
       "deployed": false,
       "commit_created": false
+    },
+    {
+      "id": "task_33_size_contract_s11_optional_width",
+      "title": "Size Contract S1.1: cạnh dài bắt buộc + cạnh ngắn tùy chọn; dung sai theo nguồn (user 10%/3mm, verified 5%/2mm)",
+      "status": "applied_production_local_verified",
+      "completed_at": "2026-10-19T06:10:00Z",
+      "scope": "contract v1_1 client+server mirror; normalizeSizePair partial; match_partial trong gate/orchestrator evidence; editor/camera UI partial; migration 20261019120000; version 6.3.0",
+      "evidence": "focused size 5 file 65/65; full 55 files/537 pass 100%; npx tsc --noEmit exit 0; npm run build 46 files; production writes 0; chưa deploy; chưa commit",
+      "pending": "commit+push git S1.1 (chủ dự án đã duyệt, đang thực hiện)",
+      "production_writes": 0,
+      "deployed": false,
+      "commit_created": false,
+      "production_evidence": "2026-10-19: npx supabase db push --yes áp 20261019120000; migration list synced; dims GET 200; app_upsert_part_dimensions token sai -> 400 UNAUTHORIZED"
     }
   ],
   "verification": {
-    "total_unit_tests": 530,
-    "passing_tests": 530,
+    "total_unit_tests": 537,
+    "passing_tests": 537,
     "failing_tests": 0,
     "typescript_exit_code": 0,
     "build_exit_code": 0,
@@ -505,7 +518,7 @@
     "build_files": 46,
     "local_e2e_passed": 12,
     "staging": "skipped_by_owner",
-    "evidence": "npm test 2026-10-19 sau Gate D + tracking box (55 files/525 tests pass 100%); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_30_gate_d_size_editor_and_tracking_box, task_29_test_backlog_t2_t7_profile01_r2_02, task_28_m28_hardening_tests_and_push Phiên 2026-10-19 (push DB): 4 migration áp production + 5 repair history + version 6.2.0; probe production OK (xem task_31_gate_d_applied_production). Phiên tracking upgrade 2026-10-19: component merge + 600ms + 60fps overlay + viền 1.5px; full 55 files/530 pass (xem task_32_tracking_upgrade_merge_600ms_60fps).",
+    "evidence": "npm test 2026-10-19 sau Gate D + tracking box (55 files/525 tests pass 100%); tsc --noEmit exit 0; npm run build 46 files exit 0; chi tiết: task_30_gate_d_size_editor_and_tracking_box, task_29_test_backlog_t2_t7_profile01_r2_02, task_28_m28_hardening_tests_and_push Phiên 2026-10-19 (push DB): 4 migration áp production + 5 repair history + version 6.2.0; probe production OK (xem task_31_gate_d_applied_production). Phiên tracking upgrade 2026-10-19: component merge + 600ms + 60fps overlay + viền 1.5px; full 55 files/530 pass (xem task_32_tracking_upgrade_merge_600ms_60fps). Phiên S1.1 2026-10-19: full 55 files/537 pass; migration 20261019120000 chờ push.",
     "app_version": "6.2.0",
     "production_migrations_applied": 4,
     "migration_history_repaired": 5,
@@ -940,6 +953,15 @@
         ],
         "drift_fix_42P13": "app_delete_part remote tạo tay kiểu TABLE(ok,message) -> thêm DROP FUNCTION IF EXISTS vào 2026101200020000 trước CREATE OR REPLACE (không đổi kiểu trả về được).",
         "verification": "migration list local=remote trừ 3 bản V6 cố ý; probe production read-only: GET catalogue_part_dimensions -> 200 [], rpc app_get_part_dimensions + app_upsert_part_dimensions -> 400 P0001 UNAUTHORIZED (tồn tại, chặn token sai)."
+      },
+      "s11_upgrade_2026_10_19": {
+        "decision": "cạnh dài bắt buộc, cạnh ngắn tùy chọn; thiếu cạnh ngắn = match_partial (chỉ so cạnh dài)",
+        "tolerance_by_source": "manual 10%/3mm (source/method user hoặc không rõ); verified 5%/2mm (chỉ khi CẢ 2 bên caliper/marker_photo/erp/camera_measured)",
+        "contract_version": "size_contract_v1_1",
+        "db_migration": "supabase/migrations/20261019120000_size_contract_s11_optional_width.sql (width_mm DROP NOT NULL + CHECK NULL-safe + RPC app_upsert_part_dimensions width optional)",
+        "migration_status": "applied_production_2026-10-19 (db push OK; migration list local=remote trừ 3 bản V6 pending cố ý; probe read-only 200/400)",
+        "app_version": "6.3.0",
+        "evidence": "full npm test 55 files/537 pass; tsc 0; build 46 files"
       }
     },
     "M29": {

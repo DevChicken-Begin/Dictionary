@@ -70,17 +70,21 @@ describe('M28 Gate D — form editor có trường size', () => {
   it('editorSizeHint phản ánh trạng thái nhập (trống/thiếu/sai/quá cỡ/hợp lệ)', () => {
     const hint = (form) => computed.editorSizeHint.call({ editor: { form } });
     expect(hint({})).toContain('Tùy chọn');
-    expect(hint({ size_length: '80' })).toBe('Nhập đủ cạnh dài và cạnh ngắn (mm)');
+    expect(hint({ size_length: '80' })).toBe('Lưu cạnh dài 80 mm — nhập thêm cạnh ngắn để lọc chính xác hơn');
+    expect(hint({ size_width: '80' })).toBe('Cần nhập cạnh dài (mm) — cạnh ngắn có thể để trống');
     expect(hint({ size_length: '0', size_width: '80' })).toBe('Số đo phải lớn hơn 0');
+    expect(hint({ size_length: 'abc' })).toBe('Số đo phải lớn hơn 0');
     expect(hint({ size_length: '6000', size_width: '80' })).toBe('Số đo tối đa 5000mm');
     expect(hint({ size_length: '80', size_width: '120' })).toBe('Lưu 120 × 80 mm');
     expect(hint({ size_length: '80,5', size_width: '120' })).toBe('Lưu 120 × 80.5 mm');
   });
 
-  it('readEditorSize: trống cả 2 -> empty; thiếu 1 cạnh -> error', async () => {
+  it('readEditorSize S1.1: trống cả 2 -> empty; chỉ cạnh ngắn -> error; chỉ cạnh dài -> hợp lệ (width null)', async () => {
     expect(await methods.readEditorSize.call(formCtx({}))).toEqual({ empty: true });
-    const one = await methods.readEditorSize.call(formCtx({ size_length: '80' }));
-    expect(one.error).toContain('đủ cạnh dài và cạnh ngắn');
+    const shortOnly = await methods.readEditorSize.call(formCtx({ size_width: '80' }));
+    expect(shortOnly.error).toContain('cạnh dài');
+    expect(await methods.readEditorSize.call(formCtx({ size_length: '80' })))
+      .toEqual({ length_mm: 80, width_mm: null });
   });
 
   it('readEditorSize: hoán vị L >= W + chấp nhận dấu phẩy thập phân', async () => {
@@ -101,7 +105,7 @@ describe('M28 Gate D — form editor có trường size', () => {
     }
   });
 
-  it('readEditorSize: module lỗi -> fallback inline vẫn hoán vị, quá cỡ vẫn error', async () => {
+  it('readEditorSize: module lỗi -> fallback inline vẫn hoán vị/partial, quá cỡ vẫn error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       const ctx = formCtx({ size_length: '80', size_width: '120' }, {
@@ -109,6 +113,11 @@ describe('M28 Gate D — form editor có trường size', () => {
       });
       expect(await methods.readEditorSize.call(ctx)).toEqual({ length_mm: 120, width_mm: 80 });
       expect(warn).toHaveBeenCalled();
+
+      const partial = formCtx({ size_length: '80' }, {
+        loadSizeContractModule: async () => { throw new Error('offline'); }
+      });
+      expect(await methods.readEditorSize.call(partial)).toEqual({ length_mm: 80, width_mm: null });
 
       const over = formCtx({ size_length: '9000', size_width: '80' }, {
         loadSizeContractModule: async () => { throw new Error('offline'); }
@@ -127,6 +136,13 @@ describe('M28 Gate D — form editor có trường size', () => {
     expect(ctx.rpcRow).toHaveBeenCalledWith('app_get_part_dimensions', expect.objectContaining({ p_image_id: 'uuid-9' }));
     expect(ctx.editor.form.size_length).toBe('52.5');
     expect(ctx.editor.form.size_width).toBe('30');
+
+    const partialRow = formCtx({ id: 'uuid-9', size_length: '1', size_width: '1' }, {
+      rpcRow: vi.fn(async () => ({ ok: true, length_mm: 52.5, width_mm: null }))
+    });
+    await methods.loadEditorSize.call(partialRow);
+    expect(partialRow.editor.form.size_length).toBe('52.5');
+    expect(partialRow.editor.form.size_width).toBe('');
 
     const fail = formCtx({ id: 'uuid-9', size_length: '9', size_width: '9' }, {
       rpcRow: vi.fn(async () => { throw new Error('missing table'); })
@@ -176,8 +192,17 @@ describe('M28 Gate D — form editor có trường size', () => {
     expect(calls.find(([fn]) => fn === 'app_upsert_part_metadata')).toBeTruthy();
   });
 
-  it('savePart: nhập thiếu 1 cạnh -> chặn trước khi gọi metadata (không upload)', async () => {
+  it('savePart S1.1: chỉ nhập cạnh dài -> lưu partial (p_width_mm null), vẫn hoạt động', async () => {
     const { ctx, calls } = saveCtx({ size_length: '80', size_width: '' });
+    await methods.savePart.call(ctx);
+    const dim = calls.find(([fn]) => fn === 'app_upsert_part_dimensions');
+    expect(dim).toBeTruthy();
+    expect(dim[1]).toMatchObject({ p_length_mm: 80, p_width_mm: null });
+    expect(calls.find(([fn]) => fn === 'app_upsert_part_metadata')).toBeTruthy();
+  });
+
+  it('savePart: chỉ nhập cạnh ngắn (thiếu cạnh dài) -> chặn trước khi gọi metadata (không upload)', async () => {
+    const { ctx, calls } = saveCtx({ size_length: '', size_width: '80' });
     const upload = vi.fn();
     ctx.uploadToR2 = upload;
     await methods.savePart.call(ctx);
